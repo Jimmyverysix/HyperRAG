@@ -15,6 +15,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sampler-seed", type=int, required=True)
     parser.add_argument("--split-seed", type=int, default=20260919)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--max-queries",
+        type=int,
+        help="仅用于冒烟测试；正式实验省略此参数",
+    )
     return parser
 
 
@@ -24,6 +29,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.domain_dir,
         sampler_seed=args.sampler_seed,
         split_seed=args.split_seed,
+        max_queries=args.max_queries,
     )
     data.save(args.output)
     print(

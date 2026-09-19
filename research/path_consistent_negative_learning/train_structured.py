@@ -306,7 +306,7 @@ def train(
             loss = loss_function(logits, batch_labels)
             loss.backward()
             optimizer.step()
-            train_loss_sum += float(loss) * len(batch_indices)
+            train_loss_sum += loss.item() * len(batch_indices)
             train_items += len(batch_indices)
         train_loss = train_loss_sum / train_items
         validation_loss = _mean_loss(

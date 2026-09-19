@@ -153,8 +153,12 @@ def build_structured_experiment_data(
     sampler_seed: int,
     split_seed: int = 20260919,
     progress_every: int = 1000,
+    max_queries: int | None = None,
 ) -> StructuredExperimentData:
+    if max_queries is not None and max_queries <= 0:
+        raise ValueError("max_queries 必须为正整数")
     domain = load_domain(domain_dir)
+    examples = domain.examples[:max_queries] if max_queries is not None else domain.examples
     entity_ids = [node[1] for node in domain.graph if node[0] != HYPEREDGE_KIND]
     relation_ids = [
         relation
@@ -163,7 +167,7 @@ def build_structured_experiment_data(
     ]
     relation_ids.extend(
         relation
-        for example in domain.examples
+        for example in examples
         for relation in example.query.relation_ids
     )
     entity_count = max(entity_ids) + 1
@@ -182,7 +186,7 @@ def build_structured_experiment_data(
     selected_labels: list[bool] = []
     disputed_labels: list[bool] = []
 
-    for query_index, example in enumerate(domain.examples):
+    for query_index, example in enumerate(examples):
         query_graph = build_query_graph(
             domain.graph, example.query.topic_id, example.answer_ids
         )
@@ -224,7 +228,7 @@ def build_structured_experiment_data(
         query_offsets.append(len(candidate_transitions))
         if progress_every and (query_index + 1) % progress_every == 0:
             print(
-                f"[{domain.name}] {query_index + 1}/{len(domain.examples)} queries, "
+                f"[{domain.name}] {query_index + 1}/{len(examples)} queries, "
                 f"{len(candidate_transitions)} candidates",
                 flush=True,
             )
@@ -280,4 +284,3 @@ def strategy_targets(
             for local_index in rng.sample(local_negatives, drop_count):
                 loss_mask[start + local_index] = False
     return labels, loss_mask
-
