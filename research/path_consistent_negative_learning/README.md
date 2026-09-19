@@ -50,6 +50,16 @@ python -m unittest discover -s research/path_consistent_negative_learning/tests 
 
 测试覆盖等长替代路径、多主题多答案、不连通节点、有向图、高元超边、四实验臂共享候选、随机对照复现性、指标和配对统计。
 
+## GitHub 同步约定
+
+本地与服务器只通过 GitHub 研究分支同步代码：
+
+```text
+research/path-consistent-negative-learning
+```
+
+训练数据、模型权重和运行日志不提交到 GitHub，保存在服务器独立运行目录；聚合后的 JSON、CSV、论文图和最终 PDF 才进入研究产物目录。服务器更新代码时只允许快进合并，避免覆盖本地或服务器上的未提交修改。
+
 ## 门槛 C 结构化代理实验
 
 官方仓库没有发布建图后的 GraphML，服务器也没有原建图流程所需的大模型缓存。因此，门槛 C 使用官方整数 ID 图和 `kg2text.py` 的按 head 聚合规则构造结构代理；它不冒充原版端到端 HyperRAG 复现。候选、查询划分和特征在四个实验臂间固定，只改变标签或损失掩码。
@@ -68,3 +78,46 @@ python -m research.path_consistent_negative_learning.train_structured `
 ```
 
 训练、验证和测试按问题划分，避免同一问题的候选三元组同时出现在不同划分中。固定评测同时报告公开选中路径、全部最短路径以及 Top-K 转移能否从主题实体到达答案。
+
+六卡运行四个实验臂和五个共享随机种子：
+
+```powershell
+python -m research.path_consistent_negative_learning.run_structured_suite `
+  --data-dir runs/gate_c/edu/datasets `
+  --output-dir runs/gate_c/edu/runs `
+  --seeds 42 43 44 45 46 `
+  --gpus 0 1 2 3 4 5
+```
+
+调度器每张卡只启动一个训练进程，并拒绝超过 6 张卡的配置。完成后分别聚合门槛 B 和门槛 C：
+
+```powershell
+python -m research.path_consistent_negative_learning.aggregate_audit `
+  --input-dir runs/wikitopics_audit `
+  --output-dir runs/wikitopics_audit/combined
+
+python -m research.path_consistent_negative_learning.aggregate_training `
+  --run-root runs/gate_c/edu/runs `
+  --output-dir runs/gate_c/edu/summary
+```
+
+## 生成论文结果
+
+聚合文件复制到 `artifacts` 后，图表与论文数字均由脚本生成：
+
+```powershell
+python -m research.path_consistent_negative_learning.figures.gen_fig_prevalence `
+  --report research/path_consistent_negative_learning/artifacts/audit/combined_summary.json `
+  --output-dir research/path_consistent_negative_learning/artifacts/figures
+
+python -m research.path_consistent_negative_learning.figures.gen_fig_gate_c `
+  --summary research/path_consistent_negative_learning/artifacts/gate_c/training_summary.json `
+  --output-dir research/path_consistent_negative_learning/artifacts/figures
+
+python research/path_consistent_negative_learning/paper/generate_results_tex.py `
+  --audit research/path_consistent_negative_learning/artifacts/audit/combined_summary.json `
+  --training research/path_consistent_negative_learning/artifacts/gate_c/training_summary.json `
+  --output research/path_consistent_negative_learning/paper/generated_results.tex
+```
+
+论文主文件是 `paper/main.tex`，在该目录编译后输出 `paper/main.pdf`。

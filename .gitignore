@@ -37,3 +37,14 @@ research/path_consistent_negative_learning/proposal/*.synctex.gz
 research/path_consistent_negative_learning/proposal/*.xdv
 research/path_consistent_negative_learning/proposal/*_check.txt
 research/path_consistent_negative_learning/proposal/rendered_*/
+research/path_consistent_negative_learning/paper/build/
+research/path_consistent_negative_learning/paper/rendered/
+research/path_consistent_negative_learning/paper/*.aux
+research/path_consistent_negative_learning/paper/*.bbl
+research/path_consistent_negative_learning/paper/*.blg
+research/path_consistent_negative_learning/paper/*.fdb_latexmk
+research/path_consistent_negative_learning/paper/*.fls
+research/path_consistent_negative_learning/paper/*.log
+research/path_consistent_negative_learning/paper/*.out
+research/path_consistent_negative_learning/paper/*.synctex.gz
+research/path_consistent_negative_learning/paper/*.xdv
