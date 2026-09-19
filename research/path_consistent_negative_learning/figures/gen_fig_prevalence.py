@@ -72,10 +72,12 @@ def configure_style() -> None:
 def _label_bars(ax: plt.Axes, values: np.ndarray) -> None:
     offset = max(float(values.max(initial=0.0)) * 0.015, 0.00015)
     for index, value in enumerate(values):
+        percentage = 100 * value
+        digits = 3 if percentage < 0.01 else 2
         ax.text(
             value + offset,
             index,
-            f"{100 * value:.2f}%",
+            f"{percentage:.{digits}f}%",
             va="center",
             ha="left",
             fontsize=7.5,

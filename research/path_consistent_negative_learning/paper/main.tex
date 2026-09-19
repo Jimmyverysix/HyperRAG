@@ -141,6 +141,8 @@ HyperRAG 将多元事实表示为超图，并用选中的主题实体到答案�
 
 策略2相对策略1的答案可达率@10配对差为 \VsStrategyOneDifference 个百分点，95\% 配对自助法区间为 [\VsStrategyOneCILow, \VsStrategyOneCIHigh]，共 \VsStrategyOnePairs 个问题配对。相对随机丢弃的差为 \VsRandomDropDifference 个百分点，区间为 [\VsRandomDropCILow, \VsRandomDropCIHigh]，共 \VsRandomDropPairs 个问题配对。策略2相对策略1的选中路径曲线下面积差为 \StrategyTwoPrecisionDifference 个百分点。
 
+表\ref{tab:gate-c}呈现出清楚的权衡：随机丢弃只比策略1略高，而策略2的答案可达率明显高于二者，说明变化不能仅由负例数量减少解释；策略3的答案可达率最高，表明更积极的最短路径监督进一步扩大了结构覆盖。另一方面，四个实验臂的全部最短路径召回率@10几乎相同，而策略2和策略3的选中路径曲线下面积依次降低。也就是说，更宽的结构覆盖没有转化为对原选中证据排序的同步改善。
+
 \ifgatecpassed
 三项预注册条件同时满足，门槛 C 判定为“\GateCDecision”。这意味着路径条件提供了超出样本数量变化的信号，但仍需门槛 D 的跨领域结果才能支持一般性结论。
 \else
@@ -159,9 +161,12 @@ HyperRAG 将多元事实表示为超图，并用选中的主题实体到答案�
 
 \section*{可复现性说明}
 
-代码采用模块化目录，结构审计、数据准备、四臂训练、六卡调度、配对统计和绘图彼此分离。所有代码通过 GitHub 研究分支同步；服务器运行产物保留在独立实验目录。门槛 A 由 41 项单元测试覆盖，门槛 B 与门槛 C 的判定均由聚合脚本从原始运行结果自动生成，论文表格中的数字再由同一汇总文件生成，避免手工转录。
+代码采用模块化目录，结构审计、数据准备、四臂训练、六卡调度、配对统计和绘图彼此分离。所有代码通过 GitHub 研究分支同步；服务器运行产物保留在独立实验目录。实验环境为 Python 3.11.15、PyTorch 2.2.2 与 CUDA 12.1，训练并发使用 6 张 24,GB 的 RTX 3090。门槛 A 由 41 项单元测试覆盖，门槛 B 与门槛 C 的判定均由聚合脚本从原始运行结果自动生成，论文表格中的数字再由同一汇总文件生成，避免手工转录。
 
+\begingroup
+\footnotesize
 \bibliographystyle{plainnat}
 \bibliography{../proposal/references}
+\endgroup
 
 \end{document}

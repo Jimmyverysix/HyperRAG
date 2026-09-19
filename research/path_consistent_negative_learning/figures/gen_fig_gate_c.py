@@ -67,16 +67,23 @@ def generate_figure(summary_path: Path, output_dir: Path) -> tuple[Path, Path]:
     for ax, (metric, title) in zip(axes, PANELS, strict=True):
         means = np.asarray([report["strategies"][name]["mean"][metric] for name in ORDER])
         stds = np.asarray([report["strategies"][name]["std"][metric] for name in ORDER])
-        bars = ax.bar(
-            x,
-            means,
-            yerr=stds,
-            color=COLORS,
-            edgecolor="white",
-            linewidth=0.5,
-            width=0.72,
-            error_kw={"ecolor": "#444444", "elinewidth": 0.8, "capsize": 2},
-        )
+        for index, (value, deviation, color) in enumerate(
+            zip(means, stds, COLORS, strict=True)
+        ):
+            ax.errorbar(
+                index,
+                value,
+                yerr=deviation,
+                fmt="o",
+                markersize=7,
+                color=color,
+                markeredgecolor="white",
+                markeredgewidth=0.6,
+                ecolor="#444444",
+                elinewidth=0.9,
+                capsize=2.5,
+                zorder=3,
+            )
         ax.set_title(title)
         ax.set_xticks(x, LABELS, rotation=24, ha="right")
         ax.yaxis.set_major_formatter(PercentFormatter(1.0))
@@ -88,10 +95,10 @@ def generate_figure(summary_path: Path, output_dir: Path) -> tuple[Path, Path]:
             center = (upper + lower) / 2
             lower, upper = max(0.0, center - 0.09), min(1.0, center + 0.09)
         ax.set_ylim(lower, upper)
-        for bar, value in zip(bars, means, strict=True):
+        for index, value in enumerate(means):
             ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.012 * (upper - lower),
+                index,
+                value + 0.025 * (upper - lower),
                 f"{100 * value:.1f}",
                 ha="center",
                 va="bottom",

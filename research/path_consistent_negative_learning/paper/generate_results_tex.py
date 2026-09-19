@@ -42,6 +42,12 @@ def _percent(value: float, digits: int = 2) -> str:
     return f"{100 * value:.{digits}f}\\%"
 
 
+def _adaptive_percent(value: float) -> str:
+    percentage = 100 * value
+    digits = 3 if percentage < 0.01 else 2
+    return f"{percentage:.{digits}f}\\%"
+
+
 def _mean_std(mean: float, std: float) -> str:
     return f"{100 * mean:.2f} $\\pm$ {100 * std:.2f}"
 
@@ -84,7 +90,7 @@ def render_results(
         label = DOMAIN_LABELS.get(row["domain"], row["domain"])
         lines.append(
             f"{label} & {_count(row['query_count'])} & "
-            f"{_percent(row['candidate_rate'])} & "
+            f"{_adaptive_percent(row['candidate_rate'])} & "
             f"{_percent(row['sampled_seed_mean'])} $\\pm$ "
             f"{100 * row['sampled_seed_std']:.2f} \\\\"  # percentage points
         )

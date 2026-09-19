@@ -1,0 +1,198 @@
+{
+  "domains": [
+    {
+      "candidate_count": 38714337266,
+      "candidate_rate": 6.476871818240154e-05,
+      "disputed_candidate_count": 2507478,
+      "disputed_sampled_count": 33724,
+      "domain": "art",
+      "query_count": 10000,
+      "sampled_count": 830625,
+      "sampled_rate": 0.0406007524454477,
+      "sampled_seed_mean": 0.0406007524454477,
+      "sampled_seed_std": 0.0004253152882632935
+    },
+    {
+      "candidate_count": 135799786,
+      "candidate_rate": 0.022574107738284655,
+      "disputed_candidate_count": 3065559,
+      "disputed_sampled_count": 138808,
+      "domain": "award",
+      "query_count": 10000,
+      "sampled_count": 1687900,
+      "sampled_rate": 0.08223709935422714,
+      "sampled_seed_mean": 0.08223709935422714,
+      "sampled_seed_std": 0.00025645891540742064
+    },
+    {
+      "candidate_count": 71175440,
+      "candidate_rate": 0.00583527126772943,
+      "disputed_candidate_count": 415328,
+      "disputed_sampled_count": 82006,
+      "domain": "edu",
+      "query_count": 10000,
+      "sampled_count": 879255,
+      "sampled_rate": 0.09326759586240624,
+      "sampled_seed_mean": 0.09326759586240624,
+      "sampled_seed_std": 0.001250887232090939
+    },
+    {
+      "candidate_count": 3777309314,
+      "candidate_rate": 0.0005438307613269502,
+      "disputed_candidate_count": 2054217,
+      "disputed_sampled_count": 70870,
+      "domain": "health",
+      "query_count": 10000,
+      "sampled_count": 1461960,
+      "sampled_rate": 0.04847601849571808,
+      "sampled_seed_mean": 0.04847601849571808,
+      "sampled_seed_std": 0.00035180164938669703
+    },
+    {
+      "candidate_count": 601306396,
+      "candidate_rate": 0.00163358980801528,
+      "disputed_candidate_count": 982288,
+      "disputed_sampled_count": 58796,
+      "domain": "infra",
+      "query_count": 10000,
+      "sampled_count": 930080,
+      "sampled_rate": 0.06321606743505935,
+      "sampled_seed_mean": 0.06321606743505935,
+      "sampled_seed_std": 0.0005692776915809075
+    },
+    {
+      "candidate_count": 463331310540,
+      "candidate_rate": 3.864770109995425e-05,
+      "disputed_candidate_count": 17906690,
+      "disputed_sampled_count": 13575,
+      "domain": "loc",
+      "query_count": 4000,
+      "sampled_count": 584900,
+      "sampled_rate": 0.02320909557189263,
+      "sampled_seed_mean": 0.02320909557189263,
+      "sampled_seed_std": 0.0006479661182383726
+    },
+    {
+      "candidate_count": 14333894,
+      "candidate_rate": 0.025991471682433258,
+      "disputed_candidate_count": 372559,
+      "disputed_sampled_count": 82787,
+      "domain": "org",
+      "query_count": 4000,
+      "sampled_count": 709135,
+      "sampled_rate": 0.11674363837633173,
+      "sampled_seed_mean": 0.11674363837633173,
+      "sampled_seed_std": 0.0009008070186805945
+    },
+    {
+      "candidate_count": 2614898998,
+      "candidate_rate": 0.0006306128845745958,
+      "disputed_candidate_count": 1648989,
+      "disputed_sampled_count": 14992,
+      "domain": "people",
+      "query_count": 10000,
+      "sampled_count": 740900,
+      "sampled_rate": 0.020234849507355917,
+      "sampled_seed_mean": 0.020234849507355917,
+      "sampled_seed_std": 0.0002109717760359071
+    },
+    {
+      "candidate_count": 1975151342,
+      "candidate_rate": 0.000650420032471618,
+      "disputed_candidate_count": 1284678,
+      "disputed_sampled_count": 54899,
+      "domain": "sci",
+      "query_count": 10000,
+      "sampled_count": 814774,
+      "sampled_rate": 0.06737942055097487,
+      "sampled_seed_mean": 0.06737942043237884,
+      "sampled_seed_std": 0.0005442694476058521
+    },
+    {
+      "candidate_count": 242224837266,
+      "candidate_rate": 4.477646934318903e-05,
+      "disputed_candidate_count": 10845973,
+      "disputed_sampled_count": 7922,
+      "domain": "sport",
+      "query_count": 4000,
+      "sampled_count": 666885,
+      "sampled_rate": 0.011879109591608749,
+      "sampled_seed_mean": 0.011879109591608749,
+      "sampled_seed_std": 0.0002814626557815541
+    },
+    {
+      "candidate_count": 119115951614,
+      "candidate_rate": 1.546687891114882e-05,
+      "disputed_candidate_count": 1842352,
+      "disputed_sampled_count": 27738,
+      "domain": "tax",
+      "query_count": 8000,
+      "sampled_count": 850300,
+      "sampled_rate": 0.03262142773138892,
+      "sampled_seed_mean": 0.03262142773138892,
+      "sampled_seed_std": 0.00044865014851238943
+    }
+  ],
+  "gate_b": {
+    "decision": "继续门槛C",
+    "domains_at_or_above_threshold": [
+      "art",
+      "award",
+      "edu",
+      "health",
+      "infra",
+      "loc",
+      "org",
+      "people",
+      "sci",
+      "sport",
+      "tax"
+    ],
+    "global_sampled_rate": 0.05770734511181471,
+    "proceed_to_causal_training": true,
+    "threshold": 0.01
+  },
+  "overall": {
+    "candidate_count": 872576411856,
+    "candidate_rate": 4.9194672714902626e-05,
+    "disputed_candidate_count": 42926111,
+    "disputed_sampled_count": 586117,
+    "domain_count": 11,
+    "query_count": 90000,
+    "sampled_count": 10156714,
+    "sampled_rate": 0.05770734511181471
+  },
+  "sampling_by_seed": [
+    {
+      "disputed_sampled_count": 116857,
+      "disputed_sampled_rate": 0.05752699446966587,
+      "sampled_count": 2031342,
+      "seed": 42
+    },
+    {
+      "disputed_sampled_count": 117300,
+      "disputed_sampled_rate": 0.057745048472857614,
+      "sampled_count": 2031343,
+      "seed": 43
+    },
+    {
+      "disputed_sampled_count": 117312,
+      "disputed_sampled_rate": 0.05775095589469627,
+      "sampled_count": 2031343,
+      "seed": 44
+    },
+    {
+      "disputed_sampled_count": 117004,
+      "disputed_sampled_rate": 0.05759933206750411,
+      "sampled_count": 2031343,
+      "seed": 45
+    },
+    {
+      "disputed_sampled_count": 117644,
+      "disputed_sampled_rate": 0.057914394565565734,
+      "sampled_count": 2031343,
+      "seed": 46
+    }
+  ],
+  "schema_version": 1
+}

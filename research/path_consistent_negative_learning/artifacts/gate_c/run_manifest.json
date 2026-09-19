@@ -1,0 +1,143 @@
+{
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "gpu_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "epochs": 50,
+  "patience": 8,
+  "batch_size": 4096,
+  "learning_rate": 0.001,
+  "tasks": [
+    {
+      "strategy": "strategy1_negative",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy1_negative/seed_42"
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy2_ignore/seed_42"
+    },
+    {
+      "strategy": "strategy3_positive",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy3_positive/seed_42"
+    },
+    {
+      "strategy": "random_drop",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/random_drop/seed_42"
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy1_negative/seed_43"
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy2_ignore/seed_43"
+    },
+    {
+      "strategy": "strategy3_positive",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy3_positive/seed_43"
+    },
+    {
+      "strategy": "random_drop",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/random_drop/seed_43"
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy1_negative/seed_44"
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy2_ignore/seed_44"
+    },
+    {
+      "strategy": "strategy3_positive",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy3_positive/seed_44"
+    },
+    {
+      "strategy": "random_drop",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/random_drop/seed_44"
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy1_negative/seed_45"
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy2_ignore/seed_45"
+    },
+    {
+      "strategy": "strategy3_positive",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy3_positive/seed_45"
+    },
+    {
+      "strategy": "random_drop",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/random_drop/seed_45"
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy1_negative/seed_46"
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy2_ignore/seed_46"
+    },
+    {
+      "strategy": "strategy3_positive",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/strategy3_positive/seed_46"
+    },
+    {
+      "strategy": "random_drop",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/gate_c/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/gate_c/edu/runs/random_drop/seed_46"
+    }
+  ]
+}
