@@ -136,6 +136,10 @@ def _query_metric_rows(
     for query_index, query_key in enumerate(data.query_keys):
         if int(data.query_splits[query_index]) != TEST_SPLIT:
             continue
+        start = int(data.query_offsets[query_index])
+        stop = int(data.query_offsets[query_index + 1])
+        if start == stop:
+            continue
         selected = selected_metrics.per_query[query_key]
         all_shortest = all_shortest_metrics.per_query[query_key]
         if selected is None or all_shortest is None:

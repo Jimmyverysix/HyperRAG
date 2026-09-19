@@ -1,24 +1,25 @@
-"""Path-consistent negative supervision for HyperRAG."""
+"""HyperRAG 全局最短路径监督研究。"""
 
-from .core import (
-    NEGATIVE_POLICIES,
-    NegativeAudit,
-    NegativeSamplingResult,
-    answer_distances,
-    audit_negative_pool,
-    filter_path_consistent_negatives,
-    is_path_consistent_transition,
-    sample_negative_triplets,
+from .schema import FixedCandidate, FixedCandidateBatch, StrategyAssignment
+from .strategies import (
+    STRATEGIES,
+    apply_strategy,
+    build_fixed_candidate_batch,
+    random_drop,
+    strategy1_negative,
+    strategy2_ignore,
+    strategy3_positive,
 )
 
 __all__ = [
-    "NEGATIVE_POLICIES",
-    "NegativeAudit",
-    "NegativeSamplingResult",
-    "answer_distances",
-    "audit_negative_pool",
-    "filter_path_consistent_negatives",
-    "is_path_consistent_transition",
-    "sample_negative_triplets",
+    "STRATEGIES",
+    "FixedCandidate",
+    "FixedCandidateBatch",
+    "StrategyAssignment",
+    "apply_strategy",
+    "build_fixed_candidate_batch",
+    "random_drop",
+    "strategy1_negative",
+    "strategy2_ignore",
+    "strategy3_positive",
 ]
-
