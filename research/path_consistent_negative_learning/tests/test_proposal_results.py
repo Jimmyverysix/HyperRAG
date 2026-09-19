@@ -231,6 +231,14 @@ class ProposalResultGenerationTests(unittest.TestCase):
         )
         self.assertIn(r"\gatedavailabletrue", content)
         self.assertIn(r"\newcommand{\GateDDomainCount}{1}", content)
+        self.assertIn(
+            r"\newcommand{\GateDVsStrategyOne}{+5.00 [+4.50, +5.50]}",
+            content,
+        )
+        self.assertIn(
+            r"\newcommand{\GateDPrecisionVsStrategyOne}{-0.50 [-1.00, +0.00]}",
+            content,
+        )
         self.assertIn("奖项 & 65.00", content)
         self.assertIn("答案可达率：相对策略1", content)
 

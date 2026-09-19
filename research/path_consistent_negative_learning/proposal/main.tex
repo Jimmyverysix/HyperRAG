@@ -374,7 +374,7 @@ $\lambda$ & 加权答案可达率 & 随机降权答案可达率 & 相对策略1�
 
 \begin{table}[H]
 \centering
-\small
+\scriptsize
 \begin{tabular}{lcc}
 \toprule
 指标 & 全部领域宏平均差值 [95\%区间] & 排除确认领域后的宏平均差值 [95\%区间]\\
@@ -407,7 +407,7 @@ $\lambda$ & 加权答案可达率 & 随机降权答案可达率 & 相对策略1�
 选参阶段的自动判定为“\WeightedSelectionDecision”，没有可供独立确认的锁定权重。
 \fi
 \ifgatedavailable
-门槛 D 在 \GateDPositiveDomainCount/\GateDDomainCount 个领域取得了相对策略1为正的答案可达率平均差值；跨领域宏平均及排除确认领域后的结果见表\ref{tab:gate-d-macro}。该统计用于描述跨领域稳定性，不把“多数领域为正”替代为新的显著性门槛。
+门槛 D 在 \GateDPositiveDomainCount/\GateDDomainCount 个领域取得了相对策略1为正的答案可达率平均差值。11 领域等权宏平均中，相对策略1的答案可达率差值及 95\% 区间为 \GateDVsStrategyOne 个百分点，相对随机降权为 \GateDVsRandomWeighted 个百分点；选中路径曲线下面积相对策略1的差值为 \GateDPrecisionVsStrategyOne 个百分点，下降幅度低于 1 个百分点保护线。排除奖项确认领域后，相对策略1与随机降权的答案可达率差值仍分别为 \GateDExcludingConfirmationVsStrategyOne 和 \GateDExcludingConfirmationVsRandomWeighted 个百分点，区间下界均大于零。完整结果见表\ref{tab:gate-d-domains}和表\ref{tab:gate-d-macro}。该统计用于描述跨领域稳定性，不把“多数领域为正”替代为新的显著性门槛。
 \fi
 
 \section{局限}
@@ -447,17 +447,17 @@ HyperRAG 论文将当前路径头节点邻接的其他三元组描述为负例�
 \fi
 无论该修订是否通过，原始门槛 C 的失败记录保持不变；门槛 D 的最终状态为“\GateDAvailability”。
 \ifgatedavailable
-跨领域扩展中，\GateDPositiveDomainCount/\GateDDomainCount 个领域的答案可达率平均差值高于策略1；等权宏平均结果见表\ref{tab:gate-d-macro}。
+跨领域扩展中，\GateDPositiveDomainCount/\GateDDomainCount 个领域的答案可达率平均差值高于策略1；等权宏平均相对策略1提升 \GateDVsStrategyOne 个百分点，相对随机降权提升 \GateDVsRandomWeighted 个百分点，而排序精度差值为 \GateDPrecisionVsStrategyOne 个百分点。排除奖项确认领域后，两个覆盖提升区间的下界仍大于零。因此，在当前结构化代理、固定划分与冻结评估规则下，策略2加权改进实现了预期的覆盖率--排序精度折中，得到独立确认和跨领域证据支持。这使整体研究可以判定为成功的现象诊断、机制检验与事后修订，但不能改写为“原始策略2通过”，也不能外推为原版端到端 HyperRAG 已完成复现。
 \fi
 
 \section*{可复现性说明}
 
 代码采用模块化目录，结构审计、数据准备、监督策略、训练、六卡调度、配对统计和绘图彼此分离。所有代码通过 GitHub 研究分支在本地与服务器之间同步；大型原始运行产物保留在独立实验目录，仓库保存聚合汇总和来源记录。实验环境为 Python 3.11.15、PyTorch 2.2.2 与 CUDA 12.1，训练并发最多使用 6 张 24\,GB 的 RTX 3090。
 
-当前研究代码由 64 项单元测试覆盖。门槛 B、原始门槛 C 和加权改进的判定均由聚合脚本从原始运行结果自动生成，正文表格中的数字再由同一汇总文件生成，避免手工转录。原始审计汇总、训练汇总和来源记录分别保存在 \texttt{artifacts/audit/combined\_summary.json}、\texttt{artifacts/gate\_c/training\_summary.json} 和 \texttt{artifacts/provenance.json}；加权实验汇总及运行清单保存在 \texttt{artifacts/weighted/}。最终文档以 \texttt{proposal/main.tex} 为唯一主文件，编译产物为同目录下的 \texttt{main.pdf}，不再单独维护实验报告正文。
+当前研究代码由 64 项单元测试覆盖。门槛 B、原始门槛 C 和加权改进的判定均由聚合脚本从原始运行结果自动生成，正文表格中的数字再由同一汇总文件生成，避免手工转录。原始审计汇总、训练汇总和来源记录分别保存在 \path{artifacts/audit/combined_summary.json}、\path{artifacts/gate_c/training_summary.json} 和 \path{artifacts/provenance.json}；加权实验汇总及运行清单保存在 \path{artifacts/weighted/}。最终文档以 \path{proposal/main.tex} 为唯一主文件，编译产物为同目录下的 \path{main.pdf}，不再单独维护实验报告正文。
 
 \begingroup
-\footnotesize
+\scriptsize
 \bibliographystyle{plainnat}
 \bibliography{references}
 \endgroup

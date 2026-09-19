@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "phase": "gate_d_data_preparation",
+  "protocol_path": "/root/hyperrag_pcneg/work/HyperRAG/research/path_consistent_negative_learning/protocols/weighted_strategy2.json",
+  "domains": [
+    "art",
+    "award",
+    "edu",
+    "health",
+    "infra",
+    "loc",
+    "org",
+    "people",
+    "sci",
+    "sport",
+    "tax"
+  ],
+  "seeds": [
+    142,
+    143,
+    144,
+    145,
+    146
+  ],
+  "split_seed": 20261001,
+  "split_scheme": "70/15/15",
+  "max_workers": 6,
+  "tasks": [
+    {
+      "domain": "art",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/art",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/art/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "art",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/art",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/art/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "art",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/art",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/art/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "art",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/art",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/art/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "art",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/art",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/art/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "award",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/award",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/award/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "award",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/award",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/award/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "award",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/award",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/award/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "award",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/award",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/award/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "award",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/award",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/award/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "edu",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/edu",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/edu/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "edu",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/edu",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/edu/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "edu",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/edu",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/edu/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "edu",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/edu",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/edu/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "edu",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/edu",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/edu/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "health",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/health",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/health/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "health",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/health",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/health/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "health",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/health",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/health/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "health",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/health",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/health/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "health",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/health",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/health/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "infra",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/infra",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/infra/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "infra",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/infra",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/infra/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "infra",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/infra",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/infra/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "infra",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/infra",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/infra/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "infra",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/infra",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/infra/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "loc",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/loc",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/loc/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "loc",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/loc",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/loc/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "loc",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/loc",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/loc/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "loc",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/loc",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/loc/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "loc",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/loc",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/loc/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "org",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/org",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/org/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "org",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/org",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/org/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "org",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/org",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/org/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "org",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/org",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/org/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "org",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/org",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/org/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "people",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/people",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/people/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "people",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/people",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/people/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "people",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/people",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/people/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "people",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/people",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/people/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "people",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/people",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/people/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sci",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sci",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sci/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sci",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sci",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sci/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sci",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sci",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sci/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sci",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sci",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sci/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sci",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sci",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sci/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sport",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sport",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sport/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sport",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sport",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sport/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sport",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sport",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sport/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sport",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sport",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sport/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "sport",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/sport",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/sport/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "tax",
+      "seed": 142,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/tax",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/tax/datasets/seed_142.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "tax",
+      "seed": 143,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/tax",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/tax/datasets/seed_143.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "tax",
+      "seed": 144,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/tax",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/tax/datasets/seed_144.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "tax",
+      "seed": 145,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/tax",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/tax/datasets/seed_145.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    },
+    {
+      "domain": "tax",
+      "seed": 146,
+      "domain_dir": "/root/hyperrag_pcneg/data_sources/WikiTopics_QE/tax",
+      "output_path": "/root/hyperrag_pcneg/runs/weighted/gate_d/data/tax/datasets/seed_146.pt",
+      "split_seed": 20261001,
+      "split_scheme": "70/15/15"
+    }
+  ]
+}

@@ -6,7 +6,9 @@
     "branch": "research/path-consistent-negative-learning",
     "audit_code_commit": "8f83fa8",
     "gate_c_training_code_commit": "4535f9c",
-    "aggregation_code_commit": "5ca8495"
+    "gate_c_aggregation_code_commit": "5ca8495",
+    "weighted_selection_code_commit": "c31c2e7",
+    "weighted_confirmation_and_gate_d_code_commit": "31db6f0"
   },
   "data": {
     "name": "WikiTopics_QE",
@@ -40,14 +42,24 @@
     "maximum_concurrent_training_processes": 6
   },
   "randomness": {
-    "audit_and_training_seeds": [42, 43, 44, 45, 46],
-    "query_split_seed": 20260919,
+    "audit_gate_c_and_weight_selection_seeds": [42, 43, 44, 45, 46],
+    "confirmation_and_gate_d_seeds": [142, 143, 144, 145, 146],
+    "gate_c_and_weight_selection_split_seed": 20260919,
+    "confirmation_and_gate_d_split_seed": 20261001,
     "bootstrap_seed": 20260919,
     "bootstrap_resamples": 10000
   },
+  "weighted_revision": {
+    "selected_disputed_negative_weight": 0.1,
+    "selection_domain": "edu",
+    "confirmation_domain": "award"
+  },
   "server_artifacts": {
     "audit": "/root/hyperrag_pcneg/runs/wikitopics_audit",
-    "gate_c": "/root/hyperrag_pcneg/runs/gate_c/edu"
+    "gate_c": "/root/hyperrag_pcneg/runs/gate_c/edu",
+    "weighted_selection": "/root/hyperrag_pcneg/runs/weighted/selection/edu",
+    "weighted_confirmation": "/root/hyperrag_pcneg/runs/weighted/confirmation/award",
+    "weighted_gate_d": "/root/hyperrag_pcneg/runs/weighted/gate_d"
   },
   "scope_note": "作者未发布最终 GraphML 与预训练文本表示；本研究从官方整数图执行确定性结构重建，不声称是原版端到端 HyperRAG 的字节级复现。"
 }

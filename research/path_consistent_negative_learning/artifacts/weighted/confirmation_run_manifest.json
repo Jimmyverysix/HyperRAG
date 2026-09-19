@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "phase": "confirmation",
+  "protocol_path": "/root/hyperrag_pcneg/work/HyperRAG/research/path_consistent_negative_learning/protocols/weighted_strategy2.json",
+  "locked_weight": 0.1,
+  "seeds": [
+    142,
+    143,
+    144,
+    145,
+    146
+  ],
+  "gpu_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "strategy2_weights": [
+    0.1
+  ],
+  "random_control_weights": [
+    0.1
+  ],
+  "include_baseline": true,
+  "include_endpoint_reference": false,
+  "evaluation_split": "test",
+  "epochs": 50,
+  "patience": 8,
+  "batch_size": 4096,
+  "learning_rate": 0.001,
+  "tasks": [
+    {
+      "strategy": "strategy1_negative",
+      "seed": 142,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_142.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy1/seed_142",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 142,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_142.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy2_weight_0p1/seed_142",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 142,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_142.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/random_weight_0p1/seed_142",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 143,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_143.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy1/seed_143",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 143,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_143.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy2_weight_0p1/seed_143",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 143,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_143.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/random_weight_0p1/seed_143",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 144,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_144.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy1/seed_144",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 144,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_144.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy2_weight_0p1/seed_144",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 144,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_144.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/random_weight_0p1/seed_144",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 145,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_145.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy1/seed_145",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 145,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_145.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy2_weight_0p1/seed_145",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 145,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_145.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/random_weight_0p1/seed_145",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 146,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_146.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy1/seed_146",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 146,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_146.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/strategy2_weight_0p1/seed_146",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 146,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/datasets/seed_146.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/runs/random_weight_0p1/seed_146",
+      "disputed_negative_weight": 0.1
+    }
+  ]
+}

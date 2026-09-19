@@ -1,0 +1,15 @@
+completed: strategy=strategy1_negative weight=None seed=143 gpu=3
+completed: strategy=random_weighted weight=0.1 seed=142 gpu=2
+completed: strategy=strategy2_weighted weight=0.1 seed=143 gpu=4
+completed: strategy=random_weighted weight=0.1 seed=143 gpu=5
+completed: strategy=strategy2_weighted weight=0.1 seed=142 gpu=1
+completed: strategy=strategy1_negative weight=None seed=144 gpu=3
+completed: strategy=strategy1_negative weight=None seed=142 gpu=0
+completed: strategy=strategy2_weighted weight=0.1 seed=144 gpu=2
+completed: strategy=random_weighted weight=0.1 seed=145 gpu=3
+completed: strategy=random_weighted weight=0.1 seed=144 gpu=4
+completed: strategy=strategy2_weighted weight=0.1 seed=145 gpu=1
+completed: strategy=strategy1_negative weight=None seed=145 gpu=5
+completed: strategy=strategy2_weighted weight=0.1 seed=146 gpu=2
+completed: strategy=strategy1_negative weight=None seed=146 gpu=0
+completed: strategy=random_weighted weight=0.1 seed=146 gpu=3

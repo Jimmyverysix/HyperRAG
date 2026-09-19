@@ -313,6 +313,10 @@ def _render_gate_d(report: Mapping[str, Any] | None) -> list[str]:
         return lines
 
     direction = report["direction_summary"]
+    macro = report["macro_comparisons"]
+    macro_excluding_confirmation = report[
+        "macro_comparisons_excluding_confirmation_domain"
+    ]
     lines.extend(
         [
             r"\gatedavailabletrue",
@@ -320,6 +324,12 @@ def _render_gate_d(report: Mapping[str, Any] | None) -> list[str]:
             rf"\newcommand{{\GateDLockedWeight}}{{{_number(float(report['locked_weight']))}}}",
             rf"\newcommand{{\GateDDomainCount}}{{{_count(direction['domain_count'])}}}",
             rf"\newcommand{{\GateDPositiveDomainCount}}{{{_count(direction['positive_answer_reach_domains_vs_strategy1'])}}}",
+            rf"\newcommand{{\GateDVsStrategyOne}}{{{_interval(macro['answer_reach_vs_strategy1'])}}}",
+            rf"\newcommand{{\GateDVsRandomWeighted}}{{{_interval(macro['answer_reach_vs_random_weighted'])}}}",
+            rf"\newcommand{{\GateDPrecisionVsStrategyOne}}{{{_interval(macro['selected_pr_auc_vs_strategy1'])}}}",
+            rf"\newcommand{{\GateDExcludingConfirmationVsStrategyOne}}{{{_interval(macro_excluding_confirmation['answer_reach_vs_strategy1'])}}}",
+            rf"\newcommand{{\GateDExcludingConfirmationVsRandomWeighted}}{{{_interval(macro_excluding_confirmation['answer_reach_vs_random_weighted'])}}}",
+            rf"\newcommand{{\GateDExcludingConfirmationPrecisionVsStrategyOne}}{{{_interval(macro_excluding_confirmation['selected_pr_auc_vs_strategy1'])}}}",
             r"\newcommand{\GateDDomainRows}{%",
         ]
     )

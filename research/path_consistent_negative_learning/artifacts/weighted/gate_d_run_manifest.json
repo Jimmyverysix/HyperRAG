@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "phase": "gate_d",
+  "protocol_path": "/root/hyperrag_pcneg/work/HyperRAG/research/path_consistent_negative_learning/protocols/weighted_strategy2.json",
+  "confirmation_summary": "/root/hyperrag_pcneg/runs/weighted/confirmation/award/summary/confirmation_summary.json",
+  "locked_weight": 0.1,
+  "domains": [
+    "art",
+    "award",
+    "edu",
+    "health",
+    "infra",
+    "loc",
+    "org",
+    "people",
+    "sci",
+    "sport",
+    "tax"
+  ],
+  "seeds": [
+    142,
+    143,
+    144,
+    145,
+    146
+  ],
+  "gpu_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "evaluation_split": "test",
+  "split_seed": 20261001,
+  "split_scheme": "70/15/15",
+  "training": {
+    "epochs": 50,
+    "patience": 8,
+    "batch_size": 4096,
+    "learning_rate": 0.001
+  }
+}

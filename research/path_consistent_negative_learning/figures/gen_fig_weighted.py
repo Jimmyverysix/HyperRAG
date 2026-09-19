@@ -190,28 +190,33 @@ def generate_figure(summary_path: Path, output_dir: Path) -> tuple[Path, Path]:
     control_ax.grid(axis="y")
     control_ax.grid(axis="x", visible=False)
 
-    legend_handles = [
-        Line2D(
-            [0],
-            [0],
-            marker="o",
-            linestyle="none",
-            markerfacecolor="#009E73",
-            markeredgecolor="white",
-            markersize=7,
-            label="满足选参条件",
-        ),
-        Line2D(
-            [0],
-            [0],
-            marker="X",
-            linestyle="none",
-            markerfacecolor="#D55E00",
-            markeredgecolor="white",
-            markersize=7,
-            label="不满足选参条件",
-        ),
-    ]
+    legend_handles = []
+    if any(bool(point["eligible"]) for point in points):
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                linestyle="none",
+                markerfacecolor="#009E73",
+                markeredgecolor="white",
+                markersize=7,
+                label="满足选参条件",
+            )
+        )
+    if any(not bool(point["eligible"]) for point in points):
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                marker="X",
+                linestyle="none",
+                markerfacecolor="#D55E00",
+                markeredgecolor="white",
+                markersize=7,
+                label="不满足选参条件",
+            )
+        )
     if selected_weight is not None:
         legend_handles.append(
             Line2D(

@@ -1,0 +1,464 @@
+{
+  "schema_version": 1,
+  "phase": "selection",
+  "protocol_path": "/root/hyperrag_pcneg/work/HyperRAG/research/path_consistent_negative_learning/protocols/weighted_strategy2.json",
+  "locked_weight": null,
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "gpu_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "strategy2_weights": [
+    0.0,
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "random_control_weights": [
+    0.1,
+    0.25,
+    0.5,
+    0.75
+  ],
+  "include_baseline": true,
+  "include_endpoint_reference": true,
+  "evaluation_split": "selection",
+  "epochs": 50,
+  "patience": 8,
+  "batch_size": 4096,
+  "learning_rate": 0.001,
+  "tasks": [
+    {
+      "strategy": "strategy1_negative",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy1/seed_42",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_original/seed_42",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0/seed_42",
+      "disputed_negative_weight": 0.0
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p1/seed_42",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p25/seed_42",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p5/seed_42",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p75/seed_42",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_1/seed_42",
+      "disputed_negative_weight": 1.0
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p1/seed_42",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p25/seed_42",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p5/seed_42",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 42,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_42.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p75/seed_42",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy1/seed_43",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_original/seed_43",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0/seed_43",
+      "disputed_negative_weight": 0.0
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p1/seed_43",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p25/seed_43",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p5/seed_43",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p75/seed_43",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_1/seed_43",
+      "disputed_negative_weight": 1.0
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p1/seed_43",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p25/seed_43",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p5/seed_43",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 43,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_43.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p75/seed_43",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy1/seed_44",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_original/seed_44",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0/seed_44",
+      "disputed_negative_weight": 0.0
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p1/seed_44",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p25/seed_44",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p5/seed_44",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p75/seed_44",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_1/seed_44",
+      "disputed_negative_weight": 1.0
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p1/seed_44",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p25/seed_44",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p5/seed_44",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 44,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_44.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p75/seed_44",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy1/seed_45",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_original/seed_45",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0/seed_45",
+      "disputed_negative_weight": 0.0
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p1/seed_45",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p25/seed_45",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p5/seed_45",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p75/seed_45",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_1/seed_45",
+      "disputed_negative_weight": 1.0
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p1/seed_45",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p25/seed_45",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p5/seed_45",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 45,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_45.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p75/seed_45",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy1_negative",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy1/seed_46",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_ignore",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_original/seed_46",
+      "disputed_negative_weight": null
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0/seed_46",
+      "disputed_negative_weight": 0.0
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p1/seed_46",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p25/seed_46",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p5/seed_46",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_0p75/seed_46",
+      "disputed_negative_weight": 0.75
+    },
+    {
+      "strategy": "strategy2_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/strategy2_weight_1/seed_46",
+      "disputed_negative_weight": 1.0
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p1/seed_46",
+      "disputed_negative_weight": 0.1
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p25/seed_46",
+      "disputed_negative_weight": 0.25
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p5/seed_46",
+      "disputed_negative_weight": 0.5
+    },
+    {
+      "strategy": "random_weighted",
+      "seed": 46,
+      "data_path": "/root/hyperrag_pcneg/runs/weighted/selection/edu/datasets/seed_46.pt",
+      "output_dir": "/root/hyperrag_pcneg/runs/weighted/selection/edu/runs/random_weight_0p75/seed_46",
+      "disputed_negative_weight": 0.75
+    }
+  ]
+}
