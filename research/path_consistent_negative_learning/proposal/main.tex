@@ -1,0 +1,268 @@
+\documentclass[UTF8,11pt]{ctexart}
+
+\usepackage[margin=2.54cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+
+\newtheorem{proposition}{命题}
+\newcommand{\Norig}{\mathcal{N}_{1}}
+\newcommand{\Npci}{\mathcal{N}_{2}}
+\definecolor{selectedblue}{RGB}{38,103,166}
+\definecolor{alternativeorange}{RGB}{217,119,6}
+
+\title{超图检索器中的路径监督：\\
+替代最短路径转移应被标负、忽略，还是标正？}
+\author{杨金名}
+\date{2026年9月}
+
+\begin{document}
+\maketitle
+
+\section{判断与研究边界}
+
+在超图检索中，如果一个候选转移使其到答案的最短距离减少一个逻辑跳数，就不应把它标为负例。PullNet 明确使用问题实体与答案实体之间的全部最短路径构造弱监督\citep{sun2019pullnet}。SubgraphRAG 同样把最短路径上的三元组当作启发式相关子图\citep{li2025subgraphrag}。HyperRAG 把同一类“距离编码加多层感知机”的检索框架推广到了多元事实\citep{lien2026hyperrag}。不过，这里仍然存在一个可证伪的问题。全部最短路径监督会把每个结构上最短的三元组都当作正例，但近期研究表明，最短路径可能偏离回答问题真正需要的事实\citep{cattaneo2025groundtruth}。PathISE 也指出，能够到达答案的路径在语义信息量上并不等价\citep{gao2026pathise}。HyperRAG 的选中路径监督走向了另一个极端：未被选中的候选会被当作负例。我们选择两者之间更保守的策略：保留选中路径上的正例，同时不让沿最短距离前进的候选参与负例损失。
+
+\section{问题定义}
+
+设知识超图为 $\mathcal{H}=(V,\mathcal{F})$，其中每条超边 $f\in\mathcal{F}$ 表示一个多元事实。HyperRAG 将它存储为无向关联图 $G_I=(V\cup\mathcal{F},E_I)$。当同一超边 $f$ 同时包含实体 $v$ 和 $u$ 时，我们把“从 $v$ 经事实 $f$ 到 $u$”记为有向候选转移 $(v,f,u)$。这种三元记法只是用于描述超图中的一次移动，并不表示原始事实是二元关系。一次有向候选转移对应两条关联边，即 $v\!\rightarrow\!f\!\rightarrow\!u$。
+
+对于问题 $q$，令 $S_q\subseteq V$ 表示主题实体集合，$A_q\subseteq V$ 表示正确答案实体集合。公开的超图数据准备代码会为每个可达的主题实体与答案实体对选择一条最短路径，把路径上的三元组作为正例，再从其他三元组中随机采样数量均衡的负例。记选中的正例集合为 $P_q^*$，采样得到的原始负例集合为 $\Norig(q)$。
+
+对任一候选转移 $(v,f,u)$，若存在一个明确的主题实体--答案实体对
+$s\in S_q,a\in A_q$，使它满足
+\begin{equation}
+ d_I(s,v)+2+d_I(u,a)=d_I(s,a), \label{eq:pair-shortest}
+\end{equation}
+则称它为路径一致候选。这里加上的是 2 而不是 1，因为实现所遍历的是“实体--超边--实体”的关联路径。式\eqref{eq:pair-shortest}要求该转移位于至少一条完整的主题实体到答案实体最短路径上，而不只是从某个已经绕远的中间节点开始朝答案降距。
+
+\begin{proposition}[成对距离等式与最短路径的关系]
+在无权关联图中，有效转移 $(v,f,u)$ 位于某条从 $s$ 到 $a$ 的最短路径上，当且仅当它满足式\eqref{eq:pair-shortest}。
+\end{proposition}
+\begin{proof}
+若等式成立，把一条从 $s$ 到 $v$ 的最短路径、转移 $v\!\rightarrow\!f\!\rightarrow\!u$ 和一条从 $u$ 到 $a$ 的最短路径拼接，所得路径长度恰为 $d_I(s,a)$，因此它是最短路径。反之，若该转移位于某条 $s$ 到 $a$ 的最短路径上，那么其前缀和后缀也必须分别为最短路径，分解该路径长度即得到式\eqref{eq:pair-shortest}。
+\end{proof}
+
+这条性质只说明结构关系，不说明语义关系：它能证明候选属于一条全局最短答案路径，却不能证明该事实是回答自然语言问题所必需的证据。正因如此，我们选择“忽略”而不是直接把它提升为正例。原先只检查 $d_I(u,A_q)=d_I(v,A_q)-2$ 的局部降距条件更宽松，本研究仅把它作为补充消融，不用于主实验。
+
+\section{研究问题与假设}
+
+\begin{description}[leftmargin=3.6em,style=nextline]
+  \item[问题一：发生率。] HyperRAG 采样的负例中，有多大比例满足式\eqref{eq:pair-shortest}？这一比例在不同数据集、跳数、超边元数和候选深度下如何变化？
+
+  \item[问题二：标签策略。] 在其他组件完全相同的条件下，选中路径之外标负、路径一致候选忽略和全部最短路径标正，分别如何影响检索效果与端到端问答效果？
+
+  \item[问题三：语义有效性。] 在结构上路径一致的候选中，有多少是真正有用的证据，有多少只是能够到达答案却在语义上伪相关，还有多少无法确定？
+
+  \item[问题四：作用机制。] 性能变化究竟来自矛盾监督的减少，还是仅仅来自正负样本比例的变化？
+\end{description}
+
+主要假设是：争议负例出现得足够频繁，足以影响训练；屏蔽这些负例能够提升答案或证据召回率，同时避免把全部最短路径都标正所造成的精度下降。零结果同样有信息价值：若争议负例比例很低，或在匹配的对照条件下，屏蔽策略没有改善留出集性能，则说明这一干预对 HyperRAG 并无实际价值。
+
+\section{监督策略}
+
+我们在完全相同的候选空间中比较以下三种策略。
+
+\paragraph{策略1：选中路径之外标负（公开基线）。}
+选中最短路径上的三元组为正例，采样得到的非路径三元组为负例。
+
+\paragraph{策略2：路径一致候选忽略。}
+选中的正例保持不变。首先严格复现策略1的负例采样，再删除满足式\eqref{eq:pair-shortest}的候选：
+\begin{equation}
+ \Npci(q)=\{(v,f,u)\in\Norig(q):
+ \text{不存在 }(s,a)\in S_q\times A_q\text{ 使得 }
+ d_I(s,v)+2+d_I(u,a)=d_I(s,a)\}.
+\end{equation}
+被删除的候选不产生损失，也不补采替代负例。模型、特征编码器、二元交叉熵目标和正例标签均保持不变。
+
+\paragraph{策略3：全部最短路径标正（既有方法对照）。}
+每一条主题实体到答案实体最短路径上的三元组都标为正例。该策略遵循 PullNet 和 SubgraphRAG 所代表的监督惯例，并非我们提出的方法。它用于检验直接提升为正例是否优于保守屏蔽。
+
+为进行干净的因果比较，主实验固定公开 HyperRAG 流程生成的候选子图。补充实验可以允许策略3用全部最短路径扩展候选图，但必须单独报告，因为这种做法同时改变了监督标签与候选覆盖率。
+
+\section{案例分析}
+
+下面用一个例子说明我们要解决的问题。假设问题是“\textbf{小林所在团队研发的药物可以治疗哪种疾病？}”，主题实体是“小林”，正确答案是“疾病Z”。候选图中存在两条长度相同的答案路径。图中的每条箭头代表一次“实体--事实--实体”的逻辑转移，箭头上的 $f_i$ 或 $g_i$ 是对应的多元事实。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  entity/.style={draw=black!65, rounded corners=2pt, fill=black!3,
+    minimum width=1.65cm, minimum height=0.78cm, align=center},
+  answer/.style={entity, fill=green!10, draw=green!45!black},
+  >=Stealth,
+  every node/.style={font=\small}
+]
+  \node[entity] (lin) at (0,0) {小林};
+  \node[entity] (lab) at (3.2,1.25) {实验室A};
+  \node[entity] (drugx) at (6.4,1.25) {药物X};
+  \node[entity] (project) at (3.2,-1.25) {项目B};
+  \node[entity] (drugy) at (6.4,-1.25) {药物Y};
+  \node[answer] (disease) at (9.7,0) {疾病Z};
+
+  \draw[-{Stealth[length=2mm]}, very thick, selectedblue]
+    (lin) -- node[above left, text=selectedblue] {$f_1$：所属} (lab);
+  \draw[-{Stealth[length=2mm]}, very thick, selectedblue]
+    (lab) -- node[above, text=selectedblue] {$f_2$：研发} (drugx);
+  \draw[-{Stealth[length=2mm]}, very thick, selectedblue]
+    (drugx) -- node[above right, text=selectedblue] {$f_3$：治疗} (disease);
+
+  \draw[-{Stealth[length=2mm]}, very thick, dashed, alternativeorange]
+    (lin) -- node[below left, text=alternativeorange] {$g_1$：参与} (project);
+  \draw[-{Stealth[length=2mm]}, very thick, dashed, alternativeorange]
+    (project) -- node[below, text=alternativeorange] {$g_2$：产出} (drugy);
+  \draw[-{Stealth[length=2mm]}, very thick, dashed, alternativeorange]
+    (drugy) -- node[below right, text=alternativeorange] {$g_3$：治疗} (disease);
+
+  \draw[very thick, selectedblue] (1.6,-2.25) -- (2.45,-2.25)
+    node[right, text=black] {程序选中的最短路径};
+  \draw[very thick, dashed, alternativeorange] (5.7,-2.25) -- (6.55,-2.25)
+    node[right, text=black] {未被选中的等长最短路径};
+\end{tikzpicture}
+\caption{同一主题实体到同一答案的两条等长路径。}
+\label{fig:case-two-paths}
+\end{figure}
+
+假设数据准备程序恰好选择了图\ref{fig:case-two-paths}中的蓝色路径，那么蓝色路径上的三个转移都会成为正例。橙色路径同样只需三个逻辑跳数就能到达答案，但因为它没有被选中，其中的转移可能进入负例候选池。例如，对第一个橙色转移 $(\text{小林},g_1,\text{项目B})$，关联图中的距离满足
+\begin{equation}
+ d_I(\text{小林},\text{疾病Z})=6,\qquad
+ d_I(\text{项目B},\text{疾病Z})=4=6-2.
+\end{equation}
+因此，这个转移确实位于另一条最短路径上。若把它直接标为负例，模型就会同时收到两种相互冲突的信号：一方面，它被要求学习如何朝答案前进；另一方面，一条同样能以最短距离朝答案前进的路线却被惩罚。
+
+不过，橙色路径只是通过“参与项目--项目产出药物”到达答案，未必准确表达问题中的“所在团队研发”关系。因此，看到它位于最短路径上，也不足以断言它一定是语义正例。这正是策略2选择“忽略”而不是“标正”的原因。
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{0.27\linewidth}p{0.27\linewidth}ccc}
+\toprule
+候选转移 & 在图中的作用 & 策略1 & 策略2 & 策略3 \\
+\midrule
+$(\text{小林},f_1,\text{实验室A})$ & 位于程序选中的最短路径 & 正例 & 正例 & 正例 \\
+$(\text{小林},g_1,\text{项目B})$ & 位于另一条等长最短路径 & 负例 & 忽略 & 正例 \\
+$(\text{小林},h_1,\text{机构C})$ & 不缩短到答案的距离 & 负例 & 负例 & 负例 \\
+\bottomrule
+\end{tabular}
+\caption{三种监督策略对同一组候选转移的处理。}
+\label{tab:case-labels}
+\end{table}
+
+表\ref{tab:case-labels}概括了三种策略的核心区别：策略1把“未被选中”等同于“错误”；策略3把“位于任一最短路径”等同于“正确”；策略2则只保留程序已经选中的正例，对其他等长最短路径暂不下判断。我们要通过实验回答的是：这种保守的中间做法，是否比强制标负或强制标正更可靠。
+
+\section{实现方案}
+
+初步实现由四部分组成。
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{距离索引。} 对每个训练问题，从主题实体执行一次无权最短路遍历，并在由距离层次诱导的最短路径有向无环图上，从可达答案反向标记节点。这样可以在线性时间内得到所有主题--答案最短路径的并集，不需要逐条枚举路径。
+
+  \item \textbf{审计。} 枚举候选子图中的有向候选转移，排除选中正例及其反向转移，同时报告候选池层面和实际采样负例层面的发生率。审计先于训练执行，因为审计结果直接决定完整实验是否值得消耗计算资源。
+
+  \item \textbf{匹配过滤。} 先按照 HyperRAG 的固定随机种子复现原始采样，再从中屏蔽路径一致候选且不补采。因此，策略2保留的每个负例也都存在于策略1中，不会暗中换成更容易的负例。
+
+  \item \textbf{实验记录。} 每个训练样本记录答案节点标识、策略名称、候选池大小、争议候选池数量、原始采样数量、保留数量和过滤数量。数据准备脚本同时写出汇总的 JSON 审计文件。
+\end{enumerate}
+
+补丁作用于公开代码的三个超图变体：
+\begin{center}
+\texttt{HyperRetriever}\qquad
+\texttt{HyperRetriever\_token}\qquad
+\texttt{HyperRetriever\_open}
+\end{center}
+知识图谱的 token 变体已经使用 \texttt{nx.all\_shortest\_paths}；它既是既有方法证据，也是有用的比较对象，不需要应用同一个修补。
+
+\paragraph{复杂度。}
+对于含 $|V_q|$ 个节点和 $|E_q|$ 条关联边的无权候选图，一次最短路遍历与一次最短路径有向无环图反向遍历的总时间复杂度为 $O(|V_q|+|E_q|)$。之后判断每个采样候选只需 $O(1)$ 时间。该方法不枚举路径、不增加可学习模块，也不增加推理阶段计算。
+
+\section{实验设计}
+
+\subsection{数据集与任务}
+
+我们沿用 HyperRAG 的实验设置：11 个闭域 WikiTopics 任务，以及开放域的 2WikiMultiHopQA、HotpotQA 和 MuSiQue。代码仓库没有附带生成后的 GraphML 训练文件，也没有提供完整的 WikiTopics 训练数据，因此复现工作的第一步是原样运行作者的图构建与实体链接流程。结果按闭域和开放域分别报告，同时区分“所需主题实体与答案实体都存在于图中”和其他问题。
+
+\subsection{受控训练比较}
+
+对每个数据集，使用相同的模型结构、文本嵌入、结构编码、二元交叉熵实现、优化器、验证集划分、停止规则和候选图，分别训练策略1、策略2与策略3。如果完整训练成本允许，至少使用 5 个共享随机种子；否则，先在查看结果指标之前选定的代表性领域上运行完整训练，而确定性的发生率审计仍覆盖全部领域。
+
+由于策略2的负例更少，还需设置一个类别比例对照：每个问题从策略1的负例中随机丢弃相同数量的样本，但不使用距离信息。该对照用于区分路径一致性作用与单纯减少负例监督的作用。
+
+\subsection{测量指标}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{0.18\linewidth}p{0.37\linewidth}p{0.32\linewidth}}
+\toprule
+层面 & 主要指标 & 目的 \\
+\midrule
+标签审计 & 争议负例比例、每题数量 & 确认现象是否真实且足量 \\
+检索器 & MRR、Hits@$K$、Recall@$K$、PR-AUC & 衡量排序行为 \\
+闭域问答 & MRR、Hits@10 & 对齐 HyperRAG 的评测设置 \\
+开放域问答 & 精确匹配率、词元 F1 & 对齐 HyperRAG 的评测设置 \\
+效率 & 数据准备时间、峰值内存、训练集大小 & 量化额外开销 \\
+语义审计 & 有用、伪相关、不确定的比例 & 检验结构代理是否可靠 \\
+\bottomrule
+\end{tabular}
+\caption{计划测量的指标。本计划书不预先声称任何实验结果。}
+\end{table}
+
+发生率采用两种分母分别报告：随机采样前的全部候选负例，以及实际写入训练文件的负例。宏平均避免稠密问题占据主导，微观总数则体现受到影响的二元交叉熵标签比例。
+
+为回答问题三，将从不同数据集和跳数中分层抽取路径一致候选。两名标注者查看问题、候选事实、选中证据路径和答案，但不知道候选属于哪种策略。标签分为“有用证据”“可到达答案但语义伪相关”和“不确定”，分歧由第三步裁决。之所以需要人工语义审计，是因为仅凭最短路径结构无法证明语义相关性。
+
+\subsection{统计分析}
+
+报告不同训练随机种子下的均值与标准差。端到端问题指标采用以问题为单位的配对自助法置信区间；多随机种子比较同时报告逐种子的配对差值。核心比较为策略2对策略1，以及策略2对策略3。单个领域的发现仅作描述，除非变化方向一致且聚合后的配对置信区间不跨越零。
+
+\section{阶段门槛与证伪标准}
+
+本项目明确把现象诊断与完整重训练分开。
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{门槛 A：实现忠实度。} 在包含两条等长最短路径的玩具图上，审计必须识别未被选中的分支；在固定随机种子下，原始采样及所有保留负例必须可复现。
+
+  \item \textbf{门槛 B：现象规模。} 在所有可用训练图上执行确定性审计。如果实际采样负例中的争议比例总体低于 1\%，且没有任何重要数据集子组受到明显影响，则停止完整重训练并报告负结果。
+
+  \item \textbf{门槛 C：小规模因果检验。} 在争议比例较高的代表性领域上训练策略1、策略2、随机丢弃对照和策略3。只有当策略2改善了预先声明的检索或问答主要指标，且精度没有实质性崩塌时，才继续推进。
+
+  \item \textbf{门槛 D：完整研究。} 通过门槛 C 后，才扩展到全部数据集和随机种子。完整论文的结论必须建立在稳定改善之上，不能依赖单一有利领域或随机种子。
+\end{enumerate}
+
+如果屏蔽策略的表现与随机减少负例无异、持续弱于基线，或只有在候选图或样本数同时改变时才有效，那么“该方法对 HyperRAG 有用”的命题即被证伪。
+
+\section{风险、局限与结果解释}
+
+\paragraph{最短不等于解释充分。}
+图中的捷径可以到达正确答案，却未必表达问题所询问的关系。策略2通过不下判断来限制损害，而不是断言候选为正例；但它仍可能删除有信息量的负例。
+
+\paragraph{答案信息只用于训练。}
+该过滤器像其他最短路径弱监督一样，使用正确答案构造训练标签。它不能在推理时使用，也不会增加推理成本。
+
+\paragraph{论文描述与代码实现存在差异。}
+HyperRAG 论文将当前路径头节点邻接的其他三元组描述为负例，而公开代码则从引导子图中均衡采样三元组。主实验以公开代码为对象，并明确记录候选池。严格按论文描述构造“仅邻接候选”的实验属于单独消融，不能悄悄替换实现基线。
+
+\paragraph{图可能不完整且含噪声。}
+缺失边会夸大距离，伪边会制造短路径。上述保证只相对于观测到的图成立。因此，本研究把这些候选称为“路径一致”，而不称为“已证明的正例”。
+
+\section{预期贡献}
+
+\begin{enumerate}[leftmargin=*]
+  \item HyperRAG 的公开监督确实会大量惩罚结构上最优的替代路径；与强制标负或强制标正相比，保守屏蔽能更稳定地改善检索；
+  \item 全部最短路径标正的效果更好，说明保守屏蔽没有必要；
+  \item 争议标签过于罕见或语义噪声过大，不足以影响结果，因此应放弃该干预。
+\end{enumerate}
+
+无论得到哪一种结果，都能回答一个具体的设计问题，也比把已知的最短路径性质包装成新方法更可信。
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

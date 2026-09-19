@@ -13,3 +13,27 @@ config.json
 results/
 
 .vscode/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# local research data, model caches, and experiment artifacts
+tmp/
+data/
+models/
+runs/
+research/path_consistent_negative_learning/runs/
+research/path_consistent_negative_learning/proposal/build/
+research/path_consistent_negative_learning/proposal/rendered/
+research/path_consistent_negative_learning/proposal/*.aux
+research/path_consistent_negative_learning/proposal/*.bbl
+research/path_consistent_negative_learning/proposal/*.blg
+research/path_consistent_negative_learning/proposal/*.fdb_latexmk
+research/path_consistent_negative_learning/proposal/*.fls
+research/path_consistent_negative_learning/proposal/*.log
+research/path_consistent_negative_learning/proposal/*.out
+research/path_consistent_negative_learning/proposal/*.synctex.gz
+research/path_consistent_negative_learning/proposal/*.xdv
+research/path_consistent_negative_learning/proposal/*_check.txt
+research/path_consistent_negative_learning/proposal/rendered_*/
