@@ -1,0 +1,386 @@
+\documentclass[UTF8,11pt]{ctexart}
+
+\usepackage[margin=2.35cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+
+\newtheorem{proposition}{命题}
+\newcommand{\Norig}{\mathcal{N}_{1}}
+\newcommand{\Npci}{\mathcal{N}_{2}}
+\definecolor{selectedblue}{RGB}{38,103,166}
+\definecolor{alternativeorange}{RGB}{217,119,6}
+
+% 原始审计与门槛 C 的确定结果由聚合脚本生成。
+\input{../paper/generated_results.tex}
+
+% 策略2加权改进仍在实验中。以下宏必须由新的聚合脚本替换，不能手工臆填。
+\newcommand{\WeightedTodo}[1]{\textcolor{red}{\textbf{TODO：#1}}}
+\newcommand{\WeightedLambdaGrid}{\WeightedTodo{写入实际搜索的权重集合}}
+\newcommand{\WeightedSelectedLambda}{\WeightedTodo{写入验证集选定权重}}
+\newcommand{\WeightedSeedCount}{\WeightedTodo{写入共享随机种子数}}
+\newcommand{\WeightedMetricRows}{\multicolumn{4}{c}{\WeightedTodo{由加权实验汇总脚本生成结果行}} \\
+}
+\newcommand{\WeightedVsStrategyOneDifference}{\WeightedTodo{写入相对策略1的答案可达率差值}}
+\newcommand{\WeightedVsStrategyOneCI}{\WeightedTodo{写入对应95\%配对自助法区间}}
+\newcommand{\WeightedVsRandomDropDifference}{\WeightedTodo{写入相对随机丢弃的答案可达率差值}}
+\newcommand{\WeightedVsRandomDropCI}{\WeightedTodo{写入对应95\%配对自助法区间}}
+\newcommand{\WeightedPrecisionDifference}{\WeightedTodo{写入相对策略1的选中路径曲线下面积差值}}
+\newcommand{\WeightedDecision}{\WeightedTodo{写入修订门槛的自动判定}}
+
+\title{超图检索器中的路径监督：\\
+替代最短路径转移应被标负、忽略，还是标正？}
+\author{杨金名}
+\date{2026年9月}
+
+\begin{document}
+\maketitle
+
+\section{判断与研究边界}
+
+在超图检索中，如果一个候选转移位于完整的主题实体到答案实体最短路径上，就不应仅因路径选择程序没有抽中它而直接把它标为负例。PullNet 明确使用问题实体与答案实体之间的全部最短路径构造弱监督\citep{sun2019pullnet}。SubgraphRAG 同样把最短路径上的三元组当作启发式相关子图\citep{li2025subgraphrag}。HyperRAG 把同一类“距离编码加多层感知机”的检索框架推广到了多元事实\citep{lien2026hyperrag}。不过，全部最短路径监督会把每个结构上最短的转移都当作正例，而近期研究表明，最短路径可能偏离回答问题真正需要的事实\citep{cattaneo2025groundtruth}。PathISE 也指出，能够到达答案的路径在语义信息量上并不等价\citep{gao2026pathise}。
+
+本研究检验了三种处理：策略1把选中路径之外的采样候选标负；策略2保留选中路径正例，同时忽略未选中的路径一致候选；策略3把全部最短路径候选标正。结构审计确认，争议负例在实际训练采样中并不罕见。原始门槛 C 也确认了路径信息能够显著提高答案可达性，但策略2使选中路径精确率--召回率曲线下面积下降 1.32 个百分点，超过预先规定的 1 个百分点保护线。因此，原始策略2未通过门槛 C，这一判定不因后续实验而改变。
+
+原始失败揭示的是覆盖率与排序精度之间的权衡，而不是研究问题不存在。为进一步寻找折中点，本文在完整保留原始结果的基础上增加“策略2加权改进”：争议候选不再被完全忽略，而是以较低权重保留负例损失。该修订属于观察到原始门槛 C 失败后提出的新方法，必须通过独立的验证选择和确认实验重新接受检验，不能回溯性地把原始失败改写为成功。
+
+\section{问题定义}
+
+设知识超图为 $\mathcal{H}=(V,\mathcal{F})$，其中每条超边 $f\in\mathcal{F}$ 表示一个多元事实。HyperRAG 将它存储为无向关联图 $G_I=(V\cup\mathcal{F},E_I)$。当同一超边 $f$ 同时包含实体 $v$ 和 $u$ 时，我们把“从 $v$ 经事实 $f$ 到 $u$”记为有向候选转移 $(v,f,u)$。这种三元记法只是用于描述超图中的一次移动，并不表示原始事实是二元关系。一次有向候选转移对应两条关联边，即 $v\!\rightarrow\!f\!\rightarrow\!u$。
+
+对于问题 $q$，令 $S_q\subseteq V$ 表示主题实体集合，$A_q\subseteq V$ 表示正确答案实体集合。公开的超图数据准备代码会为每个可达的主题实体与答案实体对选择一条最短路径，把路径上的转移作为正例，再从其他候选中随机采样数量均衡的负例。记选中的正例集合为 $P_q^*$，采样得到的原始负例集合为 $\Norig(q)$。
+
+对任一候选转移 $(v,f,u)$，若存在一个明确的主题实体--答案实体对 $s\in S_q,a\in A_q$，使它满足
+\begin{equation}
+ d_I(s,v)+2+d_I(u,a)=d_I(s,a), \label{eq:pair-shortest}
+\end{equation}
+则称它为路径一致候选。这里加上的是 2 而不是 1，因为实现所遍历的是“实体--超边--实体”的关联路径。式\eqref{eq:pair-shortest}要求该转移位于至少一条完整的主题实体到答案实体最短路径上，而不只是从某个已经绕远的中间节点开始朝答案降距。
+
+\begin{proposition}[成对距离等式与最短路径的关系]
+在无权关联图中，有效转移 $(v,f,u)$ 位于某条从 $s$ 到 $a$ 的最短路径上，当且仅当它满足式\eqref{eq:pair-shortest}。
+\end{proposition}
+\begin{proof}
+若等式成立，把一条从 $s$ 到 $v$ 的最短路径、转移 $v\!\rightarrow\!f\!\rightarrow\!u$ 和一条从 $u$ 到 $a$ 的最短路径拼接，所得路径长度恰为 $d_I(s,a)$，因此它是最短路径。反之，若该转移位于某条 $s$ 到 $a$ 的最短路径上，那么其前缀和后缀也必须分别为最短路径，分解该路径长度即得到式\eqref{eq:pair-shortest}。
+\end{proof}
+
+这条性质只说明结构关系，不说明语义关系：它能证明候选属于一条全局最短答案路径，却不能证明该事实是回答自然语言问题所必需的证据。正因如此，原始策略2选择“忽略”而不是直接把它提升为正例。原先只检查 $d_I(u,A_q)=d_I(v,A_q)-2$ 的局部降距条件更宽松，本研究仅把它作为补充消融，不用于主实验。
+
+\section{研究问题与假设}
+
+本研究围绕以下四个问题展开。
+
+\begin{description}[leftmargin=3.6em,style=nextline]
+  \item[问题一：发生率。] HyperRAG 采样的负例中，有多大比例满足式\eqref{eq:pair-shortest}？这一比例在不同领域中如何变化？
+
+  \item[问题二：标签策略。] 在其他组件完全相同的条件下，选中路径之外标负、路径一致候选忽略和全部最短路径标正，分别如何影响检索覆盖与排序精度？
+
+  \item[问题三：语义有效性。] 在结构上路径一致的候选中，有多少是真正有用的证据，有多少只是能够到达答案却在语义上伪相关，还有多少无法确定？
+
+  \item[问题四：作用机制。] 性能变化究竟来自矛盾监督的减少，还是仅仅来自正负样本比例的变化？
+\end{description}
+
+主要假设是：争议负例出现得足够频繁，足以影响训练；屏蔽这些负例能够提升答案或证据召回率，同时避免把全部最短路径都标正所造成的精度下降。实验支持了“现象足量”和“覆盖率提升”两部分，但没有支持“精度下降不超过保护线”这一部分。加权改进进一步检验：在完全忽略与完整负监督之间，是否存在能够保留大部分覆盖收益、同时把精度下降控制在 1 个百分点以内的损失权重。
+
+\section{监督策略}
+
+我们在完全相同的候选空间中比较了以下三种策略，并加入一个样本数量对照。
+
+\paragraph{策略1：选中路径之外标负（公开基线）。}
+选中最短路径上的转移为正例，采样得到的非路径转移为负例。
+
+\paragraph{策略2：路径一致候选忽略。}
+选中的正例保持不变。首先严格复现策略1的负例采样，再删除满足式\eqref{eq:pair-shortest}的候选：
+\begin{equation}
+ \Npci(q)=\{(v,f,u)\in\Norig(q):
+ \text{不存在 }(s,a)\in S_q\times A_q\text{ 使得 }
+ d_I(s,v)+2+d_I(u,a)=d_I(s,a)\}.
+\end{equation}
+被删除的候选不产生损失，也不补采替代负例。模型、特征编码器、二元交叉熵目标和正例标签均保持不变。
+
+\paragraph{策略3：全部最短路径标正（既有方法对照）。}
+每一条主题实体到答案实体最短路径上的转移都标为正例。该策略遵循 PullNet 和 SubgraphRAG 所代表的监督惯例，并非本研究提出的方法。它用于检验直接提升为正例是否优于保守屏蔽。
+
+\paragraph{随机丢弃：样本数量对照。}
+每个问题从策略1的负例中随机屏蔽与策略2等量的样本，但不使用路径信息。该实验臂用于区分路径一致性作用与单纯减少负例监督的作用。
+
+所有实验臂都固定公开流程生成的候选子图。策略3没有用全部最短路径扩展候选图，从而避免同时改变监督标签与候选覆盖率。
+
+\section{案例分析}
+
+下面用一个例子说明研究问题。假设问题是“\textbf{小林所在团队研发的药物可以治疗哪种疾病？}”，主题实体是“小林”，正确答案是“疾病Z”。候选图中存在两条长度相同的答案路径。图中的每条箭头代表一次“实体--事实--实体”的逻辑转移，箭头上的 $f_i$ 或 $g_i$ 是对应的多元事实。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  entity/.style={draw=black!65, rounded corners=2pt, fill=black!3,
+    minimum width=1.65cm, minimum height=0.78cm, align=center},
+  answer/.style={entity, fill=green!10, draw=green!45!black},
+  >=Stealth,
+  every node/.style={font=\small}
+]
+  \node[entity] (lin) at (0,0) {小林};
+  \node[entity] (lab) at (3.2,1.25) {实验室A};
+  \node[entity] (drugx) at (6.4,1.25) {药物X};
+  \node[entity] (project) at (3.2,-1.25) {项目B};
+  \node[entity] (drugy) at (6.4,-1.25) {药物Y};
+  \node[answer] (disease) at (9.7,0) {疾病Z};
+
+  \draw[-{Stealth[length=2mm]}, very thick, selectedblue]
+    (lin) -- node[above left, text=selectedblue] {$f_1$：所属} (lab);
+  \draw[-{Stealth[length=2mm]}, very thick, selectedblue]
+    (lab) -- node[above, text=selectedblue] {$f_2$：研发} (drugx);
+  \draw[-{Stealth[length=2mm]}, very thick, selectedblue]
+    (drugx) -- node[above right, text=selectedblue] {$f_3$：治疗} (disease);
+
+  \draw[-{Stealth[length=2mm]}, very thick, dashed, alternativeorange]
+    (lin) -- node[below left, text=alternativeorange] {$g_1$：参与} (project);
+  \draw[-{Stealth[length=2mm]}, very thick, dashed, alternativeorange]
+    (project) -- node[below, text=alternativeorange] {$g_2$：产出} (drugy);
+  \draw[-{Stealth[length=2mm]}, very thick, dashed, alternativeorange]
+    (drugy) -- node[below right, text=alternativeorange] {$g_3$：治疗} (disease);
+
+  \draw[very thick, selectedblue] (1.6,-2.25) -- (2.45,-2.25)
+    node[right, text=black] {程序选中的最短路径};
+  \draw[very thick, dashed, alternativeorange] (5.7,-2.25) -- (6.55,-2.25)
+    node[right, text=black] {未被选中的等长最短路径};
+\end{tikzpicture}
+\caption{同一主题实体到同一答案的两条等长路径。}
+\label{fig:case-two-paths}
+\end{figure}
+
+假设数据准备程序恰好选择了图\ref{fig:case-two-paths}中的蓝色路径，那么蓝色路径上的三个转移都会成为正例。橙色路径同样只需三个逻辑跳数就能到达答案，但因为它没有被选中，其中的转移可能进入负例候选池。例如，对第一个橙色转移 $(\text{小林},g_1,\text{项目B})$，关联图中的距离满足
+\begin{equation}
+ d_I(\text{小林},\text{疾病Z})=6,\qquad
+ d_I(\text{项目B},\text{疾病Z})=4=6-2.
+\end{equation}
+因此，这个转移确实位于另一条最短路径上。若把它直接标为负例，模型就会同时收到两种相互冲突的信号：一方面，它被要求学习如何朝答案前进；另一方面，一条同样能以最短距离朝答案前进的路线却被惩罚。
+
+不过，橙色路径只是通过“参与项目--项目产出药物”到达答案，未必准确表达问题中的“所在团队研发”关系。因此，看到它位于最短路径上，也不足以断言它一定是语义正例。这正是策略2选择“忽略”而不是“标正”的原因。
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{0.27\linewidth}p{0.27\linewidth}ccc}
+\toprule
+候选转移 & 在图中的作用 & 策略1 & 策略2 & 策略3 \\
+\midrule
+$(\text{小林},f_1,\text{实验室A})$ & 位于程序选中的最短路径 & 正例 & 正例 & 正例 \\
+$(\text{小林},g_1,\text{项目B})$ & 位于另一条等长最短路径 & 负例 & 忽略 & 正例 \\
+$(\text{小林},h_1,\text{机构C})$ & 不缩短到答案的距离 & 负例 & 负例 & 负例 \\
+\bottomrule
+\end{tabular}
+\caption{三种监督策略对同一组候选转移的处理。}
+\label{tab:case-labels}
+\end{table}
+
+表\ref{tab:case-labels}概括了三种策略的核心区别：策略1把“未被选中”等同于“错误”；策略3把“位于任一最短路径”等同于“正确”；策略2则只保留程序已经选中的正例，对其他等长最短路径暂不下判断。原始实验检验了这种保守做法是否比强制标负或强制标正更可靠；加权改进则进一步检验，在“标负”和“忽略”之间保留弱负监督能否获得更好的折中。
+
+\section{数据、实现与实验设置}
+
+\subsection{结构数据与重建边界}
+
+结构审计使用了官方 WikiTopics\_QE 的 11 个领域。对每个领域，我们读取训练图、三跳查询、困难答案和原始映射，并按照公开的知识图谱到文本规则，将同一头实体的外向事实聚合为多元超边。作者没有发布最终 GraphML，也没有提供论文训练所使用的完整预训练文本表示。因此，本研究完成的是基于官方整数图的确定性结构重建与结构化代理实验，而不是原版端到端 HyperRAG 的字节级复现。
+
+我们为每个问题重建单条最短路径正例和引导子图，再从同一候选池复现均衡负采样。等长路径按固定字典序选择一条；公开代码的选择则可能受 GraphML 节点插入顺序影响。审计使用共享随机种子 42--46，同时报告采样前候选池发生率和实际采样负例发生率。
+
+\subsection{实现}
+
+实现由四个相互分离的模块组成。
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{距离索引。} 对每个训练问题，从主题实体执行无权最短路遍历，并在距离层次诱导的最短路径有向无环图上，从可达答案反向标记节点。该过程在线性时间内得到所有主题--答案最短路径的并集，不逐条枚举路径。
+
+  \item \textbf{结构审计。} 系统枚举候选子图中的有向候选转移，排除选中正例及其反向转移，同时统计候选池层面和实际采样负例层面的争议发生率。
+
+  \item \textbf{匹配过滤。} 系统先按照固定随机种子复现策略1的原始采样，再为策略2屏蔽路径一致候选且不补采。因此，策略2保留的每个负例也都存在于策略1中，没有换成更容易的负例。
+
+  \item \textbf{实验记录。} 每个训练样本记录了答案节点标识、策略名称、候选池大小、争议候选池数量、原始采样数量、保留数量和过滤数量。数据准备脚本写出了机器可读的 JSON 审计汇总。
+\end{enumerate}
+
+对于含 $|V_q|$ 个节点和 $|E_q|$ 条关联边的无权候选图，一次最短路遍历与一次最短路径有向无环图反向遍历的总时间复杂度为 $O(|V_q|+|E_q|)$；之后判断每个采样候选只需 $O(1)$ 时间。高元超边的候选总数使用组合计数，避免物化二次规模的转移集合。该方法没有增加可学习模块，也没有增加推理阶段计算。
+
+\subsection{门槛 C 的结构化代理训练}
+
+门槛 C 使用教育领域的结构化代理任务。模型输入仅包含实体标识、查询关系、超边关系集合及不依赖标签的结构数值特征；共享嵌入经过多层感知机输出候选分数。四个实验臂只改变标签或损失掩码。
+
+问题按固定种子划分为 70\% 训练集、15\% 验证集和 15\% 测试集，防止同一问题的候选跨集合泄漏。每个实验臂使用五个共享训练种子。模型以二元交叉熵训练，并根据验证损失早停。主要指标为答案可达率@10，即得分最高的 10 个转移能否从主题实体连接到任一答案实体；同时报告全部最短路径召回率@10和选中路径的逐问题精确率--召回率曲线下面积。
+
+统计分析先把每个唯一问题在五个共享种子下的结果等权平均，再以唯一问题为配对单位执行 10,000 次配对自助法。这样避免把同一问题在不同种子下的重复观测错误地当成相互独立的样本。逐种子的配对差值另外保留在机器可读汇总中。
+
+\section{原始阶段门槛与确定结果}
+
+本项目把现象诊断与完整重训练分开，并在实验前固定了四个阶段门槛。
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{门槛 A：实现忠实度。} 在包含两条等长最短路径的玩具图上，审计必须识别未被选中的分支；固定随机种子下的原始采样及所有保留负例必须可复现。
+
+  \item \textbf{门槛 B：现象规模。} 在所有可用训练图上执行确定性审计。如果实际采样负例中的争议比例总体低于 1\%，且没有任何重要数据集子组受到明显影响，则停止完整重训练并报告负结果。
+
+  \item \textbf{门槛 C：小规模因果检验。} 在争议比例较高的代表性领域上训练策略1、策略2、随机丢弃和策略3。策略2相对策略1与随机丢弃的答案可达率@10差值的 95\% 配对自助法区间下界都必须大于零，同时策略2相对策略1的选中路径精确率--召回率曲线下面积下降不得超过 1 个百分点。
+
+  \item \textbf{门槛 D：完整研究。} 只有通过门槛 C，才扩展到全部数据集和随机种子。完整推广结论必须建立在跨领域稳定改善之上，不能依赖单一有利领域或随机种子。
+\end{enumerate}
+
+\subsection{结构审计结果}
+
+门槛 A 的 41 项单元测试全部通过。结构审计覆盖 \AuditDomainCount 个领域、\AuditQueryCount 个三跳训练问题。完整候选池共有 \CandidateCount 个候选，其中 \DisputedCandidateCount 个为未选中的路径一致候选，占 \CandidateRate。五个种子合计采样 \SampledCount 个负例，其中 \DisputedSampledCount 个存在争议，占 \SampledRate。候选池比例与实际采样比例相差三个数量级，说明完整图中的组合数量不能代替真正写入损失函数的标签比例。
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+领域 & 问题数 & 候选池争议率 & 采样争议率（均值 $\pm$ 标准差，百分点）\\
+\midrule
+\DomainAuditRows
+\bottomrule
+\end{tabular}
+\caption{11 个 WikiTopics 领域的结构审计。采样统计使用种子 42--46。}
+\label{tab:audit}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{../artifacts/figures/fig_prevalence.pdf}
+\caption{候选池与实际采样负例中的争议比例。虚线为预先设定的 1\% 门槛。}
+\label{fig:prevalence}
+\end{figure}
+
+门槛 B 的自动判定为“\GateBDecision”。该结果确认了争议监督具有进入受控训练的规模，但不预设策略2一定有效。
+
+\subsection{原始门槛 C 结果}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+实验臂 & 答案可达率@10 & 全部最短路径召回率@10 & 选中路径曲线下面积\\
+\midrule
+\GateCMetricRows
+\bottomrule
+\end{tabular}
+\caption{教育领域结构化代理实验的五种子均值 $\pm$ 标准差，表内均为百分数。}
+\label{tab:gate-c}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../artifacts/figures/fig_gate_c.pdf}
+\caption{原始门槛 C 四个实验臂的主要结果。误差线表示五个随机种子的标准差。}
+\label{fig:gate-c}
+\end{figure}
+
+策略2相对策略1的答案可达率@10配对差为 \VsStrategyOneDifference 个百分点，95\% 配对自助法区间为 [\VsStrategyOneCILow, \VsStrategyOneCIHigh]，共 \VsStrategyOnePairs 个唯一问题配对。相对随机丢弃的差为 \VsRandomDropDifference 个百分点，区间为 [\VsRandomDropCILow, \VsRandomDropCIHigh]，共 \VsRandomDropPairs 个唯一问题配对。策略2相对策略1的选中路径曲线下面积差为 \StrategyTwoPrecisionDifference 个百分点。
+
+结果呈现出清楚的覆盖率--排序精度权衡。随机丢弃只比策略1略高，而策略2的答案可达率明显高于二者，说明变化不能仅由负例数量减少解释；策略3的答案可达率最高，表明更积极的最短路径监督进一步扩大了结构覆盖。另一方面，四个实验臂的全部最短路径召回率@10几乎相同，而策略2和策略3的选中路径曲线下面积依次降低。更宽的结构覆盖没有转化为对原选中证据排序的同步改善。
+
+由于 1.32 个百分点的下降超过了 1 个百分点保护线，三项预设条件没有同时成立，门槛 C 自动判定为“\GateCDecision”。因此，原始研究按计划没有进入门槛 D。后续增加随机种子不能用于筛选有利运行，也不能改变这个既成判定。
+
+\section{策略2加权改进}
+
+\subsection{修订动机与研究地位}
+
+原始策略2把所有争议负例的损失权重从 1 直接降到 0。门槛 C 表明这种处理显著提高答案可达性，但对选中路径排序造成了超过保护线的损害。加权改进据此检验一个更窄的问题：将争议负例保留为弱负监督，能否在策略1的排序约束与原始策略2的结构覆盖之间找到折中点。
+
+该方法是在观察原始门槛 C 结果后提出的修订，不属于原始预注册方案。本文因此把原始失败与修订实验分开报告：原始门槛 C 的判定永久保持为“不扩展完整训练”；只有加权方法通过重新固定的选择规则和独立确认实验，才能作为新的候选方法进入后续跨领域验证。
+
+\subsection{加权目标}
+
+令 $D_q\subseteq\Norig(q)$ 表示问题 $q$ 中未被选中、但满足式\eqref{eq:pair-shortest}的争议负例。对模型输出 $z_x$、二元标签 $y_x$ 和逐样本二元交叉熵 $\ell(z_x,y_x)$，加权策略的训练目标为
+\begin{equation}
+ \mathcal L_{\lambda}(q)=
+ \sum_{x\in P_q^*}\ell(z_x,1)
+ +\sum_{x\in\Norig(q)\setminus D_q}\ell(z_x,0)
+ +\lambda\sum_{x\in D_q}\ell(z_x,0),
+ \label{eq:weighted-loss}
+\end{equation}
+其中 $0\leq\lambda\leq1$。$\lambda=1$ 等价于策略1，$\lambda=0$ 等价于原始策略2；$0<\lambda<1$ 时，争议候选仍受到负监督，但惩罚强度较低。除该权重外，候选、标签、模型、特征、划分、优化器与早停规则均保持不变。
+
+\subsection{选择与确认方案}
+
+实际评估的权重集合为 \WeightedLambdaGrid。权重选择只使用训练集与验证集，不查看确认测试集的主要指标。验证集先排除精度下降超过安全余量的权重，再在可行权重中选择答案可达率@10最高者；最终选定 $\lambda=\WeightedSelectedLambda$。为避免原始测试集被反复用于方法开发，加权方法的最终证据必须来自预先冻结的确认划分或新的领域，并使用 \WeightedSeedCount 个共享随机种子。
+
+修订方法的通过条件保持原研究的科学目标不变：相对策略1和随机丢弃，答案可达率@10的 95\% 配对自助法区间下界均大于零；相对策略1的选中路径曲线下面积下降不超过 1 个百分点。只有三项条件同时成立，修订方法才进入跨领域门槛 D。这里的判定是加权方法的新判定，不能替换原始策略2的门槛 C 记录。
+
+\subsection{加权实验结果}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+实验臂或权重 & 答案可达率@10 & 全部最短路径召回率@10 & 选中路径曲线下面积\\
+\midrule
+\WeightedMetricRows
+\bottomrule
+\end{tabular}
+\caption{策略2加权改进的确认实验。所有 TODO 必须由机器可读汇总自动替换。}
+\label{tab:weighted}
+\end{table}
+
+选定加权策略相对策略1的答案可达率@10差值为 \WeightedVsStrategyOneDifference 个百分点，95\% 配对自助法区间为 \WeightedVsStrategyOneCI；相对随机丢弃的差值为 \WeightedVsRandomDropDifference 个百分点，对应区间为 \WeightedVsRandomDropCI。相对策略1的选中路径曲线下面积差值为 \WeightedPrecisionDifference 个百分点。修订门槛的自动判定为“\WeightedDecision”。
+
+\paragraph{结果解释占位。}
+\WeightedTodo{根据自动判定补写：若通过，说明加权方法保留了路径信息带来的覆盖收益并满足精度保护线，但跨领域一般性仍需门槛D；若未通过，说明当前权重化仍未解决覆盖率与排序精度的权衡，不进入门槛D。不得删除或改写原始门槛C失败。}
+
+\section{讨论}
+
+结构审计回答了“错误监督是否真实存在”，受控训练则回答了“改变这些监督如何影响模型”。候选池层面的争议率只有 \CandidateRate，而实际采样负例中的争议率达到 \SampledRate；这说明监督噪声必须按照真正进入损失函数的样本衡量。随机丢弃对照进一步表明，原始策略2的答案可达率提升主要来自路径信息，而不是负例数量减少。
+
+原始门槛 C 没有支持“策略2可无代价替换公开基线”这一主张。策略2相对策略1提高答案可达率 \VsStrategyOneDifference 个百分点，却使选中路径曲线下面积下降 1.32 个百分点；策略3进一步提高覆盖率，也进一步降低该排序指标。这一结果更适合解释为覆盖率--排序精度权衡，而不是单一方法排名。
+
+加权改进的意义在于直接操纵这项权衡，而不是通过增加随机种子寻找偶然低于 1 个百分点的运行。其结论必须以表\ref{tab:weighted}的独立确认结果为准。即使修订方法通过新的门槛，也只能说明该权重在当前结构化代理任务上满足了预定折中条件；原版端到端系统和跨领域稳定性仍需门槛 D 验证。
+
+\section{局限}
+
+\paragraph{结构化代理不等于端到端复现。}
+最终 GraphML、预训练文本表示和生成器没有公开，本研究没有报告原版 HyperRAG 的端到端答案精确匹配率。当前结论只适用于官方整数图上的确定性结构重建和受控代理训练。
+
+\paragraph{等长路径择一存在实现依赖。}
+原 GraphML 的节点插入顺序未知，等长路径择一可能改变哪些候选被称为“未选中”。本研究使用固定字典序保证可复现，但没有声称复原原作者运行中的具体择一路径。
+
+\paragraph{最短不等于语义充分。}
+图中的捷径可以到达正确答案，却未必表达问题所询问的关系。路径一致只是相对于观测图的结构性质；缺失边会夸大距离，伪边会制造短路径。原始策略2可能删除有信息量的负例，加权策略也不能从结构条件自动推导正确语义权重。
+
+\paragraph{答案信息只用于训练。}
+路径一致判定像其他最短路径弱监督一样使用正确答案构造训练标签。它不能在推理时使用，也不会增加推理阶段计算。
+
+\paragraph{论文描述与公开代码存在差异。}
+HyperRAG 论文将当前路径头节点邻接的其他三元组描述为负例，而公开代码从引导子图中均衡采样候选。本研究以公开代码为对象，并明确记录候选池；严格按论文描述构造“仅邻接候选”的实验应作为单独消融，不能替换当前基线。
+
+\paragraph{语义人工审计尚未完成。}
+原提案计划由两名独立标注者在不知道策略归属的条件下，将路径一致候选标为“有用证据”“可到达答案但语义伪相关”或“不确定”，分歧再单独裁决。本轮没有获得独立人工标注资源，因此没有把单个模型的判断伪装成人类一致性结果，也不对语义有用证据占比作数值结论。
+
+\paragraph{加权修订具有事后开发属性。}
+权重化方向由原始门槛 C 的结果启发。为限制选择偏差，权重只能在验证集选择，并须在未用于选择的数据上确认。若反复查看同一测试集并调整权重，任何通过结论都不再可信。
+
+\section{结论}
+
+本研究识别并量化了 HyperRAG 路径监督中的系统性矛盾。全局主题--答案成对距离审计表明，未选中的替代最短路径候选确实进入训练负采样；11 个领域的实际采样争议率均超过预设的 1\% 门槛。受控实验表明，忽略这些候选能够显著提高答案可达性，而且效果不能由等量随机丢弃负例解释。
+
+原始策略2同时损害了选中证据的排序精度：其曲线下面积下降 1.32 个百分点，超过预先规定的 1 个百分点保护线。因此，原始门槛 C 失败，当前证据不支持直接用原始策略2替换 HyperRAG 的公开基线。研究作为现象诊断和机制检验是成功的，但“原始策略2是满足综合标准的系统改进”这一命题没有得到支持。
+
+策略2加权改进把争议负例从完全屏蔽改为弱负监督，旨在寻找覆盖率与排序精度之间的可验证折中。其最终结论为：\WeightedDecision。无论该修订是否通过，原始门槛 C 的失败记录保持不变；只有独立确认满足新门槛，才继续跨领域门槛 D。
+
+\section*{可复现性说明}
+
+代码采用模块化目录，结构审计、数据准备、监督策略、训练、六卡调度、配对统计和绘图彼此分离。所有代码通过 GitHub 研究分支在本地与服务器之间同步；大型原始运行产物保留在独立实验目录，仓库保存聚合汇总和来源记录。实验环境为 Python 3.11.15、PyTorch 2.2.2 与 CUDA 12.1，训练并发最多使用 6 张 24\,GB 的 RTX 3090。
+
+门槛 A 由 41 项单元测试覆盖。门槛 B、原始门槛 C 和加权改进的判定均应由聚合脚本从原始运行结果自动生成，正文表格中的数字再由同一汇总文件生成，避免手工转录。原始审计汇总、训练汇总和来源记录分别保存在 \texttt{artifacts/audit/combined\_summary.json}、\texttt{artifacts/gate\_c/training\_summary.json} 和 \texttt{artifacts/provenance.json}。最终文档以 \texttt{proposal/main.tex} 为唯一主文件；本合并稿确认后将替换该主文件，不再单独维护实验报告正文。
+
+\begingroup
+\footnotesize
+\bibliographystyle{plainnat}
+\bibliography{references}
+\endgroup
+
+\end{document}

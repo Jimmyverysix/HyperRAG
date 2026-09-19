@@ -43,8 +43,6 @@
     "split_seed": 20261001,
     "split_scheme": "70/15/15",
     "reported_split": "test",
-    "split_scheme": "70/15/15",
-    "reported_split": "test",
     "training": {
       "epochs": 50,
       "patience": 8,
