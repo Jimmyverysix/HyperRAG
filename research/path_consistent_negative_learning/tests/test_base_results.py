@@ -1,11 +1,11 @@
 import unittest
 
-from research.path_consistent_negative_learning.paper.generate_results_tex import (
-    render_results,
+from research.path_consistent_negative_learning.proposal.generate_results_tex import (
+    render_base_results,
 )
 
 
-class PaperResultGenerationTests(unittest.TestCase):
+class BaseResultGenerationTests(unittest.TestCase):
     def test_rendered_values_and_gate_are_data_driven(self):
         audit = {
             "overall": {
@@ -78,7 +78,7 @@ class PaperResultGenerationTests(unittest.TestCase):
             },
         }
 
-        content = render_results(audit, training)
+        content = render_base_results(audit, training)
 
         self.assertIn(r"\newcommand{\SampledRate}{10.00\%}", content)
         self.assertIn("教育 & 10", content)

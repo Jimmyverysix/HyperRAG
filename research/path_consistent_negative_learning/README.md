@@ -29,6 +29,9 @@ d(topic, head) + 2 + d(tail, answer) == d(topic, answer)
 - `structured_data.py`：门槛 C 结构化代理实验的固定候选、查询级划分与四臂标签。
 - `structured_model.py`：共享实体/关系嵌入和 MLP 检索器。
 - `train_structured.py`：独立运行目录、早停、检索指标和答案可达率评测。
+- `run_weighted_suite.py`：策略2加权实验的六卡任务调度与冻结配置校验。
+- `select_weight.py`、`confirm_weight.py`：专用选参和独立确认的自动判定。
+- `prepare_gate_d.py`、`run_gate_d_all.py`：确认通过后才可启动的跨领域门槛 D 编排。
 - `tools/upload_artifact.py`：仅用于向服务器断点续传数据或模型；代码同步仍使用 GitHub。
 
 ## 运行结构审计
@@ -114,13 +117,20 @@ python -m research.path_consistent_negative_learning.figures.gen_fig_gate_c `
   --summary research/path_consistent_negative_learning/artifacts/gate_c/training_summary.json `
   --output-dir research/path_consistent_negative_learning/artifacts/figures
 
-python research/path_consistent_negative_learning/paper/generate_results_tex.py `
+python -m research.path_consistent_negative_learning.figures.gen_fig_weighted `
+  --summary research/path_consistent_negative_learning/artifacts/weighted/selection_summary.json `
+  --output-dir research/path_consistent_negative_learning/artifacts/figures
+
+python -m research.path_consistent_negative_learning.proposal.generate_results_tex `
   --audit research/path_consistent_negative_learning/artifacts/audit/combined_summary.json `
   --training research/path_consistent_negative_learning/artifacts/gate_c/training_summary.json `
-  --output research/path_consistent_negative_learning/paper/generated_results.tex
+  --selection research/path_consistent_negative_learning/artifacts/weighted/selection_summary.json `
+  --confirmation research/path_consistent_negative_learning/artifacts/weighted/confirmation_summary.json `
+  --gate-d research/path_consistent_negative_learning/artifacts/weighted/gate_d_summary.json `
+  --output research/path_consistent_negative_learning/proposal/generated_results.tex
 ```
 
-论文主文件是 `paper/main.tex`，在该目录编译后输出 `paper/main.pdf`。
+若选参没有合格权重，省略 `--confirmation` 和 `--gate-d`；生成器会把后续阶段明确写为“未运行”。唯一主文件是 `proposal/main.tex`，在该目录编译后输出 `proposal/main.pdf`。不再另设实验报告文档。
 
 ## 策略2加权改进
 

@@ -7,12 +7,25 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from research.path_consistent_negative_learning.paper.generate_results_tex import (
-    DOMAIN_LABELS,
-    render_results as render_base_results,
-)
-
-
+DOMAIN_LABELS = {
+    "art": "艺术",
+    "award": "奖项",
+    "edu": "教育",
+    "health": "健康",
+    "infra": "基础设施",
+    "loc": "地理",
+    "org": "组织",
+    "people": "人物",
+    "sci": "科学",
+    "sport": "体育",
+    "tax": "生物分类",
+}
+BASE_STRATEGY_LABELS = {
+    "strategy1_negative": "策略1",
+    "strategy2_ignore": "策略2",
+    "random_drop": "随机丢弃",
+    "strategy3_positive": "策略3",
+}
 WEIGHTED_STRATEGY_LABELS = {
     "strategy1_negative": "策略1",
     "strategy2_weighted": "策略2加权版",
@@ -39,6 +52,106 @@ def _percentage_points(value: float, digits: int = 2) -> str:
 
 def _mean_std(mean: float, std: float) -> str:
     return f"{100 * mean:.2f} $\\pm$ {100 * std:.2f}"
+
+
+def _percent(value: float, digits: int = 2) -> str:
+    return f"{100 * value:.{digits}f}\\%"
+
+
+def _adaptive_percent(value: float) -> str:
+    percentage = 100 * value
+    digits = 3 if percentage < 0.01 else 2
+    return f"{percentage:.{digits}f}\\%"
+
+
+def _base_comparison(
+    report: Mapping[str, Any], reference: str, metric: str
+) -> Mapping[str, Any]:
+    return next(
+        row
+        for row in report["comparisons"]
+        if row["reference"] == reference
+        and row["comparison"] == "strategy2_ignore"
+        and row["metric"] == metric
+    )
+
+
+def render_base_results(
+    audit_report: Mapping[str, Any], training_report: Mapping[str, Any]
+) -> str:
+    """生成结构审计和原始门槛 C 使用的正文宏。"""
+
+    overall = audit_report["overall"]
+    gate_b = audit_report["gate_b"]
+    gate_c = training_report["gate_c"]
+    lines = [
+        "% 本文件由 proposal/generate_results_tex.py 生成，请勿手工修改。",
+        rf"\newcommand{{\AuditDomainCount}}{{{_count(overall['domain_count'])}}}",
+        rf"\newcommand{{\AuditQueryCount}}{{{_count(overall['query_count'])}}}",
+        rf"\newcommand{{\CandidateCount}}{{{_count(overall['candidate_count'])}}}",
+        rf"\newcommand{{\DisputedCandidateCount}}{{{_count(overall['disputed_candidate_count'])}}}",
+        rf"\newcommand{{\CandidateRate}}{{{_percent(overall['candidate_rate'], 3)}}}",
+        rf"\newcommand{{\SampledCount}}{{{_count(overall['sampled_count'])}}}",
+        rf"\newcommand{{\DisputedSampledCount}}{{{_count(overall['disputed_sampled_count'])}}}",
+        rf"\newcommand{{\SampledRate}}{{{_percent(overall['sampled_rate'], 2)}}}",
+        rf"\newcommand{{\GateBThreshold}}{{{_percent(gate_b['threshold'], 0)}}}",
+        rf"\newcommand{{\GateBDecision}}{{{gate_b['decision']}}}",
+        r"\newcommand{\DomainAuditRows}{%",
+    ]
+    for row in sorted(
+        audit_report["domains"], key=lambda item: item["sampled_rate"], reverse=True
+    ):
+        label = DOMAIN_LABELS.get(row["domain"], row["domain"])
+        lines.append(
+            f"{label} & {_count(row['query_count'])} & "
+            f"{_adaptive_percent(row['candidate_rate'])} & "
+            f"{_percent(row['sampled_seed_mean'])} $\\pm$ "
+            f"{100 * row['sampled_seed_std']:.2f} \\\\"
+        )
+    lines.append("}")
+
+    lines.append(r"\newcommand{\GateCMetricRows}{%")
+    for strategy in (
+        "strategy1_negative",
+        "strategy2_ignore",
+        "random_drop",
+        "strategy3_positive",
+    ):
+        values = training_report["strategies"][strategy]
+        lines.append(
+            f"{BASE_STRATEGY_LABELS[strategy]} & "
+            f"{_mean_std(values['mean']['answer_reach_10'], values['std']['answer_reach_10'])} & "
+            f"{_mean_std(values['mean']['all_shortest_recall_10'], values['std']['all_shortest_recall_10'])} & "
+            f"{_mean_std(values['mean']['selected_pr_auc'], values['std']['selected_pr_auc'])} \\\\"
+        )
+    lines.append("}")
+
+    for reference, macro_prefix in (
+        ("strategy1_negative", "VsStrategyOne"),
+        ("random_drop", "VsRandomDrop"),
+    ):
+        result = _base_comparison(training_report, reference, "answer_reach_10")
+        bootstrap = result["paired_bootstrap"]
+        lines.extend(
+            [
+                rf"\newcommand{{\{macro_prefix}Pairs}}{{{_count(bootstrap['n_pairs'])}}}",
+                rf"\newcommand{{\{macro_prefix}Difference}}{{{100 * bootstrap['mean_difference']:.2f}}}",
+                rf"\newcommand{{\{macro_prefix}CILow}}{{{100 * bootstrap['ci_low']:.2f}}}",
+                rf"\newcommand{{\{macro_prefix}CIHigh}}{{{100 * bootstrap['ci_high']:.2f}}}",
+            ]
+        )
+    precision = _base_comparison(
+        training_report, "strategy1_negative", "selected_pr_auc"
+    )["seed_summary"]["mean_difference"]
+    lines.append(
+        rf"\newcommand{{\StrategyTwoPrecisionDifference}}{{{100 * precision:.2f}}}"
+    )
+    lines.append(rf"\newcommand{{\GateCDecision}}{{{gate_c['decision']}}}")
+    lines.append(r"\newif\ifgatecpassed")
+    lines.append(
+        r"\gatecpassedtrue" if gate_c["proceed_to_gate_d"] else r"\gatecpassedfalse"
+    )
+    return "\n".join(lines) + "\n"
 
 
 def _interval(comparison: Mapping[str, Any]) -> str:
