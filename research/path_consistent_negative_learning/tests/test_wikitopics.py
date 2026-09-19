@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import pickle
+import random
 import tempfile
 import unittest
 
@@ -19,6 +20,7 @@ from research.path_consistent_negative_learning.wikitopics import (
     hyperedge_node,
     load_domain,
     shortest_distances,
+    simulate_original_sampler,
 )
 
 
@@ -171,6 +173,26 @@ class WikiTopicsAuditTests(unittest.TestCase):
         self.assertEqual(profile.size, len(explicit))
         self.assertEqual(sum(profile.by_arity.values()), len(explicit))
         self.assertEqual(sum(profile.by_depth.values()), len(explicit))
+
+    def test_sampler_can_reuse_one_domain_level_rng(self) -> None:
+        query_graph = build_query_graph(self.domain.graph, 0, (2,))
+        rng = random.Random(17)
+        before = rng.getstate()
+        simulate_original_sampler(
+            query_graph.subgraph,
+            query_graph.selected_positives,
+            len(query_graph.selected_positives),
+            rng=rng,
+        )
+        after_first_query = rng.getstate()
+        simulate_original_sampler(
+            query_graph.subgraph,
+            query_graph.selected_positives,
+            len(query_graph.selected_positives),
+            rng=rng,
+        )
+        self.assertNotEqual(before, after_first_query)
+        self.assertNotEqual(after_first_query, rng.getstate())
 
     def test_jsonl_and_summary_are_byte_reproducible(self) -> None:
         output = self.root / "output"

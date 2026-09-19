@@ -619,10 +619,14 @@ def simulate_original_sampler(
     subgraph: nx.Graph,
     positives: Iterable[Transition],
     num_samples: int,
-    seed: int,
+    seed: int | None = None,
+    *,
+    rng: random.Random | None = None,
 ) -> tuple[Transition, ...]:
     """Deterministically simulate the released balanced random sampler."""
 
+    if (seed is None) == (rng is None):
+        raise ValueError("必须且只能提供 seed 或 rng 之一")
     if num_samples <= 0:
         return ()
     excluded = positive_lookup(positives)
@@ -635,17 +639,17 @@ def simulate_original_sampler(
         )
         for edge in edges
     }
-    rng = random.Random(seed)
+    sampler_rng = rng if rng is not None else random.Random(seed)
     samples: set[Transition] = set()
     attempts = 0
     max_attempts = num_samples * 20
     while len(samples) < num_samples and attempts < max_attempts:
         attempts += 1
-        edge = rng.choice(edges)
+        edge = sampler_rng.choice(edges)
         entities = neighbors[edge]
         if len(entities) < 2:
             continue
-        head_id, tail_id = rng.sample(entities, 2)
+        head_id, tail_id = sampler_rng.sample(entities, 2)
         transition = (head_id, edge[1], tail_id)
         if transition not in excluded:
             samples.add(transition)

@@ -6,6 +6,7 @@ import argparse
 from collections import defaultdict
 import json
 from pathlib import Path
+import random
 from typing import Any, Iterable, Mapping, Sequence
 
 from .wikitopics import (
@@ -136,11 +137,16 @@ def audit_example(
     query_index: int,
     seeds: Sequence[int] = DEFAULT_SEEDS,
     stratify: Sequence[str] = STRATIFICATION_DIMENSIONS,
+    sampler_rngs: Mapping[int, random.Random] | None = None,
 ) -> dict[str, Any]:
     """Audit one structured query against a shared deterministic candidate pool."""
 
     seeds = _seed_values(seeds)
     stratify = _dimension_values(stratify)
+    if sampler_rngs is None:
+        sampler_rngs = {seed: random.Random(seed) for seed in seeds}
+    elif set(sampler_rngs) != set(seeds):
+        raise ValueError("采样生成器必须与随机种子一一对应")
 
     query_graph = build_query_graph(
         domain.graph, example.query.topic_id, example.answer_ids
@@ -166,7 +172,7 @@ def audit_example(
             query_graph.subgraph,
             query_graph.selected_positives,
             requested_samples,
-            seed,
+            rng=sampler_rngs[seed],
         )
         for seed in seeds
     }
@@ -393,6 +399,7 @@ def audit_domain_to_files(
 
     domain = load_domain(domain_dir)
     accumulator = SummaryAccumulator(domain, seeds, stratify)
+    sampler_rngs = {seed: random.Random(seed) for seed in _seed_values(seeds)}
     jsonl_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     jsonl_temp = jsonl_path.with_suffix(jsonl_path.suffix + ".tmp")
@@ -406,6 +413,7 @@ def audit_domain_to_files(
                     query_index,
                     seeds=seeds,
                     stratify=stratify,
+                    sampler_rngs=sampler_rngs,
                 )
                 accumulator.add(record)
                 handle.write(
