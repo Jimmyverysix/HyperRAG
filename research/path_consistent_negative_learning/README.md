@@ -40,7 +40,7 @@ python -m research.path_consistent_negative_learning.audit_wikitopics `
   --seeds 42 43 44 45 46
 ```
 
-命令只读取官方 `train_graph.txt`、`train_queries.pkl`、`train_answers_hard.pkl` 和 `og_mappings.pkl`。输出包含逐题 JSONL、各领域汇总、候选池发生率、实际采样发生率以及按跳数、超边元数和候选深度的分层统计。
+命令只读取官方 `train_graph.txt`、`train_queries.pkl`、`train_answers_hard.pkl` 和 `og_mappings.pkl`。输出包含逐题 JSONL、各领域汇总、候选池发生率、实际采样发生率以及按跳数、超边元数和候选深度的分层统计。由于作者没有发布最终 GraphML，该审计按照公开构图规则从官方整数图执行确定性结构重建；等长路径使用固定字典序择一，因此它不是作者原运行产物的字节级复原。
 
 ## 测试
 

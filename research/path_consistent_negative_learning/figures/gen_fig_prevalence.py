@@ -20,6 +20,19 @@ BLUE = "#0072B2"
 ORANGE = "#E69F00"
 RED = "#D55E00"
 GRID = "#D9D9D9"
+DOMAIN_LABELS = {
+    "art": "艺术",
+    "award": "奖项",
+    "edu": "教育",
+    "health": "健康",
+    "infra": "基础设施",
+    "loc": "地理",
+    "org": "组织",
+    "people": "人物",
+    "sci": "科学",
+    "sport": "体育",
+    "tax": "生物分类",
+}
 
 
 def _font_family() -> str:
@@ -74,7 +87,10 @@ def generate_figure(report_path: Path, output_dir: Path) -> tuple[Path, Path]:
     with report_path.open("r", encoding="utf-8") as handle:
         report = json.load(handle)
     domains = sorted(report["domains"], key=lambda row: row["sampled_rate"])
-    names = [row["domain"] for row in domains]
+    names = [
+        f"{DOMAIN_LABELS.get(row['domain'], row['domain'])}（{row['domain']}）"
+        for row in domains
+    ]
     candidate_rates = np.asarray([row["candidate_rate"] for row in domains])
     sampled_rates = np.asarray([row["sampled_seed_mean"] for row in domains])
     sampled_std = np.asarray([row["sampled_seed_std"] for row in domains])
@@ -118,7 +134,7 @@ def generate_figure(report_path: Path, output_dir: Path) -> tuple[Path, Path]:
     for ax in axes:
         ax.set_xlim(0.0, x_max * 1.22 + 0.001)
     axes[1].legend(loc="lower right", frameon=False, fontsize=8)
-    fig.suptitle("WikiTopics 中替代最短路径转移的发生率", fontsize=11, fontweight="bold")
+    fig.suptitle("WikiTopics 结构重建中的争议负例发生率", fontsize=11, fontweight="bold")
     fig.subplots_adjust(wspace=0.16, top=0.88)
 
     output_dir.mkdir(parents=True, exist_ok=True)
