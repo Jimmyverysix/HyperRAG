@@ -61,13 +61,14 @@ class FixedCandidateBatch:
 
 @dataclass(frozen=True)
 class StrategyAssignment:
-    """Labels and loss masks assigned to one fixed candidate batch."""
+    """Labels, masks, and optional weights for one fixed candidate batch."""
 
     strategy: str
     batch: FixedCandidateBatch
     labels: tuple[int, ...]
     loss_mask: tuple[bool, ...]
     dispute_criterion: DisputeCriterion = "pair_shortest_path"
+    loss_weights: tuple[float, ...] | None = None
 
     def __post_init__(self) -> None:
         size = len(self.batch.candidates)
@@ -75,6 +76,22 @@ class StrategyAssignment:
             raise ValueError("Labels and loss masks must align with the candidate batch")
         if any(label not in (0, 1) for label in self.labels):
             raise ValueError("Binary supervision labels must be either 0 or 1")
+        if self.loss_weights is None:
+            object.__setattr__(
+                self,
+                "loss_weights",
+                tuple(float(active) for active in self.loss_mask),
+            )
+        elif len(self.loss_weights) != size:
+            raise ValueError("Loss weights must align with the candidate batch")
+        elif any(weight < 0.0 for weight in self.loss_weights):
+            raise ValueError("Loss weights must be non-negative")
+        if any(active != (weight > 0.0) for active, weight in zip(
+            self.loss_mask,
+            self.loss_weights,
+            strict=True,
+        )):
+            raise ValueError("Loss masks must identify exactly the positive loss weights")
 
     @property
     def active_count(self) -> int:
@@ -87,3 +104,10 @@ class StrategyAssignment:
         """Number of candidates excluded from the loss."""
 
         return len(self.loss_mask) - self.active_count
+
+    @property
+    def effective_weight(self) -> float:
+        """Total supervision weight contributed by the batch."""
+
+        assert self.loss_weights is not None
+        return sum(self.loss_weights)

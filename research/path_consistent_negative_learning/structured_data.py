@@ -27,7 +27,13 @@ from .wikitopics import (
 TRAIN_SPLIT = 0
 VALIDATION_SPLIT = 1
 TEST_SPLIT = 2
-SPLIT_NAMES = {TRAIN_SPLIT: "train", VALIDATION_SPLIT: "validation", TEST_SPLIT: "test"}
+SELECTION_SPLIT = 3
+SPLIT_NAMES = {
+    TRAIN_SPLIT: "train",
+    VALIDATION_SPLIT: "validation",
+    TEST_SPLIT: "test",
+    SELECTION_SPLIT: "selection",
+}
 
 
 @dataclass
@@ -50,6 +56,8 @@ class StructuredExperimentData:
     hyperedge_relation_mask: torch.Tensor
     entity_count: int
     relation_count: int
+    split_seed: int = 20260919
+    split_scheme: str = "70/15/15"
 
     def validate(self) -> None:
         query_count = len(self.query_keys)
@@ -98,18 +106,39 @@ class StructuredExperimentData:
         return cls.from_payload(payload)
 
 
-def _query_splits(query_count: int, seed: int) -> torch.Tensor:
+def _query_splits(
+    query_count: int,
+    seed: int,
+    split_scheme: str = "70/15/15",
+) -> torch.Tensor:
     order = list(range(query_count))
     random.Random(seed).shuffle(order)
-    train_end = int(query_count * 0.70)
-    validation_end = train_end + int(query_count * 0.15)
+    if split_scheme == "70/15/15":
+        train_fraction = 0.70
+        validation_fraction = 0.15
+        selection_fraction = 0.0
+    elif split_scheme == "60/10/15/15":
+        train_fraction = 0.60
+        validation_fraction = 0.10
+        selection_fraction = 0.15
+    else:
+        raise ValueError(f"未知数据划分方案：{split_scheme}")
+    train_end = int(query_count * train_fraction)
+    validation_end = train_end + int(query_count * validation_fraction)
+    selection_end = validation_end + int(query_count * selection_fraction)
     splits = torch.full((query_count,), TEST_SPLIT, dtype=torch.uint8)
     splits[order[:train_end]] = TRAIN_SPLIT
     splits[order[train_end:validation_end]] = VALIDATION_SPLIT
+    if selection_fraction:
+        splits[order[validation_end:selection_end]] = SELECTION_SPLIT
     return splits
 
 
-def _relation_mask(domain: WikiTopicsDomain, relation_count: int, entity_count: int) -> torch.Tensor:
+def _relation_mask(
+    domain: WikiTopicsDomain,
+    relation_count: int,
+    entity_count: int,
+) -> torch.Tensor:
     mask = torch.zeros((entity_count, relation_count), dtype=torch.float32)
     for owner_id, relation_ids in domain.hyperedge_relations.items():
         if relation_ids:
@@ -152,6 +181,7 @@ def build_structured_experiment_data(
     *,
     sampler_seed: int,
     split_seed: int = 20260919,
+    split_scheme: str = "70/15/15",
     progress_every: int = 1000,
     max_queries: int | None = None,
 ) -> StructuredExperimentData:
@@ -239,7 +269,7 @@ def build_structured_experiment_data(
         query_keys=query_keys,
         query_relations=torch.tensor(query_relations, dtype=torch.long),
         query_topics=torch.tensor(query_topics, dtype=torch.long),
-        query_splits=_query_splits(len(query_keys), split_seed),
+        query_splits=_query_splits(len(query_keys), split_seed, split_scheme),
         query_answer_ids=query_answer_ids,
         query_offsets=torch.tensor(query_offsets, dtype=torch.long),
         candidate_query_indices=torch.tensor(candidate_query_indices, dtype=torch.long),
@@ -250,6 +280,8 @@ def build_structured_experiment_data(
         hyperedge_relation_mask=_relation_mask(domain, relation_count, entity_count),
         entity_count=entity_count,
         relation_count=relation_count,
+        split_seed=split_seed,
+        split_scheme=split_scheme,
     )
     data.validate()
     return data
@@ -284,3 +316,47 @@ def strategy_targets(
             for local_index in rng.sample(local_negatives, drop_count):
                 loss_mask[start + local_index] = False
     return labels, loss_mask
+
+
+def strategy_loss_weights(
+    data: StructuredExperimentData,
+    strategy: str,
+    *,
+    seed: int,
+    disputed_negative_weight: float | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return binary labels and per-candidate loss weights.
+
+    The two weighted arms use the same total number of downweighted negatives
+    per question.  Only the path-informed arm uses the dispute labels to choose
+    which negatives receive the smaller weight.
+    """
+
+    if strategy in STRATEGIES:
+        labels, mask = strategy_targets(data, strategy, seed=seed)
+        return labels, mask.to(dtype=torch.float32)
+    if strategy not in {"strategy2_weighted", "random_weighted"}:
+        raise ValueError(f"未知策略 {strategy!r}")
+    if disputed_negative_weight is None:
+        raise ValueError(f"{strategy} 需要 disputed_negative_weight")
+    if not 0.0 <= disputed_negative_weight <= 1.0:
+        raise ValueError("disputed_negative_weight 必须位于 [0, 1]")
+
+    labels = data.selected_labels.to(dtype=torch.float32).clone()
+    weights = torch.ones_like(labels)
+    if strategy == "strategy2_weighted":
+        weights[data.disputed_labels] = disputed_negative_weight
+        return labels, weights
+
+    for query_index, query_key in enumerate(data.query_keys):
+        start = int(data.query_offsets[query_index])
+        stop = int(data.query_offsets[query_index + 1])
+        weighted_count = int(data.disputed_labels[start:stop].sum())
+        if not weighted_count:
+            continue
+        local_negatives = torch.where(~data.selected_labels[start:stop])[0].tolist()
+        rng = random.Random()
+        rng.seed(f"{seed}\0{query_key}", version=2)
+        for local_index in rng.sample(local_negatives, weighted_count):
+            weights[start + local_index] = disputed_negative_weight
+    return labels, weights

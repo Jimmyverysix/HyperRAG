@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "frozen_at": "2026-09-19T19:43:45+08:00",
+  "status": "frozen_before_weighted_results",
+  "method": {
+    "name": "策略2加权改进",
+    "loss": "sum(weight * BCE) / sum(weight)",
+    "disputed_negative_weight_symbol": "lambda",
+    "endpoint_checks": {
+      "lambda_0": "等价于原策略2",
+      "lambda_1": "等价于策略1"
+    },
+    "matched_control": "每题随机选择与争议负例等量的普通负例并赋予相同lambda"
+  },
+  "selection": {
+    "domain": "edu",
+    "reason": "延续原门槛C领域，但不再使用已查看的教育领域测试集作确认",
+    "sampler_and_training_seeds": [42, 43, 44, 45, 46],
+    "split_seed": 20260919,
+    "split_scheme": "60/10/15/15",
+    "reported_split": "selection",
+    "training": {
+      "epochs": 50,
+      "patience": 8,
+      "batch_size": 4096,
+      "learning_rate": 0.001
+    },
+    "candidate_weights": [0.1, 0.25, 0.5, 0.75],
+    "diagnostic_endpoint_weights": [0.0, 1.0],
+    "conditions": {
+      "answer_reach_10_vs_strategy1_paired_bootstrap_ci_low_gt": 0.0,
+      "answer_reach_10_vs_random_weighted_paired_bootstrap_ci_low_gt": 0.0,
+      "selected_pr_auc_mean_difference_gte": -0.008
+    },
+    "selection_rule": "最大化两项答案可达率95%区间下界的较小值；差距不超过0.002时选择更大的lambda",
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260919
+  },
+  "independent_confirmation": {
+    "domain": "award",
+    "reason": "未参与调参、含10000个问题，且在同规模未调参领域中采样争议率最高",
+    "sampler_and_training_seeds": [142, 143, 144, 145, 146],
+    "split_seed": 20261001,
+    "split_scheme": "70/15/15",
+    "reported_split": "test",
+    "training": {
+      "epochs": 50,
+      "patience": 8,
+      "batch_size": 4096,
+      "learning_rate": 0.001
+    },
+    "locked_weight_only": true,
+    "conditions": {
+      "answer_reach_10_vs_strategy1_two_sided_95_ci_low_gt": 0.0,
+      "answer_reach_10_vs_random_weighted_two_sided_95_ci_low_gt": 0.0,
+      "selected_pr_auc_vs_strategy1_one_sided_95_ci_low_gt": -0.01
+    },
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260919
+  },
+  "gate_d": {
+    "run_only_after_independent_confirmation_passes": true,
+    "domains": [
+      "art",
+      "award",
+      "edu",
+      "health",
+      "infra",
+      "loc",
+      "org",
+      "people",
+      "sci",
+      "sport",
+      "tax"
+    ],
+    "sampler_and_training_seeds": [142, 143, 144, 145, 146],
+    "split_seed": 20261001,
+    "locked_weight_across_domains": true,
+    "training": {
+      "epochs": 50,
+      "patience": 8,
+      "batch_size": 4096,
+      "learning_rate": 0.001
+    },
+    "required_arms": [
+      "策略1",
+      "策略2加权版",
+      "随机降权对照"
+    ],
+    "reporting": "逐领域结果、等权领域宏平均与配对区间"
+  },
+  "interpretation": {
+    "original_gate_c_remains_failed": true,
+    "weighted_stage_is_post_result_method_revision": true
+  }
+}

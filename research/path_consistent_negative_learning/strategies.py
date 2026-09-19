@@ -30,6 +30,11 @@ STRATEGIES = (
     "random_drop",
 )
 
+WEIGHTED_STRATEGIES = (
+    "strategy2_weighted",
+    "random_weighted",
+)
+
 
 def build_fixed_candidate_batch(
     *,
@@ -113,14 +118,36 @@ def strategy2_ignore(
 ) -> StrategyAssignment:
     """Mask disputed unselected candidates without resampling replacements."""
 
+    return strategy2_weighted(
+        batch,
+        disputed_negative_weight=0.0,
+        criterion=criterion,
+        strategy_name="strategy2_ignore",
+    )
+
+
+def strategy2_weighted(
+    batch: FixedCandidateBatch,
+    *,
+    disputed_negative_weight: float,
+    criterion: DisputeCriterion = "pair_shortest_path",
+    strategy_name: str = "strategy2_weighted",
+) -> StrategyAssignment:
+    """Downweight disputed negatives while leaving their labels unchanged."""
+
+    if not 0.0 <= disputed_negative_weight <= 1.0:
+        raise ValueError("disputed_negative_weight must be between 0 and 1")
+    weights = tuple(
+        disputed_negative_weight if candidate.is_disputed(criterion) else 1.0
+        for candidate in batch.candidates
+    )
     return StrategyAssignment(
-        strategy="strategy2_ignore",
+        strategy=strategy_name,
         batch=batch,
         labels=_baseline_labels(batch),
-        loss_mask=tuple(
-            not candidate.is_disputed(criterion) for candidate in batch.candidates
-        ),
+        loss_mask=tuple(weight > 0.0 for weight in weights),
         dispute_criterion=criterion,
+        loss_weights=weights,
     )
 
 
@@ -156,7 +183,28 @@ def random_drop(
     processes and does not depend on question-processing order.
     """
 
-    drop_count = sum(
+    return random_weighted(
+        batch,
+        seed=seed,
+        disputed_negative_weight=0.0,
+        criterion=criterion,
+        strategy_name="random_drop",
+    )
+
+
+def random_weighted(
+    batch: FixedCandidateBatch,
+    *,
+    seed: int,
+    disputed_negative_weight: float,
+    criterion: DisputeCriterion = "pair_shortest_path",
+    strategy_name: str = "random_weighted",
+) -> StrategyAssignment:
+    """Downweight a matched random set of baseline negatives per question."""
+
+    if not 0.0 <= disputed_negative_weight <= 1.0:
+        raise ValueError("disputed_negative_weight must be between 0 and 1")
+    weighted_count = sum(
         candidate.is_disputed(criterion) for candidate in batch.candidates
     )
     eligible_indices = [
@@ -166,15 +214,18 @@ def random_drop(
     ]
     rng = random.Random()
     rng.seed(f"{seed}\0{batch.query_id}", version=2)
-    dropped_indices = set(rng.sample(eligible_indices, drop_count))
+    weighted_indices = set(rng.sample(eligible_indices, weighted_count))
+    weights = tuple(
+        disputed_negative_weight if index in weighted_indices else 1.0
+        for index in range(len(batch.candidates))
+    )
     return StrategyAssignment(
-        strategy="random_drop",
+        strategy=strategy_name,
         batch=batch,
         labels=_baseline_labels(batch),
-        loss_mask=tuple(
-            index not in dropped_indices for index in range(len(batch.candidates))
-        ),
+        loss_mask=tuple(weight > 0.0 for weight in weights),
         dispute_criterion=criterion,
+        loss_weights=weights,
     )
 
 
@@ -183,6 +234,7 @@ def apply_strategy(
     strategy: str,
     *,
     seed: int | None = None,
+    disputed_negative_weight: float | None = None,
     criterion: DisputeCriterion = "pair_shortest_path",
 ) -> StrategyAssignment:
     """Apply a named arm while keeping the fixed batch unchanged."""
@@ -197,4 +249,24 @@ def apply_strategy(
         if seed is None:
             raise ValueError("random_drop requires an explicit seed")
         return random_drop(batch, seed=seed, criterion=criterion)
-    raise ValueError(f"Unknown strategy {strategy!r}; choose from {STRATEGIES}")
+    if strategy == "strategy2_weighted":
+        if disputed_negative_weight is None:
+            raise ValueError("strategy2_weighted requires disputed_negative_weight")
+        return strategy2_weighted(
+            batch,
+            disputed_negative_weight=disputed_negative_weight,
+            criterion=criterion,
+        )
+    if strategy == "random_weighted":
+        if seed is None:
+            raise ValueError("random_weighted requires an explicit seed")
+        if disputed_negative_weight is None:
+            raise ValueError("random_weighted requires disputed_negative_weight")
+        return random_weighted(
+            batch,
+            seed=seed,
+            disputed_negative_weight=disputed_negative_weight,
+            criterion=criterion,
+        )
+    choices = STRATEGIES + WEIGHTED_STRATEGIES
+    raise ValueError(f"Unknown strategy {strategy!r}; choose from {choices}")

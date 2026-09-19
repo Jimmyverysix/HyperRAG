@@ -121,3 +121,28 @@ python research/path_consistent_negative_learning/paper/generate_results_tex.py 
 ```
 
 论文主文件是 `paper/main.tex`，在该目录编译后输出 `paper/main.pdf`。
+
+## 策略2加权改进
+
+原策略2在教育领域把争议负例完全移出损失，答案可达率提高，但选中路径曲线下面积下降 1.32 个百分点，超过结果产生前固定的 1 个百分点保护线。后续阶段不改写这项失败判定，而是把争议负例权重设为 $\lambda\in[0,1]$：$\lambda=0$ 等价于原策略2，$\lambda=1$ 等价于策略1。随机对照按题随机选择等量负例并赋予相同权重。
+
+完整协议冻结在 `protocols/weighted_strategy2.json`。教育领域按 `60/10/15/15` 划分训练、早停、选参和保留测试部分；权重只在专门的选参部分确定。调度命令为：
+
+```powershell
+python -m research.path_consistent_negative_learning.run_weighted_suite `
+  --phase selection `
+  --data-dir runs/weighted/selection/edu/datasets `
+  --output-dir runs/weighted/selection/edu/runs `
+  --seeds 42 43 44 45 46 `
+  --strategy2-weights 0 0.1 0.25 0.5 0.75 1 `
+  --random-control-weights 0.1 0.25 0.5 0.75 `
+  --include-endpoint-reference `
+  --evaluation-split selection `
+  --gpus 0 1 2 3 4 5
+
+python -m research.path_consistent_negative_learning.select_weight `
+  --run-root runs/weighted/selection/edu/runs `
+  --output-dir runs/weighted/selection/edu/summary
+```
+
+只有选参条件满足且两个端点等价检查通过，才锁定唯一权重。独立确认预先固定在未参与调参的获奖领域，使用新种子 142--146；确认调度器会读取锁定文件，并拒绝领域、种子、数据划分、权重或训练超参数与冻结协议不一致的运行。确认同时要求策略2加权版相对策略1和随机降权对照的答案可达率区间下界大于零，以及选中路径曲线下面积的一侧 95% 下界高于 $-1$ 个百分点。只有三项同时满足才进入门槛 D。

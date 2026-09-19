@@ -3,7 +3,10 @@ import unittest
 import torch
 
 from research.path_consistent_negative_learning.structured_data import (
+    SELECTION_SPLIT,
     StructuredExperimentData,
+    _query_splits,
+    strategy_loss_weights,
     strategy_targets,
 )
 
@@ -61,6 +64,51 @@ class StructuredStrategyTests(unittest.TestCase):
         first = strategy_targets(data, "random_drop", seed=21)[1]
         second = strategy_targets(data, "random_drop", seed=21)[1]
         self.assertTrue(torch.equal(first, second))
+
+    def test_weighted_endpoints_and_random_control(self):
+        data = toy_data()
+        baseline_labels, baseline_weights = strategy_loss_weights(
+            data,
+            "strategy1_negative",
+            seed=13,
+        )
+        zero_labels, zero_weights = strategy_loss_weights(
+            data,
+            "strategy2_weighted",
+            seed=13,
+            disputed_negative_weight=0.0,
+        )
+        one_labels, one_weights = strategy_loss_weights(
+            data,
+            "strategy2_weighted",
+            seed=13,
+            disputed_negative_weight=1.0,
+        )
+        ignore_labels, ignore_mask = strategy_targets(
+            data,
+            "strategy2_ignore",
+            seed=13,
+        )
+        self.assertTrue(torch.equal(zero_labels, ignore_labels))
+        self.assertTrue(torch.equal(zero_weights, ignore_mask.float()))
+        self.assertTrue(torch.equal(one_labels, baseline_labels))
+        self.assertTrue(torch.equal(one_weights, baseline_weights))
+
+        _, random_weights = strategy_loss_weights(
+            data,
+            "random_weighted",
+            seed=13,
+            disputed_negative_weight=0.25,
+        )
+        for start, stop in zip(data.query_offsets[:-1], data.query_offsets[1:]):
+            local = random_weights[int(start):int(stop)]
+            self.assertEqual(int((local == 0.25).sum()), 1)
+
+    def test_four_way_split_reserves_dedicated_selection_queries(self):
+        splits = _query_splits(100, 9, "60/10/15/15")
+        counts = torch.bincount(splits, minlength=4).tolist()
+        self.assertEqual(counts, [60, 10, 15, 15])
+        self.assertEqual(int((splits == SELECTION_SPLIT).sum()), 15)
 
 
 if __name__ == "__main__":

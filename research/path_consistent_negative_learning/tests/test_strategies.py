@@ -12,8 +12,10 @@ from research.path_consistent_negative_learning.strategies import (
     apply_strategy,
     build_fixed_candidate_batch,
     random_drop,
+    random_weighted,
     strategy1_negative,
     strategy2_ignore,
+    strategy2_weighted,
     strategy3_positive,
 )
 
@@ -233,6 +235,33 @@ class StrategyTests(unittest.TestCase):
         self.assertEqual(assignment.labels, (1, 1, 0, 0, 0))
         with self.assertRaisesRegex(ValueError, "explicit seed"):
             apply_strategy(self.batch, "random_drop")
+
+    def test_weighted_endpoints_match_strategies_1_and_2(self) -> None:
+        ignored = strategy2_ignore(self.batch)
+        weight_zero = strategy2_weighted(
+            self.batch,
+            disputed_negative_weight=0.0,
+        )
+        baseline = strategy1_negative(self.batch)
+        weight_one = strategy2_weighted(
+            self.batch,
+            disputed_negative_weight=1.0,
+        )
+        self.assertEqual(weight_zero.labels, ignored.labels)
+        self.assertEqual(weight_zero.loss_mask, ignored.loss_mask)
+        self.assertEqual(weight_zero.loss_weights, ignored.loss_weights)
+        self.assertEqual(weight_one.labels, baseline.labels)
+        self.assertEqual(weight_one.loss_weights, baseline.loss_weights)
+
+    def test_random_weighted_matches_count_without_touching_positives(self) -> None:
+        assignment = random_weighted(
+            self.batch,
+            seed=17,
+            disputed_negative_weight=0.25,
+        )
+        self.assertEqual(assignment.loss_weights[0], 1.0)
+        self.assertEqual(assignment.loss_weights.count(0.25), 1)
+        self.assertAlmostEqual(assignment.effective_weight, 4.25)
 
 
 if __name__ == "__main__":
