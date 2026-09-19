@@ -101,6 +101,22 @@ def _query_values(
     return output
 
 
+def _mean_queries_across_seeds(
+    values: Mapping[int, Mapping[str, float]],
+) -> dict[str, float]:
+    seed_items = tuple(sorted(values.items()))
+    if not seed_items:
+        raise ValueError("至少需要一个随机种子")
+    expected_queries = set(seed_items[0][1])
+    for seed, query_values in seed_items[1:]:
+        if set(query_values) != expected_queries:
+            raise ValueError(f"随机种子 {seed} 的问题集合与其他种子不一致")
+    return {
+        query: mean(query_values[query] for _, query_values in seed_items)
+        for query in seed_items[0][1]
+    }
+
+
 def _comparison(
     runs: Mapping[str, Mapping[int, Mapping[str, Any]]],
     reference: str,
@@ -110,19 +126,11 @@ def _comparison(
     reference_values = _query_values(runs, reference, metric)
     comparison_values = _query_values(runs, comparison, metric)
     seed_summary = summarize_paired_seeds(reference_values, comparison_values)
-    pooled_reference = {
-        (seed, query): value
-        for seed, values in reference_values.items()
-        for query, value in values.items()
-    }
-    pooled_comparison = {
-        (seed, query): value
-        for seed, values in comparison_values.items()
-        for query, value in values.items()
-    }
+    mean_reference = _mean_queries_across_seeds(reference_values)
+    mean_comparison = _mean_queries_across_seeds(comparison_values)
     bootstrap = paired_bootstrap_mean_difference(
-        pooled_reference,
-        pooled_comparison,
+        mean_reference,
+        mean_comparison,
         n_resamples=10_000,
         seed=20260919,
     )
@@ -134,6 +142,7 @@ def _comparison(
         "reference": reference,
         "comparison": comparison,
         "metric": metric,
+        "bootstrap_unit": "query_after_equal_seed_average",
         "seed_summary": seed_payload,
         "paired_bootstrap": asdict(bootstrap),
     }

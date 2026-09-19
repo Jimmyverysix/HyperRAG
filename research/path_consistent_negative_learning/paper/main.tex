@@ -85,7 +85,7 @@ HyperRAG 将多元事实表示为超图，并用选中的主题实体到答案�
 
 \subsection{统计与阶段门槛}
 
-门槛 B 预先设为：全局实际采样争议率达到 1\%，或任一领域达到 1\%，才进入训练。门槛 C 的主比较为策略2相对策略1和随机丢弃的答案可达率@10。以“随机种子、问题”为配对单位执行 10,000 次配对自助法；两个比较的 95\% 区间下界都必须大于零。同时，策略2相对策略1的选中路径精确率--召回率曲线下面积下降不得超过 1 个百分点。只有三个条件同时成立，才扩展到门槛 D。
+门槛 B 预先设为：全局实际采样争议率达到 1\%，或任一领域达到 1\%，才进入训练。门槛 C 的主比较为策略2相对策略1和随机丢弃的答案可达率@10。先对每个问题的五个共享种子等权平均，再以唯一问题为配对单位执行 10,000 次配对自助法；两个比较的 95\% 区间下界都必须大于零。同时，策略2相对策略1的选中路径精确率--召回率曲线下面积下降不得超过 1 个百分点。只有三个条件同时成立，才扩展到门槛 D。逐种子的配对差值另外保留在机器可读汇总中。
 
 \section{结果}
 
@@ -139,7 +139,7 @@ HyperRAG 将多元事实表示为超图，并用选中的主题实体到答案�
 \label{fig:gate-c}
 \end{figure}
 
-策略2相对策略1的答案可达率@10配对差为 \VsStrategyOneDifference 个百分点，95\% 配对自助法区间为 [\VsStrategyOneCILow, \VsStrategyOneCIHigh]，共 \VsStrategyOnePairs 个“种子--问题”配对。相对随机丢弃的差为 \VsRandomDropDifference 个百分点，区间为 [\VsRandomDropCILow, \VsRandomDropCIHigh]，共 \VsRandomDropPairs 个配对。策略2相对策略1的选中路径曲线下面积差为 \StrategyTwoPrecisionDifference 个百分点。
+策略2相对策略1的答案可达率@10配对差为 \VsStrategyOneDifference 个百分点，95\% 配对自助法区间为 [\VsStrategyOneCILow, \VsStrategyOneCIHigh]，共 \VsStrategyOnePairs 个问题配对。相对随机丢弃的差为 \VsRandomDropDifference 个百分点，区间为 [\VsRandomDropCILow, \VsRandomDropCIHigh]，共 \VsRandomDropPairs 个问题配对。策略2相对策略1的选中路径曲线下面积差为 \StrategyTwoPrecisionDifference 个百分点。
 
 \ifgatecpassed
 三项预注册条件同时满足，门槛 C 判定为“\GateCDecision”。这意味着路径条件提供了超出样本数量变化的信号，但仍需门槛 D 的跨领域结果才能支持一般性结论。

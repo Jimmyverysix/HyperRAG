@@ -67,6 +67,15 @@ class TrainingAggregationTests(unittest.TestCase):
         self.assertGreater(
             report["gate_c"]["strategy2_vs_strategy1_primary_ci_low"], 0.0
         )
+        primary = next(
+            row
+            for row in report["comparisons"]
+            if row["reference"] == "strategy1_negative"
+            and row["comparison"] == "strategy2_ignore"
+            and row["metric"] == "answer_reach_10"
+        )
+        self.assertEqual(primary["bootstrap_unit"], "query_after_equal_seed_average")
+        self.assertEqual(primary["paired_bootstrap"]["n_pairs"], 2)
 
 
 if __name__ == "__main__":
