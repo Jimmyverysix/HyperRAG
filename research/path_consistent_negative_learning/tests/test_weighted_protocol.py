@@ -3,6 +3,9 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from research.path_consistent_negative_learning.aggregate_gate_d import (
+    aggregate_gate_d,
+)
 from research.path_consistent_negative_learning.confirm_weight import confirm_weight
 from research.path_consistent_negative_learning.select_weight import (
     choose_weight,
@@ -24,11 +27,13 @@ def write_run(
     evaluation_split: str,
     answer_reach: float,
     selected_pr_auc: float,
+    domain: str = "toy",
+    experiment_name: str | None = None,
 ) -> None:
     run_dir = root / configuration / f"seed_{seed}"
     run_dir.mkdir(parents=True)
     result = {
-        "domain": "toy",
+        "domain": domain,
         "strategy": strategy,
         "seed": seed,
         "sampler_seed": seed,
@@ -38,7 +43,9 @@ def write_run(
         ),
         "evaluation_split": evaluation_split,
         "disputed_negative_weight": weight,
-        "experiment": f"weighted_strategy2_{'selection' if evaluation_split == 'selection' else 'confirmation'}",
+        "experiment": experiment_name or (
+            f"weighted_strategy2_{'selection' if evaluation_split == 'selection' else 'confirmation'}"
+        ),
         "training_config": {
             "epochs": 50,
             "patience": 8,
@@ -112,12 +119,67 @@ def write_protocol(path: Path) -> None:
             "reported_split": "test",
             "training": training,
         },
-        "gate_d": {},
+        "gate_d": {
+            "domains": ["d1", "d2"],
+            "sampler_and_training_seeds": [142, 143],
+            "split_seed": 99,
+            "split_scheme": "70/15/15",
+            "reported_split": "test",
+            "training": training,
+        },
     }
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
 class WeightedProtocolTests(unittest.TestCase):
+    def test_gate_d_reports_domain_macro_and_excludes_confirmation_domain(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            protocol_path = root / "protocol.json"
+            write_protocol(protocol_path)
+            for domain in ("d1", "d2"):
+                run_root = root / domain / "runs"
+                for seed in (142, 143):
+                    for configuration, strategy, weight, reach, precision in (
+                        ("strategy1", "strategy1_negative", None, 0.50, 0.60),
+                        (
+                            "strategy2_weight_0p25",
+                            "strategy2_weighted",
+                            0.25,
+                            0.60,
+                            0.595,
+                        ),
+                        (
+                            "random_weight_0p25",
+                            "random_weighted",
+                            0.25,
+                            0.52,
+                            0.598,
+                        ),
+                    ):
+                        write_run(
+                            run_root,
+                            configuration,
+                            seed,
+                            strategy=strategy,
+                            weight=weight,
+                            evaluation_split="test",
+                            answer_reach=reach,
+                            selected_pr_auc=precision,
+                            domain=domain,
+                            experiment_name="weighted_strategy2_gate_d",
+                        )
+            report = aggregate_gate_d(
+                root,
+                locked_weight=0.25,
+                protocol_path=protocol_path,
+            )
+        macro = report["macro_comparisons"]["answer_reach_vs_strategy1"]
+        self.assertAlmostEqual(
+            macro["paired_bootstrap"]["mean_difference"],
+            0.10,
+        )
+
     def test_endpoint_check_rejects_query_differences_that_cancel_in_mean(self):
         runs = {
             "reference": {
