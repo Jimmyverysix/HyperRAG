@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import random
 from typing import Any, Iterable, Sequence
 
@@ -144,11 +143,6 @@ def strategy3_positive(
     )
 
 
-def _stable_query_seed(seed: int, query_id: str) -> int:
-    payload = f"{seed}\0{query_id}".encode("utf-8")
-    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big")
-
-
 def random_drop(
     batch: FixedCandidateBatch,
     *,
@@ -157,9 +151,9 @@ def random_drop(
 ) -> StrategyAssignment:
     """Randomly mask as many baseline negatives as strategy 2 masks per question.
 
-    The global seed is mixed with ``query_id`` using SHA-256.  Consequently the
-    result is reproducible across Python processes and does not depend on the
-    order in which questions are processed.
+    The global seed and ``query_id`` seed a dedicated standard-library random
+    generator.  Consequently the result is reproducible across Python
+    processes and does not depend on question-processing order.
     """
 
     drop_count = sum(
@@ -170,7 +164,8 @@ def random_drop(
         for index, candidate in enumerate(batch.candidates)
         if not candidate.is_selected_positive
     ]
-    rng = random.Random(_stable_query_seed(seed, batch.query_id))
+    rng = random.Random()
+    rng.seed(f"{seed}\0{batch.query_id}", version=2)
     dropped_indices = set(rng.sample(eligible_indices, drop_count))
     return StrategyAssignment(
         strategy="random_drop",

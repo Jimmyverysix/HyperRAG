@@ -26,6 +26,9 @@ d(topic, head) + 2 + d(tail, answer) == d(topic, answer)
 - `audit_wikitopics.py`：发生率审计、五随机种子采样模拟和分层统计。
 - `metrics.py`：MRR、Hits@K、Recall@K 和 PR-AUC。
 - `statistics.py`：严格按问题配对的自助法区间和多随机种子汇总。
+- `structured_data.py`：门槛 C 结构化代理实验的固定候选、查询级划分与四臂标签。
+- `structured_model.py`：共享实体/关系嵌入和 MLP 检索器。
+- `train_structured.py`：独立运行目录、早停、检索指标和答案可达率评测。
 - `tools/upload_artifact.py`：仅用于向服务器断点续传数据或模型；代码同步仍使用 GitHub。
 
 ## 运行结构审计
@@ -46,3 +49,22 @@ python -m unittest discover -s research/path_consistent_negative_learning/tests 
 ```
 
 测试覆盖等长替代路径、多主题多答案、不连通节点、有向图、高元超边、四实验臂共享候选、随机对照复现性、指标和配对统计。
+
+## 门槛 C 结构化代理实验
+
+官方仓库没有发布建图后的 GraphML，服务器也没有原建图流程所需的大模型缓存。因此，门槛 C 使用官方整数 ID 图和 `kg2text.py` 的按 head 聚合规则构造结构代理；它不冒充原版端到端 HyperRAG 复现。候选、查询划分和特征在四个实验臂间固定，只改变标签或损失掩码。
+
+```powershell
+python -m research.path_consistent_negative_learning.prepare_structured_experiment `
+  --domain-dir /path/to/WikiTopics_QE/edu `
+  --sampler-seed 42 `
+  --output runs/gate_c/edu/seed_42/data.pt
+
+python -m research.path_consistent_negative_learning.train_structured `
+  --data runs/gate_c/edu/seed_42/data.pt `
+  --strategy strategy2_ignore `
+  --seed 42 `
+  --output-dir runs/gate_c/edu/strategy2_ignore/seed_42
+```
+
+训练、验证和测试按问题划分，避免同一问题的候选三元组同时出现在不同划分中。固定评测同时报告公开选中路径、全部最短路径以及 Top-K 转移能否从主题实体到达答案。
