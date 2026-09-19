@@ -12,7 +12,9 @@ from research.path_consistent_negative_learning.wikitopics import (
     THREE_HOP_SHAPE,
     build_query_graph,
     candidate_pool,
+    candidate_pool_profile,
     disputed_shortest_path_transitions,
+    disputed_transitions_in_pool,
     entity_node,
     hyperedge_node,
     load_domain,
@@ -96,10 +98,16 @@ class WikiTopicsAuditTests(unittest.TestCase):
             (item["head_id"], item["hyperedge_owner_id"], item["tail_id"])
             for item in record["selected_positive_transitions"]
         }
-        disputed = {
-            (item["head_id"], item["hyperedge_owner_id"], item["tail_id"])
-            for item in record["disputed_transitions"]
-        }
+        query_graph = build_query_graph(self.domain.graph, 0, (2,))
+        disputed = set(
+            disputed_transitions_in_pool(
+                self.domain.graph,
+                (2,),
+                query_graph.subgraph,
+                query_graph.selected_positives,
+                query_graph.source_distances,
+            )
+        )
         self.assertIn((0, 0, 1), selected)
         self.assertNotIn((0, 0, 3), selected)
         self.assertIn((0, 0, 3), disputed)
@@ -151,6 +159,18 @@ class WikiTopicsAuditTests(unittest.TestCase):
                 ):
                     expected.add((head_id, edge_id, tail_id))
         self.assertEqual(actual, expected)
+
+    def test_combinatorial_pool_profile_matches_explicit_enumeration(self) -> None:
+        query_graph = build_query_graph(self.domain.graph, 0, (2,))
+        explicit = candidate_pool(query_graph.subgraph, query_graph.selected_positives)
+        profile = candidate_pool_profile(
+            query_graph.subgraph,
+            query_graph.selected_positives,
+            query_graph.source_distances,
+        )
+        self.assertEqual(profile.size, len(explicit))
+        self.assertEqual(sum(profile.by_arity.values()), len(explicit))
+        self.assertEqual(sum(profile.by_depth.values()), len(explicit))
 
     def test_jsonl_and_summary_are_byte_reproducible(self) -> None:
         output = self.root / "output"

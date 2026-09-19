@@ -11,7 +11,7 @@ Only load dataset files obtained from a trusted source.
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 import pickle
 import random
@@ -118,6 +118,15 @@ class QueryGraph:
     min_hop: int | None
     max_hop: int | None
     source_distances: Mapping[Node, int]
+
+
+@dataclass(frozen=True)
+class CandidatePoolProfile:
+    """Exact candidate counts without materializing every ordered pair."""
+
+    size: int
+    by_arity: Mapping[int, int]
+    by_depth: Mapping[int | None, int]
 
 
 def _trusted_pickle(path: Path) -> Any:
@@ -437,6 +446,132 @@ def candidate_pool(subgraph: nx.Graph, positives: Iterable[Transition]) -> tuple
     return tuple(sorted(candidates))
 
 
+def candidate_pool_profile(
+    subgraph: nx.Graph,
+    positives: Iterable[Transition],
+    source_distances: Mapping[Node, int],
+) -> CandidatePoolProfile:
+    """Count the shared candidate pool in linear space.
+
+    A hyperedge with ``k`` incident entities contributes ``k * (k - 1)``
+    directed transitions before selected positives and their reverses are
+    removed.  Counting by head also gives the exact depth strata.
+    """
+
+    excluded = positive_lookup(positives)
+    by_arity: Counter[int] = Counter()
+    by_depth: Counter[int | None] = Counter()
+    total = 0
+    edges = sorted(
+        (node for node in subgraph if node[0] == HYPEREDGE_KIND),
+        key=_node_sort_key,
+    )
+    for edge in edges:
+        entity_ids = tuple(
+            sorted(node[1] for node in subgraph.neighbors(edge) if node[0] == ENTITY_KIND)
+        )
+        entity_set = set(entity_ids)
+        excluded_by_head: Counter[int] = Counter()
+        for head_id, edge_id, tail_id in excluded:
+            if (
+                edge_id == edge[1]
+                and head_id in entity_set
+                and tail_id in entity_set
+                and head_id != tail_id
+            ):
+                excluded_by_head[head_id] += 1
+
+        arity = len(entity_ids)
+        edge_count = arity * (arity - 1) - sum(excluded_by_head.values())
+        total += edge_count
+        by_arity[arity] += edge_count
+        for head_id in entity_ids:
+            head_count = arity - 1 - excluded_by_head[head_id]
+            distance = source_distances.get(entity_node(head_id))
+            depth = (
+                distance // LOGICAL_TRANSITION_COST
+                if distance is not None and distance % LOGICAL_TRANSITION_COST == 0
+                else None
+            )
+            by_depth[depth] += head_count
+
+    return CandidatePoolProfile(
+        size=total,
+        by_arity=dict(sorted(by_arity.items())),
+        by_depth=dict(
+            sorted(by_depth.items(), key=lambda item: (-1 if item[0] is None else item[0]))
+        ),
+    )
+
+
+def _nodes_reaching_answers_on_shortest_paths(
+    graph: nx.Graph,
+    answer_ids: Sequence[int],
+    source_distances: Mapping[Node, int],
+) -> set[Node]:
+    reachable_answers = {
+        entity_node(answer_id)
+        for answer_id in answer_ids
+        if entity_node(answer_id) in source_distances
+    }
+    reaches_answer = set(reachable_answers)
+    queue: deque[Node] = deque(sorted(reachable_answers, key=_node_sort_key))
+    while queue:
+        current = queue.popleft()
+        current_distance = source_distances[current]
+        for predecessor in graph.neighbors(current):
+            if (
+                source_distances.get(predecessor) == current_distance - 1
+                and predecessor not in reaches_answer
+            ):
+                reaches_answer.add(predecessor)
+                queue.append(predecessor)
+    return reaches_answer
+
+
+def disputed_transitions_in_pool(
+    graph: nx.Graph,
+    answer_ids: Sequence[int],
+    subgraph: nx.Graph,
+    positives: Iterable[Transition],
+    source_distances: Mapping[Node, int],
+) -> tuple[Transition, ...]:
+    """Enumerate only unselected pool transitions in the shortest-path DAG."""
+
+    reaches_answer = _nodes_reaching_answers_on_shortest_paths(
+        graph, answer_ids, source_distances
+    )
+    excluded = positive_lookup(positives)
+    disputed: set[Transition] = set()
+    for edge in sorted(
+        (node for node in subgraph if node[0] == HYPEREDGE_KIND),
+        key=_node_sort_key,
+    ):
+        edge_distance = source_distances.get(edge)
+        if edge_distance is None:
+            continue
+        entities = tuple(
+            sorted(
+                (node for node in subgraph.neighbors(edge) if node[0] == ENTITY_KIND),
+                key=_node_sort_key,
+            )
+        )
+        heads = (
+            node for node in entities if source_distances.get(node) == edge_distance - 1
+        )
+        tails = tuple(
+            node
+            for node in entities
+            if source_distances.get(node) == edge_distance + 1 and node in reaches_answer
+        )
+        for head in heads:
+            for tail in tails:
+                transition = (head[1], edge[1], tail[1])
+                if transition not in excluded:
+                    disputed.add(transition)
+    return tuple(sorted(disputed))
+
+
 def disputed_shortest_path_transitions(
     graph: nx.Graph,
     topic_id: int,
@@ -458,23 +593,9 @@ def disputed_shortest_path_transitions(
     # an answer is reachable from it through edges whose source distance rises
     # by one at every step.  Reverse traversal of that shortest-path DAG finds
     # the union for all answers in one pass, instead of one BFS per answer.
-    reachable_answers = {
-        entity_node(answer_id)
-        for answer_id in answer_ids
-        if entity_node(answer_id) in source_distances
-    }
-    reaches_answer = set(reachable_answers)
-    queue: deque[Node] = deque(sorted(reachable_answers, key=_node_sort_key))
-    while queue:
-        current = queue.popleft()
-        current_distance = source_distances[current]
-        for predecessor in graph.neighbors(current):
-            if (
-                source_distances.get(predecessor) == current_distance - 1
-                and predecessor not in reaches_answer
-            ):
-                reaches_answer.add(predecessor)
-                queue.append(predecessor)
+    reaches_answer = _nodes_reaching_answers_on_shortest_paths(
+        graph, answer_ids, source_distances
+    )
 
     disputed: list[Transition] = []
     for transition in sorted(set(candidates)):

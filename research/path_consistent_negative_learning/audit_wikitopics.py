@@ -14,8 +14,8 @@ from .wikitopics import (
     Transition,
     WikiTopicsDomain,
     build_query_graph,
-    candidate_pool,
-    disputed_shortest_path_transitions,
+    candidate_pool_profile,
+    disputed_transitions_in_pool,
     iter_mapping_sizes,
     load_domain,
     simulate_original_sampler,
@@ -67,7 +67,9 @@ def _stratum_value(
 def _per_query_strata(
     dimensions: Sequence[str],
     domain: WikiTopicsDomain,
-    candidates: Sequence[Transition],
+    candidate_count: int,
+    candidate_by_arity: Mapping[int, int],
+    candidate_by_depth: Mapping[int | None, int],
     disputed: set[Transition],
     samples_by_seed: Mapping[int, Sequence[Transition]],
     source_distances: Mapping[tuple[str, int], int],
@@ -75,16 +77,25 @@ def _per_query_strata(
 ) -> dict[str, list[dict[str, Any]]]:
     output: dict[str, list[dict[str, Any]]] = {}
     for dimension in dimensions:
-        pool: dict[int | None, list[int]] = defaultdict(lambda: [0, 0])
+        if dimension == "hop":
+            pool_counts: Mapping[int | None, int] = {query_hop: candidate_count}
+        elif dimension == "arity":
+            pool_counts = candidate_by_arity
+        elif dimension == "depth":
+            pool_counts = candidate_by_depth
+        else:
+            raise ValueError(f"Unknown stratification dimension: {dimension!r}")
+        pool: dict[int | None, list[int]] = {
+            value: [count, 0] for value, count in pool_counts.items()
+        }
         sampled: dict[int | None, dict[int, list[int]]] = defaultdict(
             lambda: defaultdict(lambda: [0, 0])
         )
-        for transition in candidates:
+        for transition in disputed:
             value = _stratum_value(
                 dimension, transition, domain, source_distances, query_hop
             )
-            pool[value][0] += 1
-            pool[value][1] += int(transition in disputed)
+            pool[value][1] += 1
         for seed, transitions in samples_by_seed.items():
             for transition in transitions:
                 value = _stratum_value(
@@ -134,15 +145,17 @@ def audit_example(
     query_graph = build_query_graph(
         domain.graph, example.query.topic_id, example.answer_ids
     )
-    candidates = candidate_pool(
-        query_graph.subgraph, query_graph.selected_positives
+    candidate_profile = candidate_pool_profile(
+        query_graph.subgraph,
+        query_graph.selected_positives,
+        query_graph.source_distances,
     )
-    disputed_transitions = disputed_shortest_path_transitions(
+    disputed_transitions = disputed_transitions_in_pool(
         domain.graph,
-        example.query.topic_id,
         query_graph.reachable_answers,
-        candidates,
-        source_distances=query_graph.source_distances,
+        query_graph.subgraph,
+        query_graph.selected_positives,
+        query_graph.source_distances,
     )
     disputed = set(disputed_transitions)
     source_distances = query_graph.source_distances
@@ -204,25 +217,19 @@ def audit_example(
             for transition in query_graph.selected_positives
         ],
         "candidate_pool_policy": "shared_across_label_strategies",
-        "candidate_pool_size": len(candidates),
+        "candidate_pool_size": candidate_profile.size,
         "disputed_candidate_count": len(disputed_transitions),
         "disputed_candidate_rate": _ratio(
-            len(disputed_transitions), len(candidates)
+            len(disputed_transitions), candidate_profile.size
         ),
         "disputed_definition": "unselected transition on any full-graph topic--hard-answer shortest path",
-        "disputed_transitions": [
-            transition_dict(
-                transition,
-                domain.graph,
-                transition_depth(source_distances, transition),
-            )
-            for transition in disputed_transitions
-        ],
         "sampling": sampling_records,
         "strata": _per_query_strata(
             stratify,
             domain,
-            candidates,
+            candidate_profile.size,
+            candidate_profile.by_arity,
+            candidate_profile.by_depth,
             disputed,
             samples_by_seed,
             source_distances,
