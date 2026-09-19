@@ -19,6 +19,7 @@ from .weighted_protocol import (
     load_protocol,
     phase_protocol,
     validate_confirmation_request,
+    validate_gate_d_request,
     validate_selection_request,
 )
 
@@ -115,6 +116,7 @@ def run_weighted_suite(
     learning_rate: float,
     protocol_path: Path = DEFAULT_PROTOCOL_PATH,
     locked_weight: float | None = None,
+    domain: str | None = None,
 ) -> None:
     unique_gpus = tuple(dict.fromkeys(int(value) for value in gpu_ids))
     if not unique_gpus:
@@ -148,6 +150,22 @@ def run_weighted_suite(
             raise ValueError("独立确认必须提供选参阶段锁定的权重")
         validate_confirmation_request(
             protocol,
+            data_dir=data_dir,
+            seeds=seeds,
+            locked_weight=locked_weight,
+            strategy2_weights=strategy2_weights,
+            random_control_weights=random_control_weights,
+            include_baseline=include_baseline,
+            include_endpoint_reference=include_endpoint_reference,
+            evaluation_split=evaluation_split,
+            training_config=training_config,
+        )
+    elif phase == "gate_d":
+        if locked_weight is None or domain is None:
+            raise ValueError("门槛D必须提供锁定权重和领域")
+        validate_gate_d_request(
+            protocol,
+            domain=domain,
             data_dir=data_dir,
             seeds=seeds,
             locked_weight=locked_weight,
@@ -211,7 +229,7 @@ def run_weighted_suite(
                 existing = json.load(handle)
             expected = {
                 "experiment": f"weighted_strategy2_{phase}",
-                "domain": settings["domain"],
+                "domain": domain if phase == "gate_d" else settings["domain"],
                 "strategy": task.strategy,
                 "seed": task.seed,
                 "sampler_seed": task.seed,
@@ -324,6 +342,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--phase", required=True)
     parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL_PATH)
     parser.add_argument("--locked-weight-file", type=Path)
+    parser.add_argument("--domain")
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--seeds", type=int, nargs="+", required=True)
@@ -367,6 +386,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         learning_rate=args.learning_rate,
         protocol_path=args.protocol,
         locked_weight=locked_weight,
+        domain=args.domain,
     )
     return 0
 

@@ -137,3 +137,46 @@ def validate_confirmation_request(
         expected_split_seed=int(settings["split_seed"]),
         expected_split_scheme=str(settings["split_scheme"]),
     )
+
+
+def validate_gate_d_request(
+    protocol: Mapping[str, Any],
+    *,
+    domain: str,
+    data_dir: Path,
+    seeds: Sequence[int],
+    locked_weight: float,
+    strategy2_weights: Sequence[float],
+    random_control_weights: Sequence[float],
+    include_baseline: bool,
+    include_endpoint_reference: bool,
+    evaluation_split: str,
+    training_config: Mapping[str, Any],
+) -> None:
+    settings = phase_protocol(protocol, "gate_d")
+    candidate_weights = [
+        float(value) for value in phase_protocol(protocol, "selection")["candidate_weights"]
+    ]
+    if locked_weight not in candidate_weights:
+        raise ValueError("门槛D权重不属于冻结的候选网格")
+    if domain not in settings["domains"]:
+        raise ValueError(f"门槛D领域不在冻结列表中：{domain}")
+    if list(seeds) != list(settings["sampler_and_training_seeds"]):
+        raise ValueError("门槛D随机种子不符合冻结协议")
+    if list(strategy2_weights) != [locked_weight]:
+        raise ValueError("门槛D只能运行锁定的策略2权重")
+    if list(random_control_weights) != [locked_weight]:
+        raise ValueError("门槛D只能运行锁定的随机对照权重")
+    if not include_baseline or include_endpoint_reference:
+        raise ValueError("门槛D实验臂不符合冻结协议")
+    if evaluation_split != settings["reported_split"]:
+        raise ValueError("门槛D评估划分不符合冻结协议")
+    if dict(training_config) != dict(settings["training"]):
+        raise ValueError("门槛D训练超参数不符合冻结协议")
+    validate_dataset_files(
+        data_dir,
+        seeds,
+        expected_domain=domain,
+        expected_split_seed=int(settings["split_seed"]),
+        expected_split_scheme=str(settings["split_scheme"]),
+    )

@@ -43,6 +43,8 @@
     "split_seed": 20261001,
     "split_scheme": "70/15/15",
     "reported_split": "test",
+    "split_scheme": "70/15/15",
+    "reported_split": "test",
     "training": {
       "epochs": 50,
       "patience": 8,
@@ -75,6 +77,8 @@
     ],
     "sampler_and_training_seeds": [142, 143, 144, 145, 146],
     "split_seed": 20261001,
+    "split_scheme": "70/15/15",
+    "reported_split": "test",
     "locked_weight_across_domains": true,
     "training": {
       "epochs": 50,
