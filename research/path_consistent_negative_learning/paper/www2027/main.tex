@@ -1,13 +1,18 @@
 \documentclass[sigconf,review,anonymous]{acmart}
 
-\usepackage[UTF8,fontset=fandol]{ctex}
-\usepackage{amsmath,amssymb}
+\usepackage{xeCJK}
+\setCJKmainfont{FandolSong-Regular}
+\setCJKsansfont{FandolHei-Regular}
+\usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{microtype}
 
-\settopmatter{printacmref=false}
+\settopmatter{printacmref=true}
+\acmConference[WWW '27]{The ACM Web Conference 2027}{May 10--14, 2027}{Dublin, Ireland}
+\acmYear{2027}
+\copyrightyear{2027}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \pagestyle{plain}
 \graphicspath{{../../artifacts/www_revision/figures/}}
@@ -19,6 +24,9 @@
 }
 
 \title{单路径弱监督并不等于确定负例：超图检索中的路径一致负例重加权}
+\ccsdesc[500]{Information systems~Retrieval models and ranking}
+\ccsdesc[300]{Information systems~Question answering}
+\keywords{图检索，超图，弱监督，负采样，检索增强生成，路径监督}
 
 \begin{document}
 \maketitle
@@ -78,6 +86,7 @@ D_q=\{t\in N_q:t\ \text{满足式}\eqref{eq:path-consistency}\}.
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{method_overview.pdf}
+  \Description{三行有向路径示意图：所选最短路径的正例权重为一，未选中的等长最短路径负例权重为 lambda，偏离最短路径的普通负例权重为一。}
   \caption{单路径弱监督产生的三类训练信号。未选中的等长最短路径具有结构冲突证据，本文保留其负标签但把损失权重降为 $\lambda$。}
   \label{fig:method}
 \end{figure}
@@ -147,6 +156,7 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.92\textwidth]{path_conflict.pdf}
+  \Description{十一领域候选空间、实际采样与受影响问题的路径冲突率对比。}
   \caption{RQ1：\DatasetCount{} 个领域的路径监督冲突。候选级比例与问题级覆盖采用不同面板，避免用总体均值掩盖分布。}
   \label{fig:conflict}
 \end{figure*}
@@ -167,6 +177,7 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.92\textwidth]{coverage_ranking_tradeoff.pdf}
+  \Description{逐领域覆盖变化与所选路径排序变化的散点图，以及带百分之九十五置信区间的森林图。}
   \caption{RQ2：冻结 $\lambda_D^*$ 相对基线的覆盖---排序权衡，以及逐领域 answer reach@10 配对区间。}
   \label{fig:tradeoff}
 \end{figure*}
@@ -182,6 +193,7 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.96\textwidth]{lambda_sensitivity.pdf}
+  \Description{选择集上的 lambda 灵敏度曲线、逐领域冻结 lambda 和冲突率相关性。}
   \caption{RQ4：selection 灵敏度、逐领域 $\lambda_D^*$ 与采样冲突率的探索性关系。}
   \label{fig:lambda}
 \end{figure*}
