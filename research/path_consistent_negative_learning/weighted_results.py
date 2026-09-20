@@ -190,6 +190,8 @@ def compare_configurations(
     comparison: str,
     metric: str,
     confidence_level: float = 0.95,
+    bootstrap_seed: int = 20260919,
+    bootstrap_resamples: int = 10_000,
 ) -> dict[str, Any]:
     reference_values = _query_values(runs, reference, metric)
     comparison_values = _query_values(runs, comparison, metric)
@@ -198,8 +200,8 @@ def compare_configurations(
         _mean_queries_across_seeds(reference_values),
         _mean_queries_across_seeds(comparison_values),
         confidence_level=confidence_level,
-        n_resamples=10_000,
-        seed=20260919,
+        n_resamples=bootstrap_resamples,
+        seed=bootstrap_seed,
     )
     seed_payload = asdict(seed_summary)
     seed_payload["per_seed"] = {

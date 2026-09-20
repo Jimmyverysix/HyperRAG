@@ -82,6 +82,8 @@ def evaluate_checkpoint(
         "lambda_star_file": str(lambda_star_path),
         "source_selection_result": str(source_result_path),
         "source_best_epoch": int(source["best_epoch"]),
+        "training_seconds": float(source["training_seconds"]),
+        "peak_cuda_memory_bytes": int(source["peak_cuda_memory_bytes"]),
         "metrics": metrics,
     }
     (output_dir / "result.json").write_text(
