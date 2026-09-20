@@ -45,7 +45,11 @@ def prepare(config_path: Path, source_root: Path, output_root: Path, workers: in
     split_scheme = config["randomness"]["split_scheme"]
     tasks = []
     for domain in config["datasets"]:
-        domain_dir = source_root / domain / "directed"
+        # WikiTopics_QE stores the integer query/answer mappings and the
+        # training graph together at the domain root.  The nested ``directed``
+        # directory contains inference exports only and is not a loadable
+        # training dataset on its own.
+        domain_dir = source_root / domain
         if not domain_dir.is_dir():
             raise FileNotFoundError(domain_dir)
         for seed in seeds:
