@@ -2,6 +2,11 @@
   "schema_version": 1,
   "status": "frozen_before_www_revision_main_results",
   "scope": "structured_proxy_only_not_official_hyperrag_qa",
+  "dataset": {
+    "name": "WikiTopics_QE",
+    "version": "unversioned_public_release_local_snapshot_2026-09-20",
+    "representation": "official_integer_id_directed_graph_files"
+  },
   "datasets": [
     "art",
     "award",
@@ -38,6 +43,12 @@
     "learning_rate": 0.001,
     "early_stopping_split": "validation",
     "early_stopping_metric": "weighted_bce"
+  },
+  "model": {
+    "backbone": "StructuredRetriever",
+    "entity_embedding_dim": 32,
+    "relation_embedding_dim": 32,
+    "hidden_dim": 256
   },
   "test_arms": [
     "baseline_lambda_1",

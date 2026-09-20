@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
 import queue
+import socket
 import subprocess
 import sys
 from typing import Any, Mapping, Sequence
+
+import torch
 
 
 ALLOWED_GPU_IDS = frozenset(range(6))
@@ -38,6 +42,52 @@ def _matches_expected(actual: Mapping[str, Any], expected: Mapping[str, Any]) ->
     return all(actual.get(key) == value for key, value in expected.items())
 
 
+def _timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _git_state() -> dict[str, Any]:
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ["git", "status", "--porcelain"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    return {
+        "commit": commit,
+        "dirty": bool(status),
+        "changed_paths": status,
+    }
+
+
+def _runtime_state() -> dict[str, Any]:
+    driver = subprocess.run(
+        [
+            "nvidia-smi",
+            "--query-gpu=driver_version",
+            "--format=csv,noheader",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    return {
+        "hostname": socket.gethostname(),
+        "python_executable": sys.executable,
+        "python_version": sys.version,
+        "pytorch_version": torch.__version__,
+        "pytorch_cuda_version": torch.version.cuda,
+        "cuda_available": torch.cuda.is_available(),
+        "nvidia_driver_versions": sorted(set(value.strip() for value in driver)),
+    }
+
+
 def run_queue(
     manifest_path: Path,
     *,
@@ -45,6 +95,8 @@ def run_queue(
     memory_limit_mib: int = 512,
 ) -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if "config_snapshot" not in manifest:
+        raise ValueError("manifest 缺少冻结的 config_snapshot")
     jobs = manifest["jobs"]
     ids = [job["experiment_id"] for job in jobs]
     if len(ids) != len(set(ids)):
@@ -58,6 +110,19 @@ def run_queue(
         raise RuntimeError("指定 GPU 当前均不空闲")
 
     root = manifest_path.resolve().parent
+    run_environment = {
+        "captured_at": _timestamp(),
+        "working_directory": str(Path.cwd().resolve()),
+        "manifest": str(manifest_path.resolve()),
+        "git": _git_state(),
+        "runtime": _runtime_state(),
+        "config_path": manifest["config"],
+        "config_snapshot": manifest["config_snapshot"],
+    }
+    (root / "environment.json").write_text(
+        json.dumps(run_environment, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     (root / "COMPLETE").unlink(missing_ok=True)
     gpu_pool: queue.Queue[int] = queue.Queue()
     for gpu in available:
@@ -66,12 +131,15 @@ def run_queue(
     def execute(job: dict[str, Any]) -> tuple[str, int]:
         output_dir = Path(job["output_dir"])
         result_path = output_dir / "result.json"
+        provenance_path = output_dir / "provenance.json"
         if result_path.is_file():
             actual = json.loads(result_path.read_text(encoding="utf-8"))
             if not _matches_expected(actual, job["expected_result"]):
                 raise RuntimeError(f"已有结果与 manifest 不一致：{result_path}")
             if not (output_dir / "query_metrics.jsonl").is_file():
                 raise RuntimeError(f"已有结果缺少逐题指标：{output_dir}")
+            if not provenance_path.is_file():
+                raise RuntimeError(f"已有结果缺少执行 provenance：{output_dir}")
             return "skipped", -1
 
         gpu = gpu_pool.get()
@@ -87,6 +155,7 @@ def run_queue(
             )
             environment = os.environ.copy()
             environment["CUDA_VISIBLE_DEVICES"] = str(gpu)
+            started_at = _timestamp()
             with (output_dir / "stdout.log").open("w", encoding="utf-8") as stdout:
                 with (output_dir / "stderr.log").open("w", encoding="utf-8") as stderr:
                     completed = subprocess.run(
@@ -103,6 +172,24 @@ def run_queue(
             actual = json.loads(result_path.read_text(encoding="utf-8"))
             if not _matches_expected(actual, job["expected_result"]):
                 raise RuntimeError(f"新结果与 manifest 不一致：{result_path}")
+            provenance = {
+                "schema_version": 1,
+                "experiment_id": job["experiment_id"],
+                "phase": manifest["phase"],
+                "started_at": started_at,
+                "completed_at": _timestamp(),
+                "physical_gpu_id": gpu,
+                "command": command,
+                "expected_result": job["expected_result"],
+                "git": run_environment["git"],
+                "runtime": run_environment["runtime"],
+                "config_path": manifest["config"],
+                "config_snapshot": manifest["config_snapshot"],
+            }
+            provenance_path.write_text(
+                json.dumps(provenance, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
             return "completed", gpu
         finally:
             gpu_pool.put(gpu)

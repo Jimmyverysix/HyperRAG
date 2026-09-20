@@ -246,6 +246,7 @@ def main() -> int:
         "schema_version": 1,
         "phase": args.phase,
         "config": str(args.config),
+        "config_snapshot": config,
         "job_count": len(jobs),
         "jobs": jobs,
     }

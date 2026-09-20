@@ -29,6 +29,9 @@ The system consists of two core modules:
 
 The codebase builds on [HyperGraphRAG](https://github.com/LHRLAB/HyperGraphRAG.git).
 
+本仓库中的路径监督修订研究、冻结协议、复现命令与中文论文入口见
+[`research/path_consistent_negative_learning/README.md`](research/path_consistent_negative_learning/README.md)。
+
 ---
 
 ## Table of Contents

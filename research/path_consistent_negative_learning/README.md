@@ -1,5 +1,27 @@
 # HyperRAG 路径监督研究
 
+## WWW 2027 修订版
+
+当前主线研究的是：单路径弱监督把“未被选中、但仍位于其他等长最短路径上的转移”当作确定负例时，是否会造成监督冲突，以及仅用一个数据集级权重 $\lambda$ 降低这类负例的监督强度能否改善检索覆盖而不过度损害原路径排序。
+
+- 正式方法定义：`docs/METHOD_SPEC.md`
+- 冻结实验协议：`docs/EXPERIMENT_PROTOCOL.md`
+- 复现说明：`docs/REPRODUCIBILITY.md`
+- 统一执行入口：`Makefile`
+- 中文投稿主文件：`paper/www2027/main.tex`，编译产物为 `paper/www2027/main.pdf`
+- 新实验产物：仅写入 `artifacts/www_revision/`
+
+历史 proposal、历史 PDF 和历史 artifacts 只作为 provenance 保存，不再被新实验覆盖。正文、实验结果和讨论统一写入同一篇 WWW 稿件；`FINAL_RESEARCH_REVISION_REPORT.md` 只记录交付状态与阻塞项，不另写一份竞争性的实验报告。
+
+从仓库根目录运行：
+
+```bash
+make -C research/path_consistent_negative_learning test
+make -C research/path_consistent_negative_learning verify-history
+```
+
+服务器上的完整顺序见 `docs/REPRODUCIBILITY.md`。代码只通过 GitHub 同步；raw runs、数据和 checkpoint 留在服务器，聚合 JSON/CSV、论文图表与最终 PDF 才进入版本库。
+
 本目录实现提案中的路径监督研究。核心问题是：公开流程只选择一条最短路径作为正例时，未被选中、但仍属于其他主题—答案最短路径的转移，应当标负、忽略，还是标正。
 
 ## 实验策略

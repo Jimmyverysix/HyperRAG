@@ -32,6 +32,14 @@ class WwwJobManifestTests(unittest.TestCase):
         self.assertTrue(
             all("selection" in job["command"] for job in jobs)
         )
+        self.assertEqual(
+            self.config["dataset"]["name"],
+            "WikiTopics_QE",
+        )
+        self.assertEqual(
+            self.config["model"]["backbone"],
+            "StructuredRetriever",
+        )
 
     def test_controls_use_each_dataset_frozen_lambda(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
