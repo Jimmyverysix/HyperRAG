@@ -1,8 +1,11 @@
 # WWW 2027 研究修订最终报告
 
-日期：2026-09-20  
-工作分支：`www-path-supervision-revision`  
-本轮已推送提交：`ad7477a`、`3f1581b`、`58519d4`、`45c42dc`  
+日期：2026-09-20
+
+工作分支：`www-path-supervision-revision`
+
+核心实现提交：`ad7477a`、`3f1581b`、`58519d4`、`45c42dc`
+
 远端分支：`github/www-path-supervision-revision`
 
 ## 结论先行
