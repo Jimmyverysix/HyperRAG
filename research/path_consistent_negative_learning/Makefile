@@ -24,7 +24,7 @@ test:
 
 verify-history:
 	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).scripts.verify_historical_artifacts \
-		--artifact-root $(HISTORICAL_ROOT) \
+		--artifacts-dir $(HISTORICAL_ROOT) \
 		--output $(ARTIFACT_ROOT)/provenance/historical_verification.json
 
 audit:
