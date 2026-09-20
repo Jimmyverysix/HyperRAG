@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_www_revision_main_results",
+  "scope": "structured_proxy_only_not_official_hyperrag_qa",
+  "datasets": [
+    "art",
+    "award",
+    "edu",
+    "health",
+    "infra",
+    "loc",
+    "org",
+    "people",
+    "sci",
+    "sport",
+    "tax"
+  ],
+  "lambda_grid": [0.0, 0.1, 0.25, 0.5, 0.75, 1.0],
+  "lambda_selection": {
+    "split": "selection",
+    "metric": "answer_reach_10",
+    "direction": "maximize",
+    "tie_rule": "absolute_difference_le_1e-12_then_choose_larger_lambda",
+    "per_dataset": true,
+    "test_access_before_freeze": false
+  },
+  "randomness": {
+    "sampler_and_training_seeds": [42, 43, 44, 45, 46],
+    "split_seed": 20260920,
+    "split_scheme": "60/10/15/15",
+    "bootstrap_seed": 20260920,
+    "bootstrap_resamples": 10000
+  },
+  "training": {
+    "epochs": 50,
+    "patience": 8,
+    "batch_size": 4096,
+    "learning_rate": 0.001,
+    "early_stopping_split": "validation",
+    "early_stopping_metric": "weighted_bce"
+  },
+  "test_arms": [
+    "baseline_lambda_1",
+    "mask_endpoint_lambda_0",
+    "dataset_specific_lambda_star",
+    "matched_random_at_lambda_star",
+    "all_shortest_positive"
+  ],
+  "primary_metric": "answer_reach_10",
+  "secondary_metrics": [
+    "selected_mrr",
+    "selected_pr_auc",
+    "all_shortest_mrr",
+    "all_shortest_pr_auc"
+  ],
+  "hardware": {
+    "allowed_gpu_ids": [0, 1, 2, 3, 4, 5],
+    "maximum_concurrent_training_processes": 6
+  }
+}

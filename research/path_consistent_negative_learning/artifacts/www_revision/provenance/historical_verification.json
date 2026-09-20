@@ -1,0 +1,57 @@
+{
+  "checks": {
+    "audit_candidate_count_is_domain_sum": true,
+    "audit_candidate_rate_recomputed": true,
+    "audit_disputed_candidate_count_is_domain_sum": true,
+    "audit_disputed_sampled_count_is_domain_sum": true,
+    "audit_query_count_is_domain_sum": true,
+    "audit_sampled_count_is_domain_sum": true,
+    "audit_sampled_rate_recomputed": true,
+    "domain_count_matches_rows": true,
+    "domain_order_matches_provenance": true,
+    "gate_c_precision_difference_matches_comparison": true,
+    "gate_d_has_all_domains": true,
+    "gate_d_reports_transfer_not_universal_improvement": true,
+    "historical_confirmation_passed": true,
+    "historical_selection_used_selection_split": true,
+    "historical_weight_consistent": true,
+    "lambda_zero_failed_registered_gate": true
+  },
+  "facts": {
+    "candidate_count": 872576411856,
+    "disputed_candidate_count": 42926111,
+    "disputed_candidate_rate": 4.9194672714902626e-05,
+    "disputed_sampled_negative_count": 586117,
+    "disputed_sampled_negative_rate": 0.05770734511181471,
+    "domain_count": 11,
+    "domain_sampled_rate_max": 0.11674363837633173,
+    "domain_sampled_rate_min": 0.011879109591608749,
+    "historical_transfer_answer_reach_ci": [
+      0.015976931095550137,
+      0.09393633720655671
+    ],
+    "historical_transfer_answer_reach_delta": 0.04806554606245554,
+    "historical_transfer_lambda": 0.1,
+    "historical_transfer_selected_pr_auc_ci": [
+      -0.0034047490806179076,
+      -0.001021084183832559
+    ],
+    "historical_transfer_selected_pr_auc_delta": -0.0021725027903853485,
+    "lambda_zero_gate_c_decision": "不扩展完整训练",
+    "lambda_zero_selected_pr_auc_delta": -0.013187252040638014,
+    "positive_reach_domains": 10,
+    "query_count": 90000,
+    "sampled_negative_count": 10156714
+  },
+  "schema_version": 1,
+  "sources": {
+    "audit": "audit/combined_summary.json",
+    "confirmation": "weighted/confirmation_summary.json",
+    "gate_c": "gate_c/training_summary.json",
+    "gate_d": "weighted/gate_d_summary.json",
+    "locked_weight": "weighted/locked_weight.json",
+    "provenance": "provenance.json",
+    "selection": "weighted/selection_summary.json"
+  },
+  "status": "passed"
+}

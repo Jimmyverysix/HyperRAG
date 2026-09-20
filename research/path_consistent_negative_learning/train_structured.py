@@ -18,6 +18,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from .metrics import RetrievalMetrics, evaluate_retrieval
+from .path_supervision.weighted_loss import weighted_binary_cross_entropy
 from .strategies import STRATEGIES, WEIGHTED_STRATEGIES
 from .structured_data import (
     SELECTION_SPLIT,
@@ -93,29 +94,6 @@ def _mean_loss(
     if total_weight <= 0.0:
         raise ValueError("损失权重之和必须大于零")
     return total_loss / total_weight
-
-
-def weighted_binary_cross_entropy(
-    logits: torch.Tensor,
-    labels: torch.Tensor,
-    weights: torch.Tensor,
-    normalization_weight: float | None = None,
-) -> torch.Tensor:
-    """Compute BCE normalized by effective supervision weight."""
-
-    denominator = weights.sum()
-    if float(denominator.detach()) <= 0.0:
-        raise ValueError("损失权重之和必须大于零")
-    losses = nn.functional.binary_cross_entropy_with_logits(
-        logits,
-        labels,
-        reduction="none",
-    )
-    if normalization_weight is None:
-        return (losses * weights).sum() / denominator
-    if normalization_weight <= 0.0:
-        raise ValueError("全局平均损失权重必须大于零")
-    return (losses * weights).mean() / normalization_weight
 
 
 def _score_indices(
@@ -312,6 +290,7 @@ def train(
     patience: int = 8,
     batch_size: int = 4096,
     learning_rate: float = 1e-3,
+    amp: bool = False,
     disputed_negative_weight: float | None = None,
     evaluation_split: int = TEST_SPLIT,
     experiment_name: str = "structured_proxy_gate_c",
@@ -344,6 +323,8 @@ def train(
         numeric_feature_count=data.numeric_features.shape[1],
     ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    use_amp = bool(amp and device.type == "cuda")
+    scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
     positive_weight_mask = loss_weights > 0.0
     train_indices = _candidate_indices_for_split(
         data,
@@ -381,19 +362,22 @@ def train(
             batch_labels = labels[batch_indices].to(device, non_blocking=True)
             batch_weights = loss_weights[batch_indices].to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
-            logits = model(entity_ids, query_relations, numeric)
-            loss = weighted_binary_cross_entropy(
-                logits,
-                batch_labels,
-                batch_weights,
-                normalization_weight=mean_training_weight,
-            )
-            loss.backward()
-            optimizer.step()
+            with torch.autocast(
+                device_type=device.type,
+                dtype=torch.float16,
+                enabled=use_amp,
+            ):
+                logits = model(entity_ids, query_relations, numeric)
+                loss = weighted_binary_cross_entropy(
+                    logits,
+                    batch_labels,
+                    batch_weights,
+                )
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             batch_weight = float(batch_weights.sum())
-            train_loss_sum += (
-                loss.item() * len(batch_indices) * mean_training_weight
-            )
+            train_loss_sum += loss.item() * batch_weight
             train_items += batch_weight
         train_loss = train_loss_sum / train_items
         validation_loss = _mean_loss(
@@ -468,6 +452,7 @@ def train(
             "batch_size": batch_size,
             "learning_rate": learning_rate,
         },
+        "amp": use_amp,
         "best_epoch": best_epoch,
         "best_validation_loss": best_validation,
         "training_seconds": elapsed,
@@ -507,6 +492,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--patience", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=4096)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
+    parser.add_argument("--amp", action="store_true")
     parser.add_argument("--disputed-negative-weight", type=float)
     parser.add_argument(
         "--evaluation-split",
@@ -528,6 +514,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         patience=args.patience,
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
+        amp=args.amp,
         disputed_negative_weight=args.disputed_negative_weight,
         evaluation_split={
             "validation": VALIDATION_SPLIT,
