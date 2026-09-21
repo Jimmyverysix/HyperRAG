@@ -2,9 +2,13 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from research.path_consistent_negative_learning.scripts.build_www_job_manifest import (
     build_jobs,
+)
+from research.path_consistent_negative_learning.scripts.run_experiment_queue import (
+    _wait_for_available_gpus,
 )
 
 
@@ -76,6 +80,17 @@ class WwwJobManifestTests(unittest.TestCase):
         self.assertTrue(
             all(job["expected_result"]["disputed_negative_weight"] == 0.25 for job in random_jobs)
         )
+
+    def test_queue_waits_for_cuda_context_release_between_phases(self) -> None:
+        module = "research.path_consistent_negative_learning.scripts.run_experiment_queue"
+        with patch(
+            f"{module}._available_gpus",
+            side_effect=[(), (0, 1)],
+        ) as available, patch(f"{module}.time.sleep") as sleep:
+            result = _wait_for_available_gpus((0, 1), 512)
+        self.assertEqual(result, (0, 1))
+        self.assertEqual(available.call_count, 2)
+        sleep.assert_called_once_with(5.0)
 
 
 if __name__ == "__main__":

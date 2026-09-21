@@ -12,12 +12,15 @@ import queue
 import socket
 import subprocess
 import sys
+import time
 from typing import Any, Mapping, Sequence
 
 import torch
 
 
 ALLOWED_GPU_IDS = frozenset(range(6))
+GPU_RELEASE_TIMEOUT_SECONDS = 120.0
+GPU_RELEASE_POLL_SECONDS = 5.0
 
 
 def _available_gpus(requested: Sequence[int], memory_limit_mib: int) -> tuple[int, ...]:
@@ -36,6 +39,30 @@ def _available_gpus(requested: Sequence[int], memory_limit_mib: int) -> tuple[in
         index, memory = (int(value.strip()) for value in line.split(","))
         used[index] = memory
     return tuple(gpu for gpu in requested if used.get(gpu, memory_limit_mib + 1) <= memory_limit_mib)
+
+
+def _wait_for_available_gpus(
+    requested: Sequence[int],
+    memory_limit_mib: int,
+    *,
+    timeout_seconds: float = GPU_RELEASE_TIMEOUT_SECONDS,
+    poll_seconds: float = GPU_RELEASE_POLL_SECONDS,
+) -> tuple[int, ...]:
+    """等待上一批 CUDA 进程释放显存，再确定本阶段可用 GPU。"""
+
+    deadline = time.monotonic() + timeout_seconds
+    announced = False
+    while True:
+        available = _available_gpus(requested, memory_limit_mib)
+        if available:
+            return available
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return ()
+        if not announced:
+            print("等待上一阶段释放 GPU 显存……", flush=True)
+            announced = True
+        time.sleep(min(poll_seconds, remaining))
 
 
 def _matches_expected(actual: Mapping[str, Any], expected: Mapping[str, Any]) -> bool:
@@ -105,7 +132,7 @@ def run_queue(
     requested = tuple(dict.fromkeys(int(gpu) for gpu in gpu_ids))
     if not requested or len(requested) > 6 or not set(requested) <= ALLOWED_GPU_IDS:
         raise ValueError("GPU 只能从 0--5 中选择，且并发数不得超过 6")
-    available = _available_gpus(requested, memory_limit_mib)
+    available = _wait_for_available_gpus(requested, memory_limit_mib)
     if not available:
         raise RuntimeError("指定 GPU 当前均不空闲")
 
