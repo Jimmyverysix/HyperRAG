@@ -1,0 +1,343 @@
+{
+  "domains": [
+    {
+      "candidate_conflict_rate": 6.476871818240154e-05,
+      "candidate_conflicts_per_query": {
+        "maximum": 18865.0,
+        "mean": 250.7478,
+        "median": 19.0,
+        "q1": 3.0,
+        "q3": 118.25
+      },
+      "candidate_pool_size": 38714337266,
+      "disputed_candidate_count": 2507478,
+      "disputed_sampled_negative_count": 33724,
+      "domain": "art",
+      "queries_with_candidate_conflict": 9902,
+      "queries_with_candidate_conflict_rate": 0.9902,
+      "queries_with_sampled_conflict_any_seed": 5293,
+      "queries_with_sampled_conflict_any_seed_rate": 0.5293,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.0406007524454477,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 19.8,
+        "mean": 0.67448,
+        "median": 0.2,
+        "q1": 0.0,
+        "q3": 0.6
+      },
+      "sampled_negative_count": 830625
+    },
+    {
+      "candidate_conflict_rate": 0.022574107738284655,
+      "candidate_conflicts_per_query": {
+        "maximum": 4369.0,
+        "mean": 306.5559,
+        "median": 84.5,
+        "q1": 18.0,
+        "q3": 393.0
+      },
+      "candidate_pool_size": 135799786,
+      "disputed_candidate_count": 3065559,
+      "disputed_sampled_negative_count": 138808,
+      "domain": "award",
+      "queries_with_candidate_conflict": 9999,
+      "queries_with_candidate_conflict_rate": 0.9999,
+      "queries_with_sampled_conflict_any_seed": 8762,
+      "queries_with_sampled_conflict_any_seed_rate": 0.8762,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.08223709935422714,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 22.4,
+        "mean": 2.77616,
+        "median": 1.8,
+        "q1": 0.4,
+        "q3": 4.0
+      },
+      "sampled_negative_count": 1687900
+    },
+    {
+      "candidate_conflict_rate": 0.00583527126772943,
+      "candidate_conflicts_per_query": {
+        "maximum": 1331.0,
+        "mean": 41.5328,
+        "median": 14.0,
+        "q1": 4.0,
+        "q3": 45.0
+      },
+      "candidate_pool_size": 71175440,
+      "disputed_candidate_count": 415328,
+      "disputed_sampled_negative_count": 82006,
+      "domain": "edu",
+      "queries_with_candidate_conflict": 9956,
+      "queries_with_candidate_conflict_rate": 0.9956,
+      "queries_with_sampled_conflict_any_seed": 7327,
+      "queries_with_sampled_conflict_any_seed_rate": 0.7327,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.09326759586240624,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 31.6,
+        "mean": 1.64012,
+        "median": 0.6,
+        "q1": 0.0,
+        "q3": 1.8
+      },
+      "sampled_negative_count": 879255
+    },
+    {
+      "candidate_conflict_rate": 0.0005438307613269502,
+      "candidate_conflicts_per_query": {
+        "maximum": 9905.0,
+        "mean": 205.4217,
+        "median": 44.0,
+        "q1": 7.0,
+        "q3": 178.0
+      },
+      "candidate_pool_size": 3777309314,
+      "disputed_candidate_count": 2054217,
+      "disputed_sampled_negative_count": 70870,
+      "domain": "health",
+      "queries_with_candidate_conflict": 9980,
+      "queries_with_candidate_conflict_rate": 0.998,
+      "queries_with_sampled_conflict_any_seed": 7177,
+      "queries_with_sampled_conflict_any_seed_rate": 0.7177,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.04847601849571808,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 29.0,
+        "mean": 1.4174,
+        "median": 0.4,
+        "q1": 0.0,
+        "q3": 1.8
+      },
+      "sampled_negative_count": 1461960
+    },
+    {
+      "candidate_conflict_rate": 0.00163358980801528,
+      "candidate_conflicts_per_query": {
+        "maximum": 2866.0,
+        "mean": 98.2288,
+        "median": 19.0,
+        "q1": 4.0,
+        "q3": 91.0
+      },
+      "candidate_pool_size": 601306396,
+      "disputed_candidate_count": 982288,
+      "disputed_sampled_negative_count": 58796,
+      "domain": "infra",
+      "queries_with_candidate_conflict": 9925,
+      "queries_with_candidate_conflict_rate": 0.9925,
+      "queries_with_sampled_conflict_any_seed": 7359,
+      "queries_with_sampled_conflict_any_seed_rate": 0.7359,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.06321606743505935,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 27.8,
+        "mean": 1.1759199999999999,
+        "median": 0.4,
+        "q1": 0.0,
+        "q3": 1.4
+      },
+      "sampled_negative_count": 930080
+    },
+    {
+      "candidate_conflict_rate": 3.864770109995425e-05,
+      "candidate_conflicts_per_query": {
+        "maximum": 371311.0,
+        "mean": 4476.6725,
+        "median": 101.0,
+        "q1": 36.0,
+        "q3": 401.5
+      },
+      "candidate_pool_size": 463331310540,
+      "disputed_candidate_count": 17906690,
+      "disputed_sampled_negative_count": 13575,
+      "domain": "loc",
+      "queries_with_candidate_conflict": 3929,
+      "queries_with_candidate_conflict_rate": 0.98225,
+      "queries_with_sampled_conflict_any_seed": 2512,
+      "queries_with_sampled_conflict_any_seed_rate": 0.628,
+      "query_count": 4000,
+      "sampled_conflict_rate": 0.02320909557189263,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 16.0,
+        "mean": 0.67875,
+        "median": 0.4,
+        "q1": 0.0,
+        "q3": 1.0
+      },
+      "sampled_negative_count": 584900
+    },
+    {
+      "candidate_conflict_rate": 0.025991471682433258,
+      "candidate_conflicts_per_query": {
+        "maximum": 879.0,
+        "mean": 93.13975,
+        "median": 59.0,
+        "q1": 7.0,
+        "q3": 140.25
+      },
+      "candidate_pool_size": 14333894,
+      "disputed_candidate_count": 372559,
+      "disputed_sampled_negative_count": 82787,
+      "domain": "org",
+      "queries_with_candidate_conflict": 3987,
+      "queries_with_candidate_conflict_rate": 0.99675,
+      "queries_with_sampled_conflict_any_seed": 2869,
+      "queries_with_sampled_conflict_any_seed_rate": 0.71725,
+      "query_count": 4000,
+      "sampled_conflict_rate": 0.11674363837633173,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 23.6,
+        "mean": 4.13935,
+        "median": 2.6,
+        "q1": 0.0,
+        "q3": 7.0
+      },
+      "sampled_negative_count": 709135
+    },
+    {
+      "candidate_conflict_rate": 0.0006306128845745958,
+      "candidate_conflicts_per_query": {
+        "maximum": 7751.0,
+        "mean": 164.8989,
+        "median": 13.0,
+        "q1": 3.0,
+        "q3": 100.0
+      },
+      "candidate_pool_size": 2614898998,
+      "disputed_candidate_count": 1648989,
+      "disputed_sampled_negative_count": 14992,
+      "domain": "people",
+      "queries_with_candidate_conflict": 9292,
+      "queries_with_candidate_conflict_rate": 0.9292,
+      "queries_with_sampled_conflict_any_seed": 4048,
+      "queries_with_sampled_conflict_any_seed_rate": 0.4048,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.020234849507355917,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 11.8,
+        "mean": 0.29983999999999994,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.2
+      },
+      "sampled_negative_count": 740900
+    },
+    {
+      "candidate_conflict_rate": 0.000650420032471618,
+      "candidate_conflicts_per_query": {
+        "maximum": 4049.0,
+        "mean": 128.4678,
+        "median": 10.0,
+        "q1": 3.0,
+        "q3": 73.0
+      },
+      "candidate_pool_size": 1975151342,
+      "disputed_candidate_count": 1284678,
+      "disputed_sampled_negative_count": 54899,
+      "domain": "sci",
+      "queries_with_candidate_conflict": 9960,
+      "queries_with_candidate_conflict_rate": 0.996,
+      "queries_with_sampled_conflict_any_seed": 6657,
+      "queries_with_sampled_conflict_any_seed_rate": 0.6657,
+      "query_count": 10000,
+      "sampled_conflict_rate": 0.06737942055097487,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 42.4,
+        "mean": 1.09798,
+        "median": 0.2,
+        "q1": 0.0,
+        "q3": 1.0
+      },
+      "sampled_negative_count": 814774
+    },
+    {
+      "candidate_conflict_rate": 4.477646934318903e-05,
+      "candidate_conflicts_per_query": {
+        "maximum": 302038.0,
+        "mean": 2711.49325,
+        "median": 246.0,
+        "q1": 12.0,
+        "q3": 1147.5
+      },
+      "candidate_pool_size": 242224837266,
+      "disputed_candidate_count": 10845973,
+      "disputed_sampled_negative_count": 7922,
+      "domain": "sport",
+      "queries_with_candidate_conflict": 3876,
+      "queries_with_candidate_conflict_rate": 0.969,
+      "queries_with_sampled_conflict_any_seed": 1564,
+      "queries_with_sampled_conflict_any_seed_rate": 0.391,
+      "query_count": 4000,
+      "sampled_conflict_rate": 0.011879109591608749,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 15.6,
+        "mean": 0.3961,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.2
+      },
+      "sampled_negative_count": 666885
+    },
+    {
+      "candidate_conflict_rate": 1.546687891114882e-05,
+      "candidate_conflicts_per_query": {
+        "maximum": 139373.0,
+        "mean": 230.294,
+        "median": 11.0,
+        "q1": 1.0,
+        "q3": 140.0
+      },
+      "candidate_pool_size": 119115951614,
+      "disputed_candidate_count": 1842352,
+      "disputed_sampled_negative_count": 27738,
+      "domain": "tax",
+      "queries_with_candidate_conflict": 7964,
+      "queries_with_candidate_conflict_rate": 0.9955,
+      "queries_with_sampled_conflict_any_seed": 3828,
+      "queries_with_sampled_conflict_any_seed_rate": 0.4785,
+      "query_count": 8000,
+      "sampled_conflict_rate": 0.03262142773138892,
+      "sampled_conflicts_per_query_seed_average": {
+        "maximum": 27.0,
+        "mean": 0.69345,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.4
+      },
+      "sampled_negative_count": 850300
+    }
+  ],
+  "historical_totals_verified": true,
+  "overall": {
+    "candidate_conflict_rate": 4.9194672714902626e-05,
+    "candidate_conflicts_per_query": {
+      "maximum": 371311.0,
+      "mean": 476.95678888888887,
+      "median": 26.0,
+      "q1": 4.0,
+      "q3": 141.0
+    },
+    "candidate_pool_size": 872576411856,
+    "disputed_candidate_count": 42926111,
+    "disputed_sampled_negative_count": 586117,
+    "domain_count": 11,
+    "queries_with_candidate_conflict": 88770,
+    "queries_with_candidate_conflict_rate": 0.9863333333333333,
+    "queries_with_sampled_conflict_any_seed": 57396,
+    "queries_with_sampled_conflict_any_seed_rate": 0.6377333333333334,
+    "query_count": 90000,
+    "sampled_conflict_rate": 0.05770734511181471,
+    "sampled_conflicts_per_query_seed_average": {
+      "maximum": 42.4,
+      "mean": 1.3024822222222223,
+      "median": 0.2,
+      "q1": 0.0,
+      "q3": 1.4
+    },
+    "sampled_negative_count": 10156714
+  },
+  "schema_version": 1,
+  "source": "historical_raw_audit_jsonl"
+}

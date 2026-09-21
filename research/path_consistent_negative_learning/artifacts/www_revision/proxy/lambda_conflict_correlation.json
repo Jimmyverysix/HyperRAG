@@ -1,0 +1,6 @@
+{
+  "analysis": "exploratory_not_causal",
+  "n_datasets": 11,
+  "spearman_rho": -0.20000000000000004,
+  "p_value": 0.5554454421055853
+}
