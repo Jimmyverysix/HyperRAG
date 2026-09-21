@@ -5,7 +5,7 @@
     "audit": "research/path_consistent_negative_learning/artifacts/www_revision/audit/path_conflict_audit.json",
     "proxy_summary": "research/path_consistent_negative_learning/artifacts/www_revision/proxy/proxy_main_summary.json",
     "proxy_table": "research/path_consistent_negative_learning/artifacts/www_revision/proxy/proxy_main_table.csv",
-    "selection": "/root/hyperrag_pcneg/www_revision/lambda_selection/lambda_selection.csv"
+    "selection": "research/path_consistent_negative_learning/artifacts/www_revision/selection/lambda_selection.csv"
   },
   "outputs": [
     "results.tex",

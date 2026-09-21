@@ -27,7 +27,13 @@ def generate(audit_path: Path, output_stem: Path) -> tuple[Path, Path]:
         [row["queries_with_sampled_conflict_any_seed_rate"] for row in rows]
     ) * 100
 
-    figure, axes = plt.subplots(1, 2, figsize=(7.2, 2.8), gridspec_kw={"wspace": 0.34})
+    figure, axes = plt.subplots(
+        1,
+        2,
+        figsize=(7.2, 3.05),
+        layout="constrained",
+        gridspec_kw={"wspace": 0.16},
+    )
     ax = axes[0]
     ax.plot(
         x,
@@ -51,7 +57,12 @@ def generate(audit_path: Path, output_stem: Path) -> tuple[Path, Path]:
     ax.set_ylabel("路径一致负例比例（%）")
     ax.set_xticks(x)
     ax.set_xticklabels(domains, rotation=45, ha="right")
-    ax.legend(loc="upper left")
+    ax.legend(
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.0),
+        ncol=2,
+        fontsize=7,
+    )
     panel_label(ax, "a")
 
     ax = axes[1]
@@ -73,9 +84,13 @@ def generate(audit_path: Path, output_stem: Path) -> tuple[Path, Path]:
     ax.set_ylabel("问题占比（%）")
     ax.set_xticks(x)
     ax.set_xticklabels(domains, rotation=45, ha="right")
-    ax.legend(loc="upper left")
+    ax.legend(
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.0),
+        ncol=2,
+        fontsize=7,
+    )
     panel_label(ax, "b")
-    figure.tight_layout(pad=0.8)
     return save_vector_figure(figure, output_stem)
 
 

@@ -62,6 +62,9 @@ class PaperGenerationTests(unittest.TestCase):
                 "dataset_specific_lambda_star_vs_matched_random_at_lambda_star_answer_reach_10": {
                     "mean_difference": 0.02, "ci_low": 0.0, "ci_high": 0.04
                 },
+                "dataset_specific_lambda_star_vs_matched_random_at_lambda_star_selected_pr_auc": {
+                    "mean_difference": -0.003, "ci_low": -0.005, "ci_high": -0.001
+                },
             }
             summary.write_text(
                 json.dumps(
@@ -111,6 +114,9 @@ class PaperGenerationTests(unittest.TestCase):
 
             results = (output / "results.tex").read_text(encoding="utf-8")
             self.assertIn(r"\newcommand{\TunedReachDelta}{3.00}", results)
+            self.assertIn(r"\newcommand{\TunedVsRandomPRDelta}{-0.30}", results)
+            self.assertIn(r"\newcommand{\InteriorSelectedDomainCount}{1}", results)
+            self.assertIn(r"\newcommand{\PRGuardrailViolationCount}{0}", results)
             self.assertIn("toy", (output / "tables" / "main_proxy.tex").read_text(encoding="utf-8"))
             self.assertEqual(manifest["dataset_count"], 1)
 

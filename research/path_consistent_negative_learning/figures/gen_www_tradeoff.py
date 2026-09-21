@@ -33,7 +33,13 @@ def generate(summary_path: Path, output_stem: Path) -> tuple[Path, Path]:
         ci_low.append(100 * reach["ci_low"])
         ci_high.append(100 * reach["ci_high"])
 
-    figure, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), gridspec_kw={"wspace": 0.42})
+    figure, axes = plt.subplots(
+        1,
+        2,
+        figsize=(7.2, 3.15),
+        layout="constrained",
+        gridspec_kw={"wspace": 0.18},
+    )
     ax = axes[0]
     colors = [COLORS["gain"] if value >= 0 else COLORS["drop"] for value in precision_delta]
     ax.scatter(reach_delta, precision_delta, c=colors, s=29, edgecolor="white", linewidth=0.5)
@@ -65,10 +71,9 @@ def generate(summary_path: Path, output_stem: Path) -> tuple[Path, Path]:
     ax.axvline(0, color=COLORS["neutral"], linewidth=0.9, linestyle="--")
     ax.set_yticks(y)
     ax.set_yticklabels([domains[index] for index in order])
-    ax.set_xlabel("tuned − baseline answer reach@10（百分点，95% CI）")
+    ax.set_xlabel("tuned − baseline answer reach@10\n（百分点，95% CI）")
     ax.set_ylim(-0.7, len(domains) - 0.3)
     panel_label(ax, "b")
-    figure.tight_layout(pad=0.8)
     return save_vector_figure(figure, output_stem)
 
 

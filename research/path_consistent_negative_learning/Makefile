@@ -4,6 +4,7 @@ RDIR := research/path_consistent_negative_learning
 MODULE := research.path_consistent_negative_learning
 CONFIG := $(RDIR)/configs/www_revision/proxy_main.json
 ARTIFACT_ROOT := $(RDIR)/artifacts/www_revision
+SELECTION_ARTIFACT_ROOT := $(ARTIFACT_ROOT)/selection
 HISTORICAL_ROOT := $(RDIR)/artifacts
 PAPER_ROOT := $(RDIR)/paper/www2027
 
@@ -49,7 +50,8 @@ sweep:
 
 select-lambda:
 	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).scripts.select_all_lambdas \
-		--config $(CONFIG) --run-root $(RUN_ROOT) --output-root $(LAMBDA_ROOT)
+		--config $(CONFIG) --run-root $(RUN_ROOT) --output-root $(LAMBDA_ROOT) \
+		--snapshot-root $(SELECTION_ARTIFACT_ROOT)
 
 test-manifests:
 	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).scripts.build_www_job_manifest \
@@ -80,7 +82,7 @@ figures:
 		--audit $(ARTIFACT_ROOT)/audit/path_conflict_audit.json \
 		--output-stem $(ARTIFACT_ROOT)/figures/path_conflict
 	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).figures.gen_www_lambda \
-		--selection-csv $(LAMBDA_ROOT)/lambda_selection.csv \
+		--selection-csv $(SELECTION_ARTIFACT_ROOT)/lambda_selection.csv \
 		--audit $(ARTIFACT_ROOT)/audit/path_conflict_audit.json \
 		--output-stem $(ARTIFACT_ROOT)/figures/lambda_sensitivity
 	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).figures.gen_www_tradeoff \
@@ -93,7 +95,7 @@ paper-results:
 		--audit $(ARTIFACT_ROOT)/audit/path_conflict_audit.json \
 		--proxy-summary $(ARTIFACT_ROOT)/proxy/proxy_main_summary.json \
 		--proxy-table $(ARTIFACT_ROOT)/proxy/proxy_main_table.csv \
-		--selection $(LAMBDA_ROOT)/lambda_selection.csv \
+		--selection $(SELECTION_ARTIFACT_ROOT)/lambda_selection.csv \
 		--output-dir $(PAPER_ROOT)/generated
 
 paper:

@@ -8,7 +8,7 @@
 - 正式配置：`configs/www_revision/proxy_main.json`
 - 新产物根目录：`artifacts/www_revision/`
 
-服务器代码只能通过 GitHub 同步。本轮检查时服务器到 GitHub HTTPS 和 `ssh.github.com:443` 均超时；网络恢复前不得用复制源码的方式绕过。
+服务器代码只能通过 GitHub 同步。2026-09-21 已通过 GitHub HTTPS 与 SSH 反向转发的本机 HTTP 代理完成 `fetch`、快进合并和分支校验；未使用 SCP、压缩包或镜像绕过 GitHub。
 
 ## 2. 数据
 

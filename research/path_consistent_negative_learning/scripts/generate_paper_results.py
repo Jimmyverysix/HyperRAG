@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -80,6 +81,20 @@ def generate(
         proxy,
         "dataset_specific_lambda_star_vs_matched_random_at_lambda_star_answer_reach_10",
     )
+    random_pr = _comparison(
+        proxy,
+        "dataset_specific_lambda_star_vs_matched_random_at_lambda_star_selected_pr_auc",
+    )
+    selected_lambdas = [float(row["best_lambda"]) for row in selection_rows]
+    mask_selected_count = sum(math.isclose(value, 0.0) for value in selected_lambdas)
+    baseline_selected_count = sum(math.isclose(value, 1.0) for value in selected_lambdas)
+    interior_selected_count = (
+        len(selected_lambdas) - mask_selected_count - baseline_selected_count
+    )
+    guardrail_violation_count = sum(
+        float(row["tuned_minus_baseline_selected_pr_auc"]) < -0.01
+        for row in proxy_rows
+    )
     facts = historical["facts"]
     overall = audit["overall"]
     correlation = proxy["lambda_conflict_correlation"]
@@ -105,6 +120,13 @@ def generate(
         _macro("TunedVsRandomReachDelta", _percent(random_reach["mean_difference"])),
         _macro("TunedVsRandomReachCILow", _percent(random_reach["ci_low"])),
         _macro("TunedVsRandomReachCIHigh", _percent(random_reach["ci_high"])),
+        _macro("TunedVsRandomPRDelta", _percent(random_pr["mean_difference"])),
+        _macro("TunedVsRandomPRCILow", _percent(random_pr["ci_low"])),
+        _macro("TunedVsRandomPRCIHigh", _percent(random_pr["ci_high"])),
+        _macro("MaskSelectedDomainCount", str(mask_selected_count)),
+        _macro("InteriorSelectedDomainCount", str(interior_selected_count)),
+        _macro("BaselineSelectedDomainCount", str(baseline_selected_count)),
+        _macro("PRGuardrailViolationCount", str(guardrail_violation_count)),
         _macro("LambdaConflictRho", f"{correlation['spearman_rho']:.2f}"),
         _macro("LambdaConflictP", f"{correlation['p_value']:.3f}"),
     ]
@@ -174,11 +196,11 @@ def generate(
     manifest = {
         "schema_version": 1,
         "sources": {
-            "historical": str(historical_path),
-            "audit": str(audit_path),
-            "proxy_summary": str(proxy_summary_path),
-            "proxy_table": str(proxy_table_path),
-            "selection": str(selection_path),
+            "historical": historical_path.as_posix(),
+            "audit": audit_path.as_posix(),
+            "proxy_summary": proxy_summary_path.as_posix(),
+            "proxy_table": proxy_table_path.as_posix(),
+            "selection": selection_path.as_posix(),
         },
         "outputs": [
             "results.tex",

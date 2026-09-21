@@ -165,7 +165,7 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
   \centering
   \caption{逐领域结构代理测试结果。五个实验臂的数值均为 answer reach@10（\%），末列为加权相对基线的 selected-path PR-AUC 差值（百分点）；$\lambda_D^*$ 只由 selection split 冻结。}
   \label{tab:main}
-  \resizebox{\textwidth}{!}{\input{generated/tables/main_proxy.tex}}
+  \resizebox{0.88\textwidth}{!}{\input{generated/tables/main_proxy.tex}}
 \end{table*}
 
 \subsection{RQ2：硬屏蔽还是软监督}
@@ -184,11 +184,11 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
 
 \subsection{RQ3：路径信息是否必要}
 
-相对逐题匹配的随机降权，路径一致加权的宏平均 answer reach@10 差值为 \TunedVsRandomReachDelta{} 个百分点（95\% CI [\TunedVsRandomReachCILow, \TunedVsRandomReachCIHigh]）。该对照直接检验收益能否仅由降低若干负例权重解释。表\ref{tab:main}同时报告 all-shortest-positive；若强正标记不优于软加权，则结构可达性不足以替代语义相关性判断。
+相对逐题匹配的随机降权，路径一致加权的宏平均 answer reach@10 差值为 \TunedVsRandomReachDelta{} 个百分点（95\% CI [\TunedVsRandomReachCILow, \TunedVsRandomReachCIHigh]），selected-path PR-AUC 差值为 \TunedVsRandomPRDelta{} 个百分点（95\% CI [\TunedVsRandomPRCILow, \TunedVsRandomPRCIHigh]）。该对照表明覆盖收益不能仅由降低等量随机负例的权重解释，但路径定位同时引入了可测的原路径排序代价。表\ref{tab:main}同时报告 all-shortest-positive；强正标记的宏平均覆盖更高，排序代价也更大，因此结构可达性不足以替代语义相关性判断。
 
 \subsection{RQ4：领域特异权重}
 
-图\ref{fig:lambda}给出完整 selection 曲线、各领域冻结值及冲突率相关性。采样冲突率与 $\lambda_D^*$ 的 Spearman $\rho=\LambdaConflictRho$（$p=\LambdaConflictP$）。这是仅含 \DatasetCount{} 个领域的探索性分析，不作因果解释，也不据此修改冻结网格或删除不显著结果。
+图\ref{fig:lambda}给出完整 selection 曲线、各领域冻结值及冲突率相关性。\MaskSelectedDomainCount{}/\DatasetCount{} 个领域选择了屏蔽端点 $\lambda=0$，\InteriorSelectedDomainCount{} 个领域选择中间权重，\BaselineSelectedDomainCount{} 个领域选择基线端点。采样冲突率与 $\lambda_D^*$ 的 Spearman $\rho=\LambdaConflictRho$（$p=\LambdaConflictP$）。这是仅含 \DatasetCount{} 个领域的探索性分析，不作因果解释，也不据此修改冻结网格或删除不显著结果。
 
 \begin{figure*}[t]
   \centering
@@ -204,7 +204,7 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
 
 \section{结论}
 
-单路径弱监督把一个可观测选择过程误当成了完整的负例标注。完整主题---答案距离判据能够定位真实进入损失的路径一致负例；数据集级 $\lambda$ 重加权则在不改模型、标签和推理的条件下校准其监督强度。本文的实证判断以冻结测试结果为准：覆盖收益必须同时对照原路径排序代价和等量随机降权，不能仅凭某一次指标提高宣称方法成功。
+单路径弱监督把一个可观测选择过程误当成了完整的负例标注。完整主题---答案距离判据能够定位真实进入损失的路径一致负例；数据集级 $\lambda$ 重加权则在不改模型、标签和推理的条件下校准其监督强度。冻结测试中，该方案相对基线将 answer reach@10 宏平均提高 \TunedReachDelta{} 个百分点，selected-path PR-AUC 下降 \TunedPRDelta{} 个百分点；相对等量随机降权的覆盖收益区间下界仍为正。因此，本文在结构代理检索器上验证了路径定位机制和宏平均覆盖---排序折中。但这不是普遍无代价的替换：排序差值的 95\% 区间下界为 \TunedPRCILow{} 个百分点，且 \PRGuardrailViolationCount{}/\DatasetCount{} 个领域的点估计低于 $-1$ 个百分点。结论限于当前冻结协议和结构代理，不外推为官方 HyperRAG 端到端 QA 已得到验证。
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
@@ -220,10 +220,10 @@ d_I(s,s)+2+d_I(y,a)=0+2+2=4=d_I(s,a),
   \resizebox{\columnwidth}{!}{\input{generated/tables/audit.tex}}
 \end{table}
 
-\begin{table*}[h]
+\begin{table*}[b]
   \centering
   \caption{selection split 上的 $\lambda$ 灵敏度（answer reach@10，百分数）。}
-  \resizebox{\textwidth}{!}{\input{generated/tables/lambda.tex}}
+  \resizebox{0.78\textwidth}{!}{\input{generated/tables/lambda.tex}}
 \end{table*}
 
 \end{document}

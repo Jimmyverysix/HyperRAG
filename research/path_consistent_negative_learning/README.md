@@ -13,6 +13,8 @@
 
 历史 proposal、历史 PDF 和历史 artifacts 只作为 provenance 保存，不再被新实验覆盖。正文、实验结果和讨论统一写入同一篇 WWW 稿件；`FINAL_RESEARCH_REVISION_REPORT.md` 只记录交付状态与阻塞项，不另写一份竞争性的实验报告。
 
+冻结主实验已经完成。路径一致方案相对基线将 answer reach@10 宏平均提高 6.89 个百分点，同时 selected-path PR-AUC 下降 0.57 个百分点；相对逐题等量随机降权的覆盖提高 6.65 个百分点。10/11 个领域选择 $\lambda=0$，tax 选择 $\lambda=0.1$，且 2/11 个领域的排序下降超过 1 个百分点。因而当前结论是：结构代理上的路径定位机制与宏平均覆盖收益得到验证，但尚不能宣称逐领域无代价，也不能外推为官方 HyperRAG 端到端 QA 结果。
+
 从仓库根目录运行：
 
 ```bash
@@ -80,7 +82,7 @@ python -m unittest discover -s research/path_consistent_negative_learning/tests 
 本地与服务器只通过 GitHub 研究分支同步代码：
 
 ```text
-research/path-consistent-negative-learning
+www-path-supervision-revision
 ```
 
 训练数据、模型权重和运行日志不提交到 GitHub，保存在服务器独立运行目录；聚合后的 JSON、CSV、论文图和最终 PDF 才进入研究产物目录。服务器更新代码时只允许快进合并，避免覆盖本地或服务器上的未提交修改。
@@ -152,7 +154,7 @@ python -m research.path_consistent_negative_learning.proposal.generate_results_t
   --output research/path_consistent_negative_learning/proposal/generated_results.tex
 ```
 
-若选参没有合格权重，省略 `--confirmation` 和 `--gate-d`；生成器会把后续阶段明确写为“未运行”。唯一主文件是 `proposal/main.tex`，在该目录编译后输出 `proposal/main.pdf`。不再另设实验报告文档。
+若选参没有合格权重，省略 `--confirmation` 和 `--gate-d`；生成器会把后续阶段明确写为“未运行”。当前唯一主文件是 `paper/www2027/main.tex`，在该目录编译后输出 `paper/www2027/main.pdf`；方法、case study、实验结果与结论全部放在这一份文档中，不再另设活跃实验报告。`proposal/` 只保留为历史 provenance。
 
 ## 策略2加权改进
 

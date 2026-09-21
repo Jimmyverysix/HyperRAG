@@ -14,9 +14,23 @@ from research.path_consistent_negative_learning.path_supervision.lambda_selectio
 )
 
 
-def select_all(config_path: Path, run_root: Path, output_root: Path) -> list[dict]:
+def _write_summary_csv(rows: list[dict], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def select_all(
+    config_path: Path,
+    run_root: Path,
+    output_root: Path,
+    snapshot_root: Path | None = None,
+) -> list[dict]:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     rows = []
+    selections = {}
     for domain in config["datasets"]:
         paths = sorted(
             (run_root / "selection" / domain).glob(
@@ -34,6 +48,7 @@ def select_all(config_path: Path, run_root: Path, output_root: Path) -> list[dic
             json.dumps(selection, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        selections[domain] = selection
         row = {
             "dataset": domain,
             "best_lambda": selection["best_lambda"],
@@ -43,13 +58,17 @@ def select_all(config_path: Path, run_root: Path, output_root: Path) -> list[dic
             },
         }
         rows.append(row)
-    output_root.mkdir(parents=True, exist_ok=True)
-    with (output_root / "lambda_selection.csv").open(
-        "w", encoding="utf-8", newline=""
-    ) as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
+    _write_summary_csv(rows, output_root / "lambda_selection.csv")
+    if snapshot_root is not None:
+        domains_root = snapshot_root / "domains"
+        domains_root.mkdir(parents=True, exist_ok=True)
+        for domain, selection in selections.items():
+            (domains_root / f"{domain}.json").write_text(
+                json.dumps(selection, ensure_ascii=False, indent=2, sort_keys=True)
+                + "\n",
+                encoding="utf-8",
+            )
+        _write_summary_csv(rows, snapshot_root / "lambda_selection.csv")
     return rows
 
 
@@ -58,12 +77,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--run-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--snapshot-root", type=Path)
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
-    rows = select_all(args.config, args.run_root, args.output_root)
+    rows = select_all(
+        args.config,
+        args.run_root,
+        args.output_root,
+        args.snapshot_root,
+    )
     print(json.dumps(rows, ensure_ascii=False, indent=2))
     return 0
 
