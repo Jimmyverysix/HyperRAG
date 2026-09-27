@@ -1,5 +1,5 @@
 # ignore dataset
-dataset/WikiTopicsQE_NLG/
+dataset/WikiTopicsQE_NLG
 dataset/WikiTopicsQE_decoded
 
 # ignore builded graphs
