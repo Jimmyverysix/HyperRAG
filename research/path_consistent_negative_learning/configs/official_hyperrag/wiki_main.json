@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_baseline_reproduction",
+  "frozen_at": "2026-09-27",
+  "upstream": {
+    "url": "https://github.com/Vincent-Lien/HyperRAG",
+    "commit": "6d5a9033353c516a9220d78591f2c666f19ee0b1",
+    "commit_date": "2026-07-11T22:07:42+08:00",
+    "retrieved_at": "2026-09-27"
+  },
+  "scope": "official_hyperretriever_end_to_end",
+  "artifact_root": "research/path_consistent_negative_learning/artifacts/official_hyperrag",
+  "wikitopics": {
+    "domains": [
+      "art",
+      "award",
+      "edu",
+      "health",
+      "infra",
+      "loc",
+      "org",
+      "people",
+      "sci",
+      "sport",
+      "tax"
+    ],
+    "official_splits": ["train", "valid", "test"],
+    "training_and_sampling_seeds": [42, 43, 44, 45, 46],
+    "lambda_grid": [0.00, 0.10, 0.25, 0.50, 0.75, 1.00],
+    "selection": {
+      "split": "valid",
+      "metric": "MRR",
+      "direction": "maximize",
+      "aggregate_across_seeds": "arithmetic_mean",
+      "tie_rule": "choose_larger_lambda",
+      "test_access_before_selection_freeze": false
+    },
+    "test_metrics": ["MRR", "Hit@10"]
+  },
+  "loss": {
+    "type": "weighted_bce_with_logits",
+    "path_consistent_negative_weight": "lambda",
+    "other_sample_weight": 1.00,
+    "normalization": "sum_of_sample_weights"
+  },
+  "official_training": {
+    "architecture": "MLP_4126_256_1_relu",
+    "optimizer": "Adam",
+    "learning_rate": 0.0001,
+    "batch_size": 32,
+    "maximum_epochs": 50,
+    "early_stopping_metric": "internal_validation_bce",
+    "patience": 10,
+    "minimum_delta": 0.00001,
+    "internal_split": "candidate_level_stratified_80_20_random_state_42"
+  },
+  "matched_random": {
+    "unit": "query",
+    "count": "number_of_path_consistent_negatives_for_same_query",
+    "pool": "ordinary_sampled_negatives",
+    "weight": "same_as_path_aware_arm"
+  },
+  "path_selection_sensitivity": {
+    "variant_seeds": [2718, 3141, 5772],
+    "methods": ["official_baseline", "final_path_aware_method"],
+    "statistics": ["mean", "standard_deviation", "range"]
+  },
+  "open_domain": {
+    "dataset": "2wikimultihopqa",
+    "train_validation_split_seed": 20260927,
+    "train_fraction": 0.80,
+    "validation_fraction": 0.20,
+    "selection_metric": "F1",
+    "tie_rule": "choose_larger_lambda",
+    "test_metrics": ["EM", "F1"],
+    "test_access_before_selection_freeze": false
+  },
+  "hardware": {
+    "allowed_gpu_ids": [0, 1, 2, 3, 4, 5],
+    "maximum_concurrent_processes": 6,
+    "one_experiment_per_gpu": true,
+    "distributed_training": false
+  }
+}

@@ -1,19 +1,25 @@
 # HyperRAG 路径监督研究
 
-## WWW 2027 修订版
+## WWW 2027 官方 HyperRetriever 阶段
 
-当前主线研究的是：单路径弱监督把“未被选中、但仍位于其他等长最短路径上的转移”当作确定负例时，是否会造成监督冲突，以及仅用一个数据集级权重 $\lambda$ 降低这类负例的监督强度能否改善检索覆盖而不过度损害原路径排序。
+当前主线是：在官方 HyperRetriever 上检验单路径弱监督是否会对“未被选中、但位于另一条完整主题—答案最短路径上的采样负例”施加过强负监督，并由正式实验决定最终方法是 Masking 还是 Soft Weighting。
 
-- 正式方法定义：`docs/METHOD_SPEC.md`
-- 冻结实验协议：`docs/EXPERIMENT_PROTOCOL.md`
-- 复现说明：`docs/REPRODUCIBILITY.md`
+- 官方代码审计：`docs/HYPERRAG_CODE_AUDIT.md`
+- 官方冻结协议：`docs/OFFICIAL_EXPERIMENT_PROTOCOL.md`
+- 官方配置：`configs/official_hyperrag/wiki_main.json`
+- 历史结构代理方法定义：`docs/METHOD_SPEC.md`
+- 历史结构代理协议：`docs/EXPERIMENT_PROTOCOL.md`
 - 统一执行入口：`Makefile`
 - 中文投稿主文件：`paper/www2027/main.tex`，编译产物为 `paper/www2027/main.pdf`
-- 新实验产物：仅写入 `artifacts/www_revision/`
+- 官方新实验产物：仅写入 `artifacts/official_hyperrag/`
 
-历史 proposal、历史 PDF 和历史 artifacts 只作为 provenance 保存，不再被新实验覆盖。正文、实验结果和讨论统一写入同一篇 WWW 稿件；`FINAL_RESEARCH_REVISION_REPORT.md` 只记录交付状态与阻塞项，不另写一份竞争性的实验报告。
+官方上游已冻结为 `6d5a9033353c516a9220d78591f2c666f19ee0b1`。完整 WikiTopics NLG 与整数图已经具备；当前尚未产生官方 baseline 指标，因为构建后的 GraphML、GTE 表示、检查点及 `gpt-4o-mini` API 配置仍缺失。baseline 跑通前不接入监督修改，也不启动大规模 sweep。
 
-冻结主实验已经完成。路径一致方案相对基线将 answer reach@10 宏平均提高 6.89 个百分点，同时 selected-path PR-AUC 下降 0.57 个百分点；相对逐题等量随机降权的覆盖提高 6.65 个百分点。10/11 个领域选择 $\lambda=0$，tax 选择 $\lambda=0.1$，且 2/11 个领域的排序下降超过 1 个百分点。因而当前结论是：结构代理上的路径定位机制与宏平均覆盖收益得到验证，但尚不能宣称逐领域无代价，也不能外推为官方 HyperRAG 端到端 QA 结果。
+历史 proposal、历史 PDF、结构代理代码与 artifacts 全部作为 provenance 只读保留。正文、正式实验结果和讨论最终统一写入同一篇 WWW 稿件，不另写竞争性的实验报告。
+
+## 历史结构代理结果
+
+冻结的结构代理实验已经完成。路径一致方案相对基线将 answer reach@10 宏平均提高 6.89 个百分点，同时 selected-path PR-AUC 下降 0.57 个百分点；相对逐题等量随机降权的覆盖提高 6.65 个百分点。10/11 个领域选择 $\lambda=0.00$，tax 选择 $\lambda=0.10$，且 2/11 个领域的排序下降超过 1 个百分点。该结果仅是 Mechanism / Diagnostic Study，不能外推为官方 HyperRetriever 或端到端 QA 结果。
 
 从仓库根目录运行：
 
@@ -79,10 +85,10 @@ python -m unittest discover -s research/path_consistent_negative_learning/tests 
 
 ## GitHub 同步约定
 
-本地与服务器只通过 GitHub 研究分支同步代码：
+本地与服务器只通过 GitHub 研究分支同步代码。当前官方实验分支为：
 
 ```text
-www-path-supervision-revision
+codex/www27-official-hyperretriever
 ```
 
 训练数据、模型权重和运行日志不提交到 GitHub，保存在服务器独立运行目录；聚合后的 JSON、CSV、论文图和最终 PDF 才进入研究产物目录。服务器更新代码时只允许快进合并，避免覆盖本地或服务器上的未提交修改。

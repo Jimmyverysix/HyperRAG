@@ -23,7 +23,7 @@
   \PackageError{path-supervision}{缺少 generated/results.tex}{请先运行 make paper-results；禁止使用占位实验数字。}
 }
 
-\title{单路径弱监督并不等于确定负例：超图检索中的路径一致负例重加权}
+\title{未被选中的路径并非都是负例：重新审视超图检索中的路径监督}
 \ccsdesc[500]{Information systems~Retrieval models and ranking}
 \ccsdesc[300]{Information systems~Question answering}
 \keywords{图检索，超图，弱监督，负采样，检索增强生成，路径监督}
@@ -116,7 +116,7 @@ w_i(\lambda)=
 
 \subsection{选择与识别对照}
 
-每个领域在 $\{0,.1,.25,.5,.75,1\}$ 上独立选择 $\lambda_D^*$，唯一优化指标为 selection split 的 answer reach@10；精确并列时选择更大的 $\lambda$，即更弱干预。测试集在冻结前不可访问。
+每个领域在 $\{0.00,0.10,0.25,0.50,0.75,1.00\}$ 上独立选择 $\lambda_D^*$，唯一优化指标为 selection split 的 answer reach@10；精确并列时选择更大的 $\lambda$，即更弱干预。测试集在冻结前不可访问。
 
 匹配随机降权对照对每个问题随机选择恰好 $|D_q|$ 个普通负例并赋予相同 $\lambda_D^*$。它保持被降权样本数与总损失质量变化相近，却删除路径信息。另设 all-shortest-positive 诊断，把 $D_q$ 改为正标签，用来检验结构一致是否足以支持强正监督；它不是本文方法。
 

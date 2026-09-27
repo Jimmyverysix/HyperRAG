@@ -173,7 +173,7 @@ def generate(
     lambda_table = [
         r"\begin{tabular}{lrrrrrrr}",
         r"\toprule",
-        r"领域 & $\lambda_D^*$ & 0 & .10 & .25 & .50 & .75 & 1.0 \\",
+        r"领域 & $\lambda_D^*$ & 0.00 & 0.10 & 0.25 & 0.50 & 0.75 & 1.00 \\",
         r"\midrule",
     ]
     for row in selection_rows:

@@ -3,7 +3,9 @@ REPO_ROOT := $(abspath ../..)
 RDIR := research/path_consistent_negative_learning
 MODULE := research.path_consistent_negative_learning
 CONFIG := $(RDIR)/configs/www_revision/proxy_main.json
+OFFICIAL_CONFIG := $(RDIR)/configs/official_hyperrag/wiki_main.json
 ARTIFACT_ROOT := $(RDIR)/artifacts/www_revision
+OFFICIAL_ARTIFACT_ROOT := $(RDIR)/artifacts/official_hyperrag
 SELECTION_ARTIFACT_ROOT := $(ARTIFACT_ROOT)/selection
 HISTORICAL_ROOT := $(RDIR)/artifacts
 PAPER_ROOT := $(RDIR)/paper/www2027
@@ -16,12 +18,25 @@ RUN_ROOT := $(WORK_ROOT)/runs
 MANIFEST_ROOT := $(WORK_ROOT)/manifests
 LAMBDA_ROOT := $(WORK_ROOT)/lambda_selection
 GPU_IDS ?= 0 1 2 3 4 5
+OFFICIAL_NLG_ROOT ?= dataset/WikiTopicsQE_NLG
+OFFICIAL_EXPR_ROOT ?= expr
 
 .PHONY: test verify-history audit prepare sweep-manifest sweep select-lambda \
-	test-manifests main-experiments aggregate figures paper-results paper all
+	test-manifests main-experiments aggregate figures paper-results paper all \
+	official-preflight numeric-lint
 
 test:
 	cd $(REPO_ROOT) && $(PYTHON) -m unittest discover -s $(RDIR)/tests -v
+
+official-preflight:
+	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).scripts.check_official_hyperrag_prerequisites \
+		--stage graph-build --repo-root . --data-root $(OFFICIAL_NLG_ROOT) \
+		--expr-root $(OFFICIAL_EXPR_ROOT) \
+		--json-output $(OFFICIAL_ARTIFACT_ROOT)/preflight/graph_build.json
+
+numeric-lint:
+	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).scripts.lint_numeric_format \
+		$(PAPER_ROOT) $(RDIR)/proposal/main.tex $(RDIR)/docs
 
 verify-history:
 	cd $(REPO_ROOT) && $(PYTHON) -m $(MODULE).scripts.verify_historical_artifacts \

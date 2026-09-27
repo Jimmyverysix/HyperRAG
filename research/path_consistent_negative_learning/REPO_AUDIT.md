@@ -139,3 +139,16 @@
 - 服务器保留 1.4 GB 的完整 11 领域 `WikiTopics_QE` 整数图，以及历史 audit、Gate C、加权选择、确认与跨领域原始运行目录。
 - 服务器仓库仍停在历史提交 `31db6f0`；新代码继续按约定经 GitHub 同步，不直接在服务器修改源码。
 - 服务器同样缺少 `expr/`、`results/`、完整 `WikiTopicsQE_NLG`、GraphML、GTE 表示、官方 Retriever 检查点和 `config.json`。因此 official Retriever/QA 当前不是“尚未运行”，而是缺少上游官方资产和 API 配置，不能由现有代理实验替代。
+
+## 13. 2026-09-27 官方 HyperRetriever 阶段补充审计
+
+本节是更新后的当前状态；前述 2026-09-20 内容作为当时快照保留。
+
+- 已切换到独立分支 `codex/www27-official-hyperretriever`，分支起点为 `05cbafe`。
+- 已冻结官方上游提交 `6d5a9033353c516a9220d78591f2c666f19ee0b1`，获取日期为 2026-09-27。当前四个官方主目录与该提交没有语义差异。
+- 完整 WikiTopics NLG 与整数图已在本地忽略目录找到并核验：NLG 为 11 个领域、121 个文件、约 1.35 GB；整数图为 11 个领域、223 个文件、约 1.49 GB。因此“缺少完整 NLG”不再是当前阻塞项。
+- 本地官方 graph-build 前置检查确认源代码、11 领域数据和所需 Python 包均存在，唯一未满足项是 `gpt-4o-mini` API 凭据。
+- 服务器 `sdhp` 环境为 Python 3.11.15、PyTorch 2.2.2+cu121，CUDA 可用；缺少 `transformers`、`openai` 和 `requests`。服务器对 GitHub 可达，但对 Hugging Face、OpenAI 和 Google Drive 的直接访问失败，需要复用本地代理或同步模型缓存。
+- 服务器仍缺少 `expr/`、GTE 表示和官方 Retriever 检查点，也未发现 `OPENAI_API_KEY`/`config.json`。因此尚未生成任何官方 baseline MRR/Hit，不应把空结果理解为零分或实验失败。
+- 官方 WikiTopics 推理存在检查点预加载错误；开放域流程存在构图入口缺失、数据路径错误和字符串答案按字符迭代等可达问题。详见 `docs/HYPERRAG_CODE_AUDIT.md`。
+- 新正式协议已冻结在 `docs/OFFICIAL_EXPERIMENT_PROTOCOL.md` 与 `configs/official_hyperrag/wiki_main.json`。在一个领域的官方训练—推理—评价闭环成功前，不接入监督修改，也不启动大规模 GPU 实验。
