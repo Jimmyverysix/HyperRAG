@@ -85,16 +85,18 @@ WikiTopics 发布数据另有 `valid_*` 与 `test_*`。官方训练脚本没有�
 - `pred_in_size`
 - `emb_size`
 
-`HyperRetriever/hypergraphrag/operate.py` 的按需加载路径正确读取上述字段；但 `HyperRetriever/hypergraphrag/hypergraphrag.py` 的预加载路径把整个字典直接传给 `load_state_dict`。只要检查点存在，官方 WikiTopics 查询构造器就会在预加载阶段失败。基线复现需要一个只修复检查点解包的最小补丁，不能改动模型参数、候选、打分或评价。
+`HyperRetriever/hypergraphrag/operate.py` 的按需加载路径正确读取上述字段；但官方 `HyperRetriever/hypergraphrag/hypergraphrag.py` 的预加载路径把整个字典直接传给 `load_state_dict`。只要检查点存在，官方 WikiTopics 查询构造器就会在预加载阶段失败。研究分支已采用最小补丁：读取训练脚本实际保存的三个字段后再构造并加载同一个 MLP；模型参数、候选、打分和评价均不改变。
 
 ## 7. 外部依赖
 
 官方全流程依赖两类外部资产：
 
 - Hugging Face 上的 `Alibaba-NLP/gte-large-en-v1.5`，用于图节点、超边和问题表示；
-- OpenAI `gpt-4o-mini`，用于超图构建时的信息抽取、训练数据的主题实体抽取，以及推理时的查询理解与答案生成。
+- OpenAI `gpt-4o-mini`，用于超图构建时的信息抽取、训练数据的主题实体抽取，以及推理时的查询理解与答案生成；构图代码的默认向量数据库还调用 `text-embedding-3-small`。
 
-本地和服务器均未发现 `OPENAI_API_KEY` 或 `config.json`。服务器的 `sdhp` 环境已有 CUDA PyTorch、NetworkX 与 scikit-learn，但缺少 `transformers`、`requests` 和 `openai`。服务器可连接 GitHub，但当前对 Hugging Face、OpenAI 与 Google Drive 的直接访问失败；正式运行需复用本地网络代理或预先同步模型缓存。网络可达性与 API 授权是两个独立条件。
+本地和服务器均未发现 `OPENAI_API_KEY` 或 `config.json`。服务器已建立独立 `hyperrag_official` 环境，固定 Python 3.11.16、PyTorch 2.3.0+cu121、Transformers 4.52.4 与官方根 requirements 中的相关版本；CUDA 和 8 张 GPU 均可识别，但实验仍只允许 0–5 号卡。GTE 主权重及其 `Alibaba-NLP/new-impl` 远程代码已放入独立 Hugging Face 缓存，并通过“官方模型名 + 离线模式”实际加载验证。
+
+服务器可连接 GitHub、PyPI 和 Hugging Face 镜像，但对 OpenAI 官方端点的直接访问失败。正式运行仍需要一个同时支持 `gpt-4o-mini` 与 `text-embedding-3-small` 的授权端点，并在服务器可达；网络可达性与 API 授权是两个独立条件。
 
 ## 8. 开放域流程审计
 
@@ -115,9 +117,9 @@ WikiTopics 发布数据另有 `valid_*` 与 `test_*`。官方训练脚本没有�
 - 完整 WikiTopics 数据：已具备；
 - 官方源代码与上游锚点：已具备；
 - 服务器 0–5 号 RTX 3090：可用；
+- 独立 Python/CUDA 环境与 GTE 模型缓存：已具备并通过加载测试；
 - 构建后的官方超图与检查点：缺失；
-- `gpt-4o-mini` API 配置：缺失；
-- 服务器 Python 依赖与 GTE 模型缓存：尚未安装/同步；
-- 服务器对模型与 API 站点的直接网络：不可用，需代理。
+- `gpt-4o-mini` 与 `text-embedding-3-small` API 配置：缺失；
+- 服务器对 OpenAI 官方端点的直接网络：不可用，需可达的替代端点或代理。
 
 在 API 配置到位并完成一个领域的官方 baseline 训练、推理、评价之前，不修改官方监督逻辑，也不启动 11 领域 × 6 λ × 5 seeds 的正式任务。

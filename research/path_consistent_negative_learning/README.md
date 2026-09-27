@@ -13,7 +13,7 @@
 - 中文投稿主文件：`paper/www2027/main.tex`，编译产物为 `paper/www2027/main.pdf`
 - 官方新实验产物：仅写入 `artifacts/official_hyperrag/`
 
-官方上游已冻结为 `6d5a9033353c516a9220d78591f2c666f19ee0b1`。完整 WikiTopics NLG 与整数图已经具备；当前尚未产生官方 baseline 指标，因为构建后的 GraphML、GTE 表示、检查点及 `gpt-4o-mini` API 配置仍缺失。baseline 跑通前不接入监督修改，也不启动大规模 sweep。
+官方上游已冻结为 `6d5a9033353c516a9220d78591f2c666f19ee0b1`。完整 WikiTopics NLG、独立服务器环境和 GTE 模型缓存已经具备；当前尚未产生官方 baseline 指标，因为构图和推理所需的 `gpt-4o-mini`/`text-embedding-3-small` API 配置仍缺失，GraphML 与检查点因而尚未生成。baseline 跑通前不接入监督修改，也不启动大规模 sweep。
 
 历史 proposal、历史 PDF、结构代理代码与 artifacts 全部作为 provenance 只读保留。正文、正式实验结果和讨论最终统一写入同一篇 WWW 稿件，不另写竞争性的实验报告。
 

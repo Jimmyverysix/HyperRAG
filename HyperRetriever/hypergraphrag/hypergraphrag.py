@@ -273,10 +273,11 @@ class HyperGraphRAG:
         # Load MLP model
         model_path = Path(f"../expr/wikitopics/{domain}/train/best_retrieval_model.pth")
         if model_path.exists():
-            emb_size = 256
-            pred_in_size = 1024 * 4 + 30
+            checkpoint = torch.load(model_path, map_location=device)
+            pred_in_size = checkpoint["pred_in_size"]
+            emb_size = checkpoint["emb_size"]
             self.model = MLP(pred_in_size=pred_in_size, emb_size=emb_size).to(device)
-            self.model.load_state_dict(torch.load(model_path, map_location=device))
+            self.model.load_state_dict(checkpoint["model_state_dict"])
             self.model.eval()
             logger.info(f"Successfully pre-loaded MLP model from {model_path}")
         else:

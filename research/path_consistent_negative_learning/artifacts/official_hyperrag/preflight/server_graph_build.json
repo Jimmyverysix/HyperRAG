@@ -1,0 +1,37 @@
+{
+  "stage": "graph-build",
+  "ready": false,
+  "repo_root": "/root/hyperrag_pcneg/work/HyperRAG_official",
+  "data_root": "/root/hyperrag_pcneg/data_sources/WikiTopicsQE_NLG",
+  "expr_root": "/root/hyperrag_pcneg/work/HyperRAG_official/expr",
+  "checks": {
+    "source_files": {
+      "wiki_prepare": true,
+      "wiki_train": true,
+      "wiki_query": true,
+      "wiki_evaluator": true
+    },
+    "dataset_domains": {
+      "art": true,
+      "award": true,
+      "edu": true,
+      "health": true,
+      "infra": true,
+      "loc": true,
+      "org": true,
+      "people": true,
+      "sci": true,
+      "sport": true,
+      "tax": true
+    },
+    "runtime_packages": {
+      "torch": true,
+      "networkx": true,
+      "numpy": true,
+      "openai": true,
+      "tiktoken": true
+    },
+    "stage_assets": {},
+    "api_credentials_present": false
+  }
+}

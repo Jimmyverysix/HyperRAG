@@ -148,7 +148,8 @@
 - 已冻结官方上游提交 `6d5a9033353c516a9220d78591f2c666f19ee0b1`，获取日期为 2026-09-27。当前四个官方主目录与该提交没有语义差异。
 - 完整 WikiTopics NLG 与整数图已在本地忽略目录找到并核验：NLG 为 11 个领域、121 个文件、约 1.35 GB；整数图为 11 个领域、223 个文件、约 1.49 GB。因此“缺少完整 NLG”不再是当前阻塞项。
 - 本地官方 graph-build 前置检查确认源代码、11 领域数据和所需 Python 包均存在，唯一未满足项是 `gpt-4o-mini` API 凭据。
-- 服务器 `sdhp` 环境为 Python 3.11.15、PyTorch 2.2.2+cu121，CUDA 可用；缺少 `transformers`、`openai` 和 `requests`。服务器对 GitHub 可达，但对 Hugging Face、OpenAI 和 Google Drive 的直接访问失败，需要复用本地代理或同步模型缓存。
-- 服务器仍缺少 `expr/`、GTE 表示和官方 Retriever 检查点，也未发现 `OPENAI_API_KEY`/`config.json`。因此尚未生成任何官方 baseline MRR/Hit，不应把空结果理解为零分或实验失败。
+- 服务器原 `sdhp` 环境为 Python 3.11.15、PyTorch 2.2.2+cu121。为避免污染历史环境，现已新建 `hyperrag_official`：Python 3.11.16、PyTorch 2.3.0+cu121、Transformers 4.52.4；官方所需核心依赖和 CUDA import smoke test 均通过。
+- 完整 WikiTopics NLG 已同步到服务器数据目录，官方 worktree 通过被 Git 忽略的数据链接读取。GTE 主权重与 `new-impl` 远程代码已进入独立缓存，并通过官方模型名离线加载测试。
+- 服务器仍缺少 `expr/` 和官方 Retriever 检查点，也未发现 `OPENAI_API_KEY`/`config.json`。当前唯一外部授权阻塞是同时支持 `gpt-4o-mini` 与 `text-embedding-3-small` 的 API；服务器对 OpenAI 官方端点还需可达代理或替代 base URL。因此尚未生成任何官方 baseline MRR/Hit，不应把空结果理解为零分或实验失败。
 - 官方 WikiTopics 推理存在检查点预加载错误；开放域流程存在构图入口缺失、数据路径错误和字符串答案按字符迭代等可达问题。详见 `docs/HYPERRAG_CODE_AUDIT.md`。
 - 新正式协议已冻结在 `docs/OFFICIAL_EXPERIMENT_PROTOCOL.md` 与 `configs/official_hyperrag/wiki_main.json`。在一个领域的官方训练—推理—评价闭环成功前，不接入监督修改，也不启动大规模 GPU 实验。
