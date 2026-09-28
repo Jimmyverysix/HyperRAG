@@ -1,19 +1,17 @@
 # HyperRAG 路径监督研究
 
-## WWW 2027 官方 HyperRetriever 阶段
+## WWW 2027 Retriever-only 主线
 
-当前主线是：在官方 HyperRetriever 上检验单路径弱监督是否会对“未被选中、但位于另一条完整主题—答案最短路径上的采样负例”施加过强负监督，并由正式实验决定最终方法是 Masking 还是 Soft Weighting。
+当前主线是：使用 HyperRAG 官方 GTE、DDE 与 MLP Retriever 组件，在零生成式 LLM 的确定性 WikiTopics 超图上，检验单路径弱监督是否会对“未被选中、但位于另一条完整主题—答案最短路径上的采样负例”施加过强负监督，并由正式实验决定最终方法是 Masking 还是 Soft Weighting。
 
-- 官方代码审计：`docs/HYPERRAG_CODE_AUDIT.md`
-- 官方冻结协议：`docs/OFFICIAL_EXPERIMENT_PROTOCOL.md`
-- 官方配置：`configs/official_hyperrag/wiki_main.json`
+- 仓库与数据审计：`docs/REPO_AUDIT.md`
+- 冻结协议：`docs/EXPERIMENT_PROTOCOL.md`
+- 正式配置：`configs/retriever_only/wiki_main.json`
 - 历史结构代理方法定义：`docs/METHOD_SPEC.md`
-- 历史结构代理协议：`docs/EXPERIMENT_PROTOCOL.md`
-- 统一执行入口：`Makefile`
 - 中文投稿主文件：`paper/www2027/main.tex`，编译产物为 `paper/www2027/main.pdf`
-- 官方新实验产物：仅写入 `artifacts/official_hyperrag/`
+- 新实验小型产物：`artifacts/retriever_only/`；checkpoint、GTE 张量与 raw runs 留在服务器
 
-官方上游已冻结为 `6d5a9033353c516a9220d78591f2c666f19ee0b1`。完整 WikiTopics NLG、独立服务器环境和 GTE 模型缓存已经具备；当前尚未产生官方 baseline 指标，因为构图和推理所需的 `gpt-4o-mini`/`text-embedding-3-small` API 配置仍缺失，GraphML 与检查点因而尚未生成。baseline 跑通前不接入监督修改，也不启动大规模 sweep。
+官方上游冻结为 `6d5a9033353c516a9220d78591f2c666f19ee0b1`。正式流程不调用 `rag.query()`，不使用 OpenAI、百炼或其他生成式 API；topic entity 直接读取结构化 query，答案只用于训练监督和评价。图节点身份使用 Wikidata QID，冻结英文标签仅作为本地 GTE 文本，避免同名实体合并。
 
 历史 proposal、历史 PDF、结构代理代码与 artifacts 全部作为 provenance 只读保留。正文、正式实验结果和讨论最终统一写入同一篇 WWW 稿件，不另写竞争性的实验报告。
 
@@ -85,10 +83,10 @@ python -m unittest discover -s research/path_consistent_negative_learning/tests 
 
 ## GitHub 同步约定
 
-本地与服务器只通过 GitHub 研究分支同步代码。当前官方实验分支为：
+本地与服务器只通过 GitHub 研究分支同步代码。当前 Retriever-only 实验分支为：
 
 ```text
-codex/www27-official-hyperretriever
+codex/www-retriever-only
 ```
 
 训练数据、模型权重和运行日志不提交到 GitHub，保存在服务器独立运行目录；聚合后的 JSON、CSV、论文图和最终 PDF 才进入研究产物目录。服务器更新代码时只允许快进合并，避免覆盖本地或服务器上的未提交修改。
