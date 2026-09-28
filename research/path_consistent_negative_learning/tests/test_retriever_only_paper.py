@@ -152,11 +152,17 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
             table = (output / "tables" / "main_retriever.tex").read_text(
                 encoding="utf-8"
             )
+            manifest = json.loads(
+                (output / "generation_manifest.json").read_text(encoding="utf-8")
+            )
         self.assertIn(r"\newcommand{\SoftSelectedDomainCount}{1}", macros)
         self.assertIn("策略1", table)
         self.assertIn("策略2", table)
         self.assertIn("策略3", table)
         self.assertIn("0.50", table)
+        self.assertEqual(manifest["scope"], "formal_zero_llm_retriever_only")
+        self.assertEqual(manifest["dataset_count"], 1)
+        self.assertIn("tables/main_retriever.tex", manifest["outputs"])
 
 
 if __name__ == "__main__":

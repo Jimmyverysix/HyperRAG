@@ -294,6 +294,7 @@ def generate_paper_artifacts(
         "prevalence": tables / "prevalence.tex",
         "lambda": tables / "lambda_validation.tex",
         "sensitivity": tables / "path_sensitivity.tex",
+        "manifest": output_dir / "generation_manifest.json",
     }
     contents = {
         "results": _macro_lines(preflight, selection, prevalence, main, sensitivity),
@@ -303,5 +304,28 @@ def generate_paper_artifacts(
         "sensitivity": _sensitivity_table(sensitivity),
     }
     for name, path in outputs.items():
+        if name == "manifest":
+            continue
         path.write_text("\n".join(contents[name]) + "\n", encoding="utf-8")
+    manifest = {
+        "schema_version": 1,
+        "scope": "formal_zero_llm_retriever_only",
+        "sources": {
+            "preflight": str(preflight_path),
+            "selection": str(selection_path),
+            "prevalence": str(prevalence_path),
+            "main_test": str(main_path),
+            "sensitivity": str(sensitivity_path),
+        },
+        "outputs": [
+            path.relative_to(output_dir).as_posix()
+            for name, path in outputs.items()
+            if name != "manifest"
+        ],
+        "dataset_count": len(preflight["domains"]),
+    }
+    outputs["manifest"].write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     return {name: str(path) for name, path in outputs.items()}
