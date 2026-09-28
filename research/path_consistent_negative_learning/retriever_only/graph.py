@@ -153,8 +153,26 @@ def shortest_path(
 ) -> tuple[str, ...] | None:
     """Return one stable shortest path, optionally using seeded tie-breaking."""
 
-    if source not in graph or target not in graph:
-        return None
+    parents = _shortest_path_tree(
+        graph,
+        source,
+        variant_seed=variant_seed,
+        target=target,
+        cutoff=cutoff,
+    )
+    return _path_from_tree(parents, target)
+
+
+def _shortest_path_tree(
+    graph: nx.Graph,
+    source: str,
+    *,
+    variant_seed: int | None,
+    target: str | None,
+    cutoff: int,
+) -> dict[str, str | None]:
+    if source not in graph or (target is not None and target not in graph):
+        return {}
     rng = None
     if variant_seed is not None:
         rng = random.Random(f"{variant_seed}|{source}|{target}")
@@ -163,7 +181,7 @@ def shortest_path(
     queue: deque[str] = deque([source])
     while queue:
         current = queue.popleft()
-        if current == target:
+        if target is not None and current == target:
             break
         if distances[current] >= cutoff:
             continue
@@ -173,6 +191,13 @@ def shortest_path(
             parents[neighbor] = current
             distances[neighbor] = distances[current] + 1
             queue.append(neighbor)
+    return parents
+
+
+def _path_from_tree(
+    parents: Mapping[str, str | None],
+    target: str,
+) -> tuple[str, ...] | None:
     if target not in parents:
         return None
     path: list[str] = []
@@ -200,13 +225,27 @@ def selected_paths(
     *,
     variant_seed: int | None = None,
 ) -> tuple[tuple[str, ...], ...]:
+    answer_values = sorted(set(answers))
     paths = []
-    for answer in sorted(set(answers)):
-        path = shortest_path(
+    shared_parents = None
+    if variant_seed is None:
+        shared_parents = _shortest_path_tree(
             graph,
             topic,
-            answer,
-            variant_seed=variant_seed,
+            variant_seed=None,
+            target=None,
+            cutoff=MAX_INCIDENCE_DISTANCE,
+        )
+    for answer in answer_values:
+        path = (
+            _path_from_tree(shared_parents, answer)
+            if shared_parents is not None
+            else shortest_path(
+                graph,
+                topic,
+                answer,
+                variant_seed=variant_seed,
+            )
         )
         if path is not None:
             paths.append(path)
