@@ -135,3 +135,34 @@ def assemble_features(
         ),
         dim=1,
     ).to(device, non_blocking=True)
+
+
+def materialize_features(
+    data: PreparedCandidates,
+    node_embeddings: torch.Tensor,
+    query_embeddings: torch.Tensor,
+    *,
+    device: torch.device,
+    chunk_size: int,
+) -> torch.Tensor:
+    """Materialize fixed candidate features once, in bounded chunks."""
+
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+    candidate_count = len(data.dde_features)
+    output = torch.empty(
+        (candidate_count, 4126),
+        dtype=torch.float32,
+        device=device,
+    )
+    for start in range(0, candidate_count, chunk_size):
+        stop = min(start + chunk_size, candidate_count)
+        indices = torch.arange(start, stop, dtype=torch.long)
+        output[start:stop] = assemble_features(
+            data,
+            node_embeddings,
+            query_embeddings,
+            indices,
+            device=device,
+        )
+    return output

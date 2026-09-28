@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from ..path_supervision.weighted_loss import weighted_binary_cross_entropy
 from .embeddings import EmbeddingStore
 from .official import create_official_mlp
-from .prepared import PreparedCandidates, assemble_features, method_weights
+from .prepared import PreparedCandidates, materialize_features, method_weights
 
 
 @dataclass(frozen=True)
@@ -28,6 +28,7 @@ class TrainingConfig:
     maximum_epochs: int = 50
     patience: int = 10
     minimum_delta: float = 0.00001
+    feature_materialization_chunk_size: int = 8192
 
 
 def seed_everything(seed: int) -> None:
@@ -103,8 +104,15 @@ def train_retriever(
     )
     model = create_official_mlp(device=device)
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
-    node_embeddings = embeddings.node_embeddings
-    query_embeddings = embeddings.query_embeddings
+    features = materialize_features(
+        data,
+        embeddings.node_embeddings,
+        embeddings.query_embeddings,
+        device=device,
+        chunk_size=config.feature_materialization_chunk_size,
+    )
+    labels = data.labels.float().to(device).unsqueeze(1)
+    device_weights = weights.to(device).unsqueeze(1)
     best_loss = float("inf")
     best_state: dict[str, torch.Tensor] | None = None
     epochs_without_improvement = 0
@@ -115,18 +123,17 @@ def train_retriever(
         train_weighted_loss = 0.0
         train_weight_sum = 0.0
         for (indices,) in train_loader:
-            features = assemble_features(
-                data,
-                node_embeddings,
-                query_embeddings,
-                indices,
-                device=device,
-            )
-            labels = data.labels[indices].float().to(device).unsqueeze(1)
-            batch_weights = weights[indices].to(device).unsqueeze(1)
+            device_indices = indices.to(device)
+            batch_features = features[device_indices]
+            batch_labels = labels[device_indices]
+            batch_weights = device_weights[device_indices]
             optimizer.zero_grad(set_to_none=True)
-            logits = model(features)
-            loss = weighted_binary_cross_entropy(logits, labels, batch_weights)
+            logits = model(batch_features)
+            loss = weighted_binary_cross_entropy(
+                logits,
+                batch_labels,
+                batch_weights,
+            )
             loss.backward()
             optimizer.step()
             weight_sum = float(batch_weights.sum())
@@ -138,19 +145,14 @@ def train_retriever(
         validation_weight_sum = 0.0
         with torch.no_grad():
             for (indices,) in validation_loader:
-                features = assemble_features(
-                    data,
-                    node_embeddings,
-                    query_embeddings,
-                    indices,
-                    device=device,
-                )
-                labels = data.labels[indices].float().to(device).unsqueeze(1)
-                batch_weights = weights[indices].to(device).unsqueeze(1)
-                logits = model(features)
+                device_indices = indices.to(device)
+                batch_features = features[device_indices]
+                batch_labels = labels[device_indices]
+                batch_weights = device_weights[device_indices]
+                logits = model(batch_features)
                 elementwise = functional.binary_cross_entropy_with_logits(
                     logits,
-                    labels,
+                    batch_labels,
                     reduction="none",
                 )
                 validation_weighted_loss += float((elementwise * batch_weights).sum())

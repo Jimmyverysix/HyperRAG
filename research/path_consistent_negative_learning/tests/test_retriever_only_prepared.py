@@ -10,6 +10,8 @@ from research.path_consistent_negative_learning.path_supervision.weighted_loss i
 )
 from research.path_consistent_negative_learning.retriever_only.prepared import (
     PreparedCandidates,
+    assemble_features,
+    materialize_features,
     method_weights,
 )
 
@@ -124,6 +126,37 @@ class PreparedWeightTests(unittest.TestCase):
             seed=42,
         )
         torch.testing.assert_close(weights, torch.tensor([1.0, 0.0]))
+
+    def test_chunked_feature_materialization_matches_direct_assembly(self) -> None:
+        node_embeddings = torch.arange(3 * 1024, dtype=torch.float32).reshape(
+            3,
+            1024,
+        )
+        query_embeddings = torch.arange(
+            2 * 1024,
+            dtype=torch.float32,
+        ).reshape(2, 1024)
+        self.data.query_embedding_indices = torch.tensor(
+            [0, 0, 0, 0, 1, 1, 1, 1]
+        )
+        self.data.head_embedding_indices = torch.tensor([0, 1, 2, 0, 1, 2, 0, 1])
+        self.data.edge_embedding_indices = torch.tensor([1, 2, 0, 1, 2, 0, 1, 2])
+        self.data.tail_embedding_indices = torch.tensor([2, 0, 1, 2, 0, 1, 2, 0])
+        expected = assemble_features(
+            self.data,
+            node_embeddings,
+            query_embeddings,
+            torch.arange(8),
+            device=torch.device("cpu"),
+        )
+        actual = materialize_features(
+            self.data,
+            node_embeddings,
+            query_embeddings,
+            device=torch.device("cpu"),
+            chunk_size=3,
+        )
+        torch.testing.assert_close(actual, expected)
 
 
 if __name__ == "__main__":
