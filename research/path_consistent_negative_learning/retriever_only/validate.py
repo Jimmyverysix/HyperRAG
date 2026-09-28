@@ -35,7 +35,7 @@ def validate_domain(
         labeled_topics = sum(query.topic_node is not None for query in queries)
         topic_mentions = sum(
             query.topic_node is not None
-            and text_mentions_topic(query.text, query.topic_node)
+            and text_mentions_topic(query.text, labels.labels[query.topic_node])
             for query in queries
         )
         topic_in_graph = sum(query.topic_node in bundle.graph for query in queries)
@@ -59,7 +59,9 @@ def validate_domain(
             # overwritten answer value.
             if question_counts[query.text] != 1:
                 continue
-            structured = {normalize_text(value) for value in query.answer_nodes}
+            structured = {
+                normalize_text(labels.labels[value]) for value in query.answer_nodes
+            }
             released = {
                 normalize_text(str(value))
                 for value in released_answers.get(query.text, [])
@@ -96,8 +98,15 @@ def validate_domain(
             "retriever_eligible_queries": eligible,
             "excluded_queries": len(queries) - eligible,
         }
+    entity_labels = [
+        bundle.node_texts[node]
+        for node, data in bundle.graph.nodes(data=True)
+        if data["kind"] == "entity"
+    ]
+    label_counts = Counter(entity_labels)
     return {
         "domain": domain,
+        "entity_identity": "wikidata_qid",
         "graph_nodes": bundle.graph.number_of_nodes(),
         "graph_edges": bundle.graph.number_of_edges(),
         "entity_nodes": sum(
@@ -107,6 +116,12 @@ def validate_domain(
             1
             for _, data in bundle.graph.nodes(data=True)
             if data["kind"] == "hyperedge"
+        ),
+        "duplicate_entity_label_groups": sum(
+            count > 1 for count in label_counts.values()
+        ),
+        "entities_with_duplicate_labels": sum(
+            count for count in label_counts.values() if count > 1
         ),
         "fact_count": bundle.fact_count,
         "train_structured_groups": bundle.train_group_count,

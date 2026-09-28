@@ -253,17 +253,20 @@ def load_aligned_queries(
             + (" (inverse)" if relation_qid.endswith("_inv") else "")
             for relation_qid in relation_qids
         )
-        topic_node = labels.labels.get(topic_qid)
+        topic_label = labels.labels.get(topic_qid)
+        topic_node = topic_qid if topic_label is not None else None
         answer_nodes = tuple(
             sorted(
                 {
-                    labels.labels[answer_qid]
+                    answer_qid
                     for answer_qid in answer_qids
                     if answer_qid in labels.labels
                 }
             )
         )
-        topic_evidence = topic_node is not None and text_mentions_topic(text, topic_node)
+        topic_evidence = topic_label is not None and text_mentions_topic(
+            text, topic_label
+        )
         released_answer_nodes = {
             normalize_text(str(value)) for value in nlg_answers.get(text, [])
         }
@@ -272,7 +275,7 @@ def load_aligned_queries(
             and bool(answer_nodes)
             and bool(released_answer_nodes)
             and not {
-                normalize_text(value) for value in answer_nodes
+                normalize_text(labels.labels[value]) for value in answer_nodes
             }.isdisjoint(released_answer_nodes)
         )
         aligned.append(

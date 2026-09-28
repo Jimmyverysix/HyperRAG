@@ -69,20 +69,26 @@ def _decode_fact_groups(
             relation_text = labels.labels[relation_base_id(relation_qid)]
             if relation_qid.endswith("_inv"):
                 relation_text += " (inverse)"
-            grouped.setdefault(labels.labels[head_qid], []).append(
-                (relation_text, labels.labels[tail_qid])
-            )
+            # Keep Wikidata IDs as graph identity.  English labels are not
+            # unique (for example, several entities are named "Union Station")
+            # and therefore belong only in the encoder text.
+            grouped.setdefault(head_qid, []).append((relation_text, tail_qid))
 
     return OrderedDict(
         (owner, tuple(dict.fromkeys(facts))) for owner, facts in grouped.items()
     )
 
 
-def _fact_text(owner: str, facts: Sequence[tuple[str, str]]) -> str:
+def _fact_text(
+    owner: str,
+    facts: Sequence[tuple[str, str]],
+    labels: LabelSnapshot,
+) -> str:
     components = "; ".join(
-        f"{relation}: {tail}" for relation, tail in sorted(set(facts))
+        f"{relation}: {labels.labels[tail]}"
+        for relation, tail in sorted(set(facts))
     )
-    return f"{owner} | {components}"
+    return f"{labels.labels[owner]} | {components}"
 
 
 def build_deterministic_hypergraph(
@@ -117,11 +123,11 @@ def build_deterministic_hypergraph(
         facts = sorted(facts_by_owner[owner])
         incident_entities = sorted({owner, *(tail for _, tail in facts)})
         graph.add_node(edge, kind="hyperedge", owner_qid=owner)
-        node_texts[edge] = _fact_text(owner, facts)
+        node_texts[edge] = _fact_text(owner, facts, labels)
         for entity in incident_entities:
             graph.add_node(entity, kind="entity")
             graph.add_edge(entity, edge)
-            node_texts[entity] = entity
+            node_texts[entity] = labels.labels[entity]
         fact_count += len(facts)
     return DeterministicHypergraph(
         graph=graph,

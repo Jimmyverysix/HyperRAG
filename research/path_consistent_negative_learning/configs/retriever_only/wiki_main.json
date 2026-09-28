@@ -29,6 +29,8 @@
     "graph_files": ["train_graph.txt", "test_inference.txt"],
     "graph_scope": "transductive_union_matching_official_train_plus_test_context_insertion",
     "hypergraph_reconstruction": "group_outgoing_facts_by_head",
+    "entity_identity": "wikidata_qid",
+    "entity_encoder_text": "frozen_english_label",
     "topic_source": "structured_query_head_entity",
     "answer_usage": ["training_supervision", "evaluation_only"],
     "answer_in_inference_features": false,

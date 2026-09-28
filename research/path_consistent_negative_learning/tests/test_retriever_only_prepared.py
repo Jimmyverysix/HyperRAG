@@ -3,7 +3,11 @@ from __future__ import annotations
 import unittest
 
 import torch
+from torch.nn import functional
 
+from research.path_consistent_negative_learning.path_supervision.weighted_loss import (
+    weighted_binary_cross_entropy,
+)
 from research.path_consistent_negative_learning.retriever_only.prepared import (
     PreparedCandidates,
     method_weights,
@@ -38,9 +42,48 @@ class PreparedWeightTests(unittest.TestCase):
         ours = method_weights(self.data, method="ours", lambda_=1.0, seed=42)
         torch.testing.assert_close(baseline, ours)
 
+    def test_lambda_one_matches_baseline_loss_and_gradient(self) -> None:
+        baseline_logits = torch.tensor(
+            [[-0.4], [0.2], [1.1], [-1.3]], requires_grad=True
+        )
+        ours_logits = baseline_logits.detach().clone().requires_grad_(True)
+        labels = torch.tensor([[0.0], [1.0], [1.0], [0.0]])
+        baseline_loss = functional.binary_cross_entropy_with_logits(
+            baseline_logits, labels
+        )
+        ours_loss = weighted_binary_cross_entropy(
+            ours_logits,
+            labels,
+            torch.ones_like(labels),
+        )
+        baseline_loss.backward()
+        ours_loss.backward()
+        torch.testing.assert_close(ours_loss, baseline_loss)
+        torch.testing.assert_close(ours_logits.grad, baseline_logits.grad)
+
     def test_lambda_zero_masks_exact_path_consistent_negatives(self) -> None:
         weights = method_weights(self.data, method="ours", lambda_=0.0, seed=42)
         self.assertEqual(torch.where(weights == 0)[0].tolist(), [1, 6])
+
+    def test_lambda_zero_matches_hard_masking_loss_and_gradient(self) -> None:
+        weighted_logits = torch.tensor(
+            [[-0.4], [0.2], [1.1], [-1.3]], requires_grad=True
+        )
+        masked_logits = weighted_logits.detach().clone().requires_grad_(True)
+        labels = torch.tensor([[0.0], [1.0], [1.0], [0.0]])
+        weights = torch.tensor([[1.0], [0.0], [1.0], [0.0]])
+        weighted_loss = weighted_binary_cross_entropy(
+            weighted_logits,
+            labels,
+            weights,
+        )
+        masked_loss = functional.binary_cross_entropy_with_logits(
+            masked_logits[[0, 2]], labels[[0, 2]]
+        )
+        weighted_loss.backward()
+        masked_loss.backward()
+        torch.testing.assert_close(weighted_loss, masked_loss)
+        torch.testing.assert_close(weighted_logits.grad, masked_logits.grad)
 
     def test_matched_random_uses_equal_count_per_query(self) -> None:
         weights = method_weights(

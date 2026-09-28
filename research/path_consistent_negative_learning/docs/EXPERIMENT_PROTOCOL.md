@@ -18,7 +18,7 @@
 
 领域固定为：art、award、edu、health、infra、loc、org、people、sci、sport、tax。
 
-数据使用 WikiTopics_QE 整数图和现有 WikiTopics NLG。整数图经 `og_mappings.pkl` 映射到 Wikidata ID；`train_graph.txt` 与 `test_inference.txt` 合并后，按 head 实体聚合外向事实为超边。实体文本来自冻结英文标签快照；超边文本由同一超边内的结构化事实按稳定顺序序列化为 `head | relation: tail; ...`，不调用生成式模型，也不使用无法与结构化 head 可靠回溯对齐的历史 graph sentences。自然语言 query 来自现有 NLG query 文件。
+数据使用 WikiTopics_QE 整数图和现有 WikiTopics NLG。整数图经 `og_mappings.pkl` 映射到 Wikidata ID；`train_graph.txt` 与 `test_inference.txt` 合并后，按 head 实体聚合外向事实为超边。图中的实体身份始终使用 Wikidata QID，英文标签只作为 GTE 编码文本，因而同名但 QID 不同的实体不会被合并。超边文本由同一超边内的结构化事实按稳定顺序序列化为 `head | relation: tail; ...`，不调用生成式模型，也不使用无法与结构化 head 可靠回溯对齐的历史 graph sentences。自然语言 query 来自现有 NLG query 文件。
 
 topic entity 直接取结构化 query 的首实体 `e`。hard answer 来自 benchmark ground truth，只用于最短路径监督与评价，禁止进入候选生成、文本编码、DDE 或 MLP scoring。
 

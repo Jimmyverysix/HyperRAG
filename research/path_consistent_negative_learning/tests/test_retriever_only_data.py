@@ -78,8 +78,8 @@ class RetrieverOnlyAlignmentTests(unittest.TestCase):
         self.assertEqual(len(queries), 1)
         self.assertEqual(queries[0].topic_qid, "Q1")
         self.assertEqual(queries[0].answer_qids, ("Q3",))
-        self.assertEqual(queries[0].topic_node, "One")
-        self.assertEqual(queries[0].answer_nodes, ("Three",))
+        self.assertEqual(queries[0].topic_node, "Q1")
+        self.assertEqual(queries[0].answer_nodes, ("Q3",))
         self.assertEqual(queries[0].text, "Where is One?")
         self.assertTrue(queries[0].topic_text_alignment_evidence)
         self.assertTrue(queries[0].hard_answer_alignment_evidence)
@@ -92,9 +92,23 @@ class RetrieverOnlyAlignmentTests(unittest.TestCase):
         self.assertEqual(bundle.train_group_count, 1)
         self.assertEqual(bundle.test_group_count, 1)
         self.assertEqual(bundle.fact_count, 3)
-        self.assertIn("first: Two", bundle.node_texts["H:One"])
-        self.assertTrue(bundle.graph.has_edge("One", "H:One"))
+        self.assertIn("first: Two", bundle.node_texts["H:Q1"])
+        self.assertTrue(bundle.graph.has_edge("Q1", "H:Q1"))
         self.assertFalse(bundle.graph.has_node("QX"))
+
+    def test_equal_labels_do_not_merge_distinct_entities(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            structured, _, labels = self._write_fixture(Path(temporary))
+            collision_labels = LabelSnapshot(
+                labels={**labels.labels, "QX": "One"},
+                source=labels.source,
+                retrieved_at=labels.retrieved_at,
+            )
+            bundle = build_deterministic_hypergraph(structured, collision_labels)
+        self.assertNotEqual("Q1", "QX")
+        self.assertEqual(bundle.node_texts["Q1"], bundle.node_texts["QX"])
+        self.assertTrue(bundle.graph.has_edge("Q1", "H:Q1"))
+        self.assertTrue(bundle.graph.has_edge("QX", "H:QX"))
 
     def test_alignment_count_mismatch_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
