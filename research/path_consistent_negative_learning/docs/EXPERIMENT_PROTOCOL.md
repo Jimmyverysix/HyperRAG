@@ -78,7 +78,7 @@ Matched Random 对每个 query 从普通 negatives 中随机选取恰好 `|D_q|`
 
 ### C. Path-Selection Sensitivity
 
-只在存在多条等长最短路径的训练 query 上改变最短路径择一。固定变体种子 2718、3141、5772，使用 shortest-path DAG 和 seeded predecessor ordering 为每个 topic-answer pair 选一条路径，不枚举全部路径。每个变体训练 Baseline 与 Ours，报告 Answer-Path MRR、Answer Reach@10 的 mean、standard deviation 和 range。
+只在存在多条等长最短路径的训练 query 上改变最短路径择一。固定变体种子 2718、3141、5772，使用 shortest-path DAG 和 seeded predecessor ordering 为每个 topic-answer pair 选一条路径，不枚举全部路径。每个变体训练 Baseline 与 Ours；敏感性指标只聚合至少一个 topic--answer 对具有多条等长最短路径的测试 query，报告 Answer-Path MRR、Answer Reach@10 的 mean、standard deviation 和 range。
 
 P0 完成前不开发第二数据集或新模型。
 

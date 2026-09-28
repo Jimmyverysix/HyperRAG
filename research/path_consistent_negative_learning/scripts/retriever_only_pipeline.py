@@ -197,7 +197,11 @@ def command_evaluate(args: argparse.Namespace) -> dict[str, Any]:
     )
     args.scores.parent.mkdir(parents=True, exist_ok=True)
     torch.save(scores, args.scores)
-    result = evaluate_scores(data, scores)
+    result = evaluate_scores(
+        data,
+        scores,
+        multiple_shortest_only=args.multiple_shortest_only,
+    )
     result.update(
         {
             "stage": "evaluate",
@@ -271,6 +275,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--device", required=True)
     evaluate.add_argument("--batch-size", type=int, default=1024)
     evaluate.add_argument("--selection-file", type=Path)
+    evaluate.add_argument("--multiple-shortest-only", action="store_true")
     evaluate.add_argument("--scores", type=Path, required=True)
     evaluate.set_defaults(handler=command_evaluate)
     return parser

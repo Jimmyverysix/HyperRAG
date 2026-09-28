@@ -300,6 +300,7 @@ def build_jobs(
                                     "--evaluation-arm", method,
                                     "--device", "cuda",
                                     "--selection-file", str(selection_file),
+                                    "--multiple-shortest-only",
                                     "--scores", str(scores),
                                 ],
                             ]

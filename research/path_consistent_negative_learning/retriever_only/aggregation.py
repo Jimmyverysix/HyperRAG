@@ -234,6 +234,13 @@ def aggregate_path_sensitivity(
                         / "test_scores.report.json"
                     )
                     report = json.loads(path.read_text(encoding="utf-8"))
+                    if (
+                        report.get("evaluation_subset")
+                        != "multiple_equal_shortest_paths"
+                    ):
+                        raise ValueError(
+                            f"path sensitivity report has the wrong query subset: {path}"
+                        )
                     values["answer_path_mrr"].append(
                         float(report["metrics"]["answer_path_mrr"])
                     )

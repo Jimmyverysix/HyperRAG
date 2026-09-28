@@ -27,6 +27,7 @@ class PreparedCandidates:
     labels: torch.Tensor | None = None
     path_consistent_mask: torch.Tensor | None = None
     transitions: list[tuple[str, str, str]] | None = None
+    query_multiple_shortest: list[bool] | None = None
 
     def validate(self) -> None:
         query_count = len(self.query_keys)
@@ -56,6 +57,11 @@ class PreparedCandidates:
                 raise ValueError("path-consistent candidates must be negative labels")
         if self.transitions is not None and len(self.transitions) != candidate_count:
             raise ValueError("transitions must align with candidates")
+        if (
+            self.query_multiple_shortest is not None
+            and len(self.query_multiple_shortest) != query_count
+        ):
+            raise ValueError("shortest-path flags must align with queries")
 
     def save(self, path: Path) -> None:
         self.validate()

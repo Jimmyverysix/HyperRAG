@@ -14,6 +14,9 @@ from research.path_consistent_negative_learning.retriever_only.metrics import (
     answer_path_metrics,
     rank_transitions,
 )
+from research.path_consistent_negative_learning.retriever_only.graph import (
+    has_multiple_shortest_answer_paths,
+)
 
 
 def add_transition(graph: nx.Graph, head: str, edge: str, tail: str) -> None:
@@ -82,6 +85,15 @@ class PathConsistentCandidateTests(unittest.TestCase):
         self.assertEqual(metrics.first_answer_rank, 3)
         self.assertAlmostEqual(metrics.reciprocal_rank, 1 / 3)
         self.assertEqual(metrics.reach_at_5, 1.0)
+
+    def test_multiple_shortest_paths_are_detected_without_enumeration(self) -> None:
+        graph = nx.Graph()
+        add_transition(graph, "s", "H:1", "b")
+        add_transition(graph, "b", "H:2", "a")
+        add_transition(graph, "s", "H:3", "c")
+        add_transition(graph, "c", "H:4", "a")
+        self.assertTrue(has_multiple_shortest_answer_paths(graph, "s", ("a",)))
+        self.assertFalse(has_multiple_shortest_answer_paths(graph, "s", ("b",)))
 
 
 if __name__ == "__main__":

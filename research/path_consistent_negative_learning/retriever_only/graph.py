@@ -309,6 +309,40 @@ def all_shortest_distances(
     return dict(nx.single_source_shortest_path_length(graph, source, cutoff=cutoff))
 
 
+def has_multiple_shortest_answer_paths(
+    graph: nx.Graph,
+    source: str,
+    answers: Iterable[str],
+    *,
+    cutoff: int = MAX_INCIDENCE_DISTANCE,
+) -> bool:
+    """Return whether any source--answer pair has two shortest paths.
+
+    Path counts are capped at two because sensitivity eligibility only needs to
+    distinguish a unique shortest path from a tie; no path enumeration is
+    performed.
+    """
+
+    distances = all_shortest_distances(graph, source, cutoff=cutoff)
+    if not distances:
+        return False
+    path_counts = {source: 1}
+    ordered_nodes = sorted(distances, key=lambda node: (distances[node], node))
+    for node in ordered_nodes:
+        if node == source:
+            continue
+        distance = distances[node]
+        path_counts[node] = min(
+            2,
+            sum(
+                path_counts.get(predecessor, 0)
+                for predecessor in graph.neighbors(node)
+                if distances.get(predecessor) == distance - 1
+            ),
+        )
+    return any(path_counts.get(answer, 0) >= 2 for answer in set(answers))
+
+
 def is_path_consistent(
     graph: nx.Graph,
     transition: Transition,

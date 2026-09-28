@@ -45,16 +45,29 @@ def score_candidates(
 def evaluate_scores(
     data: PreparedCandidates,
     scores: torch.Tensor,
+    *,
+    multiple_shortest_only: bool = False,
 ) -> dict[str, Any]:
     if data.transitions is None:
         raise ValueError("evaluation data has no candidate transitions")
     if scores.shape != (len(data.transitions),):
         raise ValueError("scores must align with evaluation candidates")
+    if multiple_shortest_only and data.query_multiple_shortest is None:
+        raise ValueError("evaluation data has no shortest-path multiplicity flags")
     query_results = []
     metric_values = []
+    evaluated_candidate_count = 0
+    shortest_flags = data.query_multiple_shortest
     for query_index, query_key in enumerate(data.query_keys):
+        if (
+            multiple_shortest_only
+            and shortest_flags is not None
+            and not shortest_flags[query_index]
+        ):
+            continue
         start = int(data.query_offsets[query_index])
         stop = int(data.query_offsets[query_index + 1])
+        evaluated_candidate_count += stop - start
         ranked = rank_transitions(
             data.transitions[start:stop],
             scores[start:stop].tolist(),
@@ -75,11 +88,18 @@ def evaluate_scores(
                 "answer_reach_10": metrics.reach_at_10,
             }
         )
+    if not metric_values:
+        raise ValueError("evaluation subset contains no queries")
     return {
         "domain": data.domain,
         "split": data.split,
-        "query_count": len(data.query_keys),
-        "candidate_count": len(data.transitions),
+        "evaluation_subset": (
+            "multiple_equal_shortest_paths"
+            if multiple_shortest_only
+            else "all_eligible_queries"
+        ),
+        "query_count": len(query_results),
+        "candidate_count": evaluated_candidate_count,
         "metrics": mean_metrics(metric_values),
         "queries": query_results,
     }

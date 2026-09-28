@@ -63,6 +63,14 @@ class RetrieverManifestTests(unittest.TestCase):
             self.assertEqual(
                 len(build_jobs("path-sensitivity", self.config, **arguments)), 12
             )
+            main_job = build_jobs("main-test", self.config, **arguments)[0]
+            sensitivity_job = build_jobs(
+                "path-sensitivity", self.config, **arguments
+            )[0]
+            self.assertNotIn("--multiple-shortest-only", main_job["commands"][-1])
+            self.assertIn(
+                "--multiple-shortest-only", sensitivity_job["commands"][-1]
+            )
 
 
 if __name__ == "__main__":

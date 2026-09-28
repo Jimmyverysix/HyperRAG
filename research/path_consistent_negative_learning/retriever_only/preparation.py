@@ -13,7 +13,11 @@ from .candidates import (
 )
 from .data import AlignedQuery
 from .embeddings import EmbeddingStore
-from .graph import DeterministicHypergraph, Transition
+from .graph import (
+    DeterministicHypergraph,
+    Transition,
+    has_multiple_shortest_answer_paths,
+)
 from .official import OfficialDDE
 from .prepared import PreparedCandidates
 
@@ -35,6 +39,7 @@ class _Accumulator:
     labels: list[bool] | None = field(default_factory=list)
     path_consistent_mask: list[bool] | None = field(default_factory=list)
     transitions: list[Transition] | None = None
+    query_multiple_shortest: list[bool] | None = None
 
     def add(
         self,
@@ -48,6 +53,7 @@ class _Accumulator:
         embeddings: EmbeddingStore,
         labels: Sequence[bool] | None,
         path_mask: Sequence[bool] | None,
+        multiple_shortest: bool | None = None,
     ) -> None:
         node_index = embeddings.node_index
         query_index = embeddings.query_index
@@ -66,6 +72,10 @@ class _Accumulator:
             self.path_consistent_mask.extend(path_mask)
         if self.transitions is not None:
             self.transitions.extend(candidates)
+        if self.query_multiple_shortest is not None:
+            if multiple_shortest is None:
+                raise ValueError("evaluation queries require a shortest-path flag")
+            self.query_multiple_shortest.append(multiple_shortest)
         self.query_offsets.append(self.query_offsets[-1] + len(candidates))
 
     def finish(self) -> PreparedCandidates:
@@ -106,6 +116,7 @@ class _Accumulator:
                 else None
             ),
             transitions=self.transitions,
+            query_multiple_shortest=self.query_multiple_shortest,
         )
         value.validate()
         return value
@@ -170,6 +181,7 @@ def prepare_evaluation_candidates(
         labels=None,
         path_consistent_mask=None,
         transitions=[],
+        query_multiple_shortest=[],
     )
     device = torch.device(similarity_device)
     node_embeddings = embeddings.node_embeddings.to(device)
@@ -214,6 +226,11 @@ def prepare_evaluation_candidates(
             embeddings=embeddings,
             labels=None,
             path_mask=None,
+            multiple_shortest=has_multiple_shortest_answer_paths(
+                bundle.graph,
+                query.topic_node,
+                answers,
+            ),
         )
         if progress_every and eligible % progress_every == 0:
             print(f"[{domain}/{split}] {eligible} queries", flush=True)
