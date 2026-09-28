@@ -21,6 +21,7 @@ class RetrieverFigureTests(unittest.TestCase):
         case = {
             "question": "Which answer is connected to the topic?",
             "selected_paths": [path],
+            "selected_path_for_witness_answer": path,
             "conflict_witness_path": path,
             "sampled_negative_transition": {
                 "head": "s",

@@ -60,6 +60,18 @@ def _render_path(
     ]
 
 
+def selected_path_to_answer(
+    paths: Iterable[tuple[str, ...]],
+    answer: str,
+) -> tuple[str, ...]:
+    """Return the released selected path for the witness answer."""
+
+    matches = [path for path in paths if path and path[-1] == answer]
+    if len(matches) != 1:
+        raise ValueError(f"expected one selected path for answer {answer}")
+    return matches[0]
+
+
 def extract_case_study(
     structured_root: Path,
     nlg_root: Path,
@@ -101,8 +113,11 @@ def extract_case_study(
             prepared.topic,
             prepared.answers,
         )
-        source_distances = all_shortest_distances(bundle.graph, prepared.topic)
         answer = witness[-1]
+        paired_selected = selected_path_to_answer(selected, answer)
+        if len(paired_selected) != len(witness):
+            raise RuntimeError("selected and witness paths must be equal-length")
+        source_distances = all_shortest_distances(bundle.graph, prepared.topic)
         return {
             "schema_version": 1,
             "selection_rule": "first_released_order_query_with_sampled_conflict",
@@ -137,6 +152,14 @@ def extract_case_study(
             "selected_paths": [
                 _render_path(path, bundle.node_texts) for path in selected
             ],
+            "witness_answer": {
+                "node_id": answer,
+                "text": bundle.node_texts[answer],
+            },
+            "selected_path_for_witness_answer": _render_path(
+                paired_selected,
+                bundle.node_texts,
+            ),
             "conflict_witness_path": _render_path(witness, bundle.node_texts),
         }
     raise ValueError(

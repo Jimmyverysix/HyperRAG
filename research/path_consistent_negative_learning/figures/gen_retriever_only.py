@@ -86,7 +86,7 @@ def _draw_path(
 
 def generate_method_figure(case: Mapping[str, Any], output_dir: Path) -> None:
     apply_style()
-    selected = case["selected_paths"][0]
+    selected = case["selected_path_for_witness_answer"]
     witness = case["conflict_witness_path"]
     transition = case["sampled_negative_transition"]
     highlighted = (

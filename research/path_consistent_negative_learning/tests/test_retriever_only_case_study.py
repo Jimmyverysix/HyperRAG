@@ -5,6 +5,7 @@ import unittest
 import networkx as nx
 
 from research.path_consistent_negative_learning.retriever_only.case_study import (
+    selected_path_to_answer,
     witness_shortest_path,
 )
 
@@ -43,6 +44,11 @@ class CaseStudyWitnessTests(unittest.TestCase):
         self.assertIsNone(
             witness_shortest_path(graph, "s", ("a",), ("s", "H:1", "x"))
         )
+
+    def test_selected_path_is_paired_with_the_witness_answer(self) -> None:
+        first = ("s", "H:1", "a1")
+        second = ("s", "H:2", "x", "H:3", "a2")
+        self.assertEqual(selected_path_to_answer((first, second), "a2"), second)
 
 
 if __name__ == "__main__":
