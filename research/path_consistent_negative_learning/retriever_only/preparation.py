@@ -192,13 +192,15 @@ def prepare_evaluation_candidates(
         query_embedding = embeddings.query_embeddings[query_index[query.text]].to(device)
         with torch.no_grad():
             similarities = torch.mv(node_embeddings, query_embedding).cpu().tolist()
-        scores = {name: similarities[index] for name, index in node_index.items()}
+        def node_score(name: str) -> float:
+            return similarities[node_index[name]]
+
         candidates = tuple(
             value.transition
             for value in semantic_beam_candidates(
                 bundle.graph,
                 query.topic_node,
-                scores,
+                node_score,
                 beam_width=beam_width,
             )
         )

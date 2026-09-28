@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 import random
-from typing import Iterable, Iterator, Mapping, Sequence
+from typing import Callable, Iterable, Iterator, Sequence
 
 import networkx as nx
 
@@ -261,7 +261,7 @@ def enumerate_retrieval_candidates(
 def semantic_beam_candidates(
     graph: nx.Graph,
     topic: str,
-    node_scores: Mapping[str, float],
+    node_score: Callable[[str], float],
     *,
     beam_width: int = 10,
     maximum_hops: int = 3,
@@ -289,7 +289,7 @@ def semantic_beam_candidates(
                 continue
             edges = sorted(
                 (edge for edge in graph.neighbors(head) if is_hyperedge(edge)),
-                key=lambda edge: (-node_scores[edge], edge),
+                key=lambda edge: (-node_score(edge), edge),
             )[:beam_width]
             for edge in edges:
                 tails = sorted(
@@ -298,7 +298,7 @@ def semantic_beam_candidates(
                         for tail in graph.neighbors(edge)
                         if not is_hyperedge(tail) and tail != head
                     ),
-                    key=lambda tail: (-node_scores[tail], tail),
+                    key=lambda tail: (-node_score(tail), tail),
                 )[:beam_width]
                 for tail in tails:
                     pair = (edge, *sorted((head, tail)))
@@ -306,7 +306,7 @@ def semantic_beam_candidates(
                         continue
                     local_pairs.add(pair)
                     score = (
-                        node_scores[head] + node_scores[edge] + node_scores[tail]
+                        node_score(head) + node_score(edge) + node_score(tail)
                     ) / 3.0
                     scored.append((score, (head, edge, tail)))
         chosen = sorted(scored, key=lambda item: (-item[0], item[1]))[:beam_width]

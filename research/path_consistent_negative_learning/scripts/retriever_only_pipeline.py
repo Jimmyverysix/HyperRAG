@@ -20,6 +20,7 @@ from research.path_consistent_negative_learning.retriever_only.embeddings import
     encode_store,
 )
 from research.path_consistent_negative_learning.retriever_only.evaluation import (
+    candidate_path_coverage,
     evaluate_scores,
     score_candidates,
 )
@@ -145,6 +146,7 @@ def command_prepare_eval(args: argparse.Namespace) -> dict[str, Any]:
         "beam_width": args.beam_width,
         "query_count": len(data.query_keys),
         "candidate_count": len(data.dde_features),
+        "candidate_path_coverage": candidate_path_coverage(data),
         "output": str(args.output),
     }
 

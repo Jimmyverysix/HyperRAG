@@ -83,3 +83,25 @@ def evaluate_scores(
         "metrics": mean_metrics(metric_values),
         "queries": query_results,
     }
+
+
+def candidate_path_coverage(data: PreparedCandidates) -> dict[str, float | int]:
+    """Report the answer-path ceiling imposed by fixed candidates alone."""
+
+    if data.transitions is None:
+        raise ValueError("evaluation data has no candidate transitions")
+    reachable = 0
+    for query_index in range(len(data.query_keys)):
+        start = int(data.query_offsets[query_index])
+        stop = int(data.query_offsets[query_index + 1])
+        metrics = answer_path_metrics(
+            data.transitions[start:stop],
+            data.query_topics[query_index],
+            data.query_answers[query_index],
+        )
+        reachable += metrics.first_answer_rank is not None
+    return {
+        "path_reachable_query_count": reachable,
+        "path_reachable_query_rate": reachable / len(data.query_keys),
+        "mean_candidate_count": len(data.transitions) / len(data.query_keys),
+    }
