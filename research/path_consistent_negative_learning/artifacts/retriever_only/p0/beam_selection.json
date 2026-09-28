@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_formal_sweep",
+  "selection_scope": "art_valid",
+  "selection_metric": "candidate_path_coverage.path_reachable_query_rate",
+  "tie_rule": "choose_smaller_beam",
+  "candidates": {
+    "10": {
+      "query_count": 9878,
+      "candidate_count": 283044,
+      "mean_candidate_count": 28.65397853816562,
+      "path_reachable_query_count": 1294,
+      "path_reachable_query_rate": 0.13099817776877912,
+      "report_created_at": "2026-09-28T06:21:24.985097+00:00",
+      "research_commit": "1e9d2e75df42bb670d0b2ef477a70542c6632970",
+      "research_worktree_dirty": false
+    },
+    "32": {
+      "query_count": 9878,
+      "candidate_count": 911714,
+      "mean_candidate_count": 92.29742862927718,
+      "path_reachable_query_count": 2165,
+      "path_reachable_query_rate": 0.21917392184652765,
+      "report_created_at": "2026-09-28T07:15:40.070130+00:00",
+      "research_commit": "48b964ed620e78d39d5a542276f47e039ce4a240",
+      "research_worktree_dirty": false
+    }
+  },
+  "selected_beam_width": 32,
+  "test_metrics_accessed": false,
+  "third_width_considered": false
+}

@@ -31,7 +31,7 @@ export PYTHONPATH="$REPO"
 
 图实体以 Wikidata QID 保持身份；冻结英文标签只作为 GTE 文本。同名实体不能合并。正式训练种子为 42--46，lambda 网格为 `0.00, 0.10, 0.25, 0.50, 0.75, 1.00`。
 
-正式 `prepare` manifest 只能在 art/valid 的 beam=10 与 beam=32 P0 完成后生成。唯一选择指标是候选路径覆盖率；覆盖率较高者胜，精确并列取 10。冻结结果必须写回配置，禁止追加第三个宽度。
+正式 `prepare` manifest 只能在 art/valid 的 beam=10 与 beam=32 P0 完成后生成。唯一选择指标是候选路径覆盖率；覆盖率较高者胜，精确并列取 10。实测 beam=10 为 13.10%（1,294/9,878），beam=32 为 21.92%（2,165/9,878），因此正式宽度冻结为 32；完整机器可读记录见 `artifacts/retriever_only/p0/beam_selection.json`，不追加第三个宽度。
 
 ## 3. 预检与测试
 
