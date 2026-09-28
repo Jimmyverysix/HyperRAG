@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "frozen_before_retriever_only_runs",
+  "status": "p0_beam_selection_pending",
   "frozen_at": "2026-09-28",
   "scope": "zero_llm_retriever_only",
   "upstream": {
@@ -80,6 +80,11 @@
     "maximum_logical_hops": 3,
     "candidate_generation": "answer_free_frozen_gte_semantic_beam",
     "beam_width": 10,
+    "beam_width_status": "provisional_until_art_valid_p0",
+    "beam_width_p0_candidates": [10, 32],
+    "beam_width_p0_selection_split": "art_valid",
+    "beam_width_p0_selection_metric": "candidate_path_coverage.path_reachable_query_rate",
+    "beam_width_p0_tie_rule": "choose_smaller_beam",
     "semantic_beam_score": "mean_query_cosine_over_head_hyperedge_tail",
     "reverse_duplicate_policy": "first_stable_orientation",
     "threshold": null,

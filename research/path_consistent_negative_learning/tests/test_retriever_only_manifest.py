@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
-import unittest
 import json
+from pathlib import Path
 import tempfile
+import unittest
 
 from research.path_consistent_negative_learning.scripts.build_retriever_manifest import (
     build_jobs,
@@ -31,6 +31,12 @@ class RetrieverManifestTests(unittest.TestCase):
         self.assertEqual(len(build_jobs("encode", self.config, **self.arguments)), 2)
         self.assertEqual(len(build_jobs("prepare", self.config, **self.arguments)), 6)
         self.assertEqual(len(build_jobs("sweep", self.config, **self.arguments)), 8)
+
+    def test_formal_manifest_rejects_pending_beam_decision(self) -> None:
+        pending = {**self.config, "status": "p0_beam_selection_pending"}
+        with self.assertRaisesRegex(ValueError, "beam P0 decision"):
+            build_jobs("prepare", pending, **self.arguments)
+        self.assertEqual(len(build_jobs("encode", pending, **self.arguments)), 2)
 
     def test_sweep_job_trains_then_evaluates_valid(self) -> None:
         job = build_jobs("sweep", self.config, **self.arguments)[0]

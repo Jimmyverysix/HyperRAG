@@ -15,6 +15,12 @@
 
 历史 proposal、历史 PDF、结构代理代码与 artifacts 全部作为 provenance 只读保留。正文、正式实验结果和讨论最终统一写入同一篇 WWW 稿件，不另写竞争性的实验报告。
 
+正式主实验的名称只使用以下三种：
+
+- 策略1：原始负监督基线（$\lambda=1.00$）；
+- 策略2：逐题等量匹配随机降权；
+- 策略3：按完整路径条件定位负例，并使用验证集冻结的 $\lambda_D^*$。
+
 ## 历史结构代理结果
 
 冻结的结构代理实验已经完成。路径一致方案相对基线将 answer reach@10 宏平均提高 6.89 个百分点，同时 selected-path PR-AUC 下降 0.57 个百分点；相对逐题等量随机降权的覆盖提高 6.65 个百分点。10/11 个领域选择 $\lambda=0.00$，tax 选择 $\lambda=0.10$，且 2/11 个领域的排序下降超过 1 个百分点。该结果仅是 Mechanism / Diagnostic Study，不能外推为官方 HyperRetriever 或端到端 QA 结果。
@@ -28,14 +34,14 @@ make -C research/path_consistent_negative_learning verify-history
 
 服务器上的完整顺序见 `docs/REPRODUCIBILITY.md`。代码只通过 GitHub 同步；raw runs、数据和 checkpoint 留在服务器，聚合 JSON/CSV、论文图表与最终 PDF 才进入版本库。
 
-本目录实现提案中的路径监督研究。核心问题是：公开流程只选择一条最短路径作为正例时，未被选中、但仍属于其他主题—答案最短路径的转移，应当标负、忽略，还是标正。
+以下内容记录早期结构代理研究，保留用于历史 provenance，不定义当前 Retriever-only 主实验。
 
-## 实验策略
+## 历史结构代理臂（非当前正式策略）
 
-- 策略1：保留公开基线标签，选中路径之外的采样候选标负。
-- 策略2：选中路径正例保持不变；其他最短路径上的候选不参与损失。
-- 策略3：任一主题—答案最短路径上的候选标正。
-- 随机丢弃对照：每题随机屏蔽与策略2相同数量的负例，用于区分路径信息与样本数变化。
+- `strategy1_baseline`：保留公开基线标签，选中路径之外的采样候选标负。
+- `strategy2_ignore`：选中路径正例保持不变；其他最短路径上的候选不参与损失。
+- `strategy3_positive`：任一主题—答案最短路径上的候选标正。
+- `random_ignore_control`：每题随机屏蔽与 `strategy2_ignore` 相同数量的负例。
 
 四个实验臂共享同一候选顺序和特征对象，只改变标签与损失掩码。主判据为
 
@@ -160,7 +166,7 @@ python -m research.path_consistent_negative_learning.proposal.generate_results_t
 
 若选参没有合格权重，省略 `--confirmation` 和 `--gate-d`；生成器会把后续阶段明确写为“未运行”。当前唯一主文件是 `paper/www2027/main.tex`，在该目录编译后输出 `paper/www2027/main.pdf`；方法、case study、实验结果与结论全部放在这一份文档中，不再另设活跃实验报告。`proposal/` 只保留为历史 provenance。
 
-## 策略2加权改进
+## 历史 `strategy2_ignore` 加权改进
 
 原策略2在教育领域把争议负例完全移出损失，答案可达率提高，但选中路径曲线下面积下降 1.32 个百分点，超过结果产生前固定的 1 个百分点保护线。后续阶段不改写这项失败判定，而是把争议负例权重设为 $\lambda\in[0,1]$：$\lambda=0$ 等价于原策略2，$\lambda=1$ 等价于策略1。随机对照按题随机选择等量负例并赋予相同权重。
 

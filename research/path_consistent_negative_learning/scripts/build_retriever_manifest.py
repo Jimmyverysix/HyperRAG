@@ -49,6 +49,10 @@ def build_jobs(
     run_root: Path,
     selection_file: Path | None = None,
 ) -> list[dict[str, Any]]:
+    if phase != "encode" and config.get("status") == "p0_beam_selection_pending":
+        raise ValueError(
+            "formal manifests require the art/valid beam P0 decision to be frozen"
+        )
     domains = config["domains"]
     seeds = config["training"]["seeds"]
     lambdas = config["selection"]["lambda_grid"]

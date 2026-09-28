@@ -2,7 +2,7 @@
 
 冻结日期：2026-09-28
 
-状态：`frozen_before_retriever_only_runs`
+状态：P0 的 beam 宽度决策规则已冻结；正式 sweep 配置将在 P0 结束后记录唯一宽度并冻结。
 
 配置真源：`configs/retriever_only/wiki_main.json`
 
@@ -46,7 +46,7 @@ d_I(s,v) + 2 + d_I(u,a) = d_I(s,a)
 
 ## 5. Retrieve-only 候选接口
 
-验证与测试只输入自然语言 query、topic entity 和确定性超图。直接三跳全展开在 art 的实测典型规模约为每题 1,560 万候选，因此冻结为答案不可见的 GTE 语义束接口：每跳先按冻结 GTE 的 query 与 head、hyperedge、tail 平均余弦相似度保留 10 个转移，最多三跳；反向重复转移按稳定顺序去重。该候选束不读取 hard answer，不读取训练后 MLP，对所有方法、lambda 和种子完全相同。DDE 按官方单跳候选接口计算；接口直接返回 candidate transition 与原始 MLP logit，不做 logit 阈值截断，不调用生成器。
+验证与测试只输入自然语言 query、topic entity 和确定性超图。直接三跳全展开在 art 的实测典型规模约为每题 1,560 万候选，因此采用答案不可见的 GTE 语义束接口：每跳先按冻结 GTE 的 query 与 head、hyperedge、tail 平均余弦相似度保留固定数量的转移，最多三跳；反向重复转移按稳定顺序去重。正式 sweep 前只在 art/valid 做一次 beam=10 与 beam=32 的 P0 比较，以候选集合最终能否形成 topic--answer 路径的覆盖率为唯一决策指标；覆盖率较高者胜，精确并列取计算量更小的 10，不追加第三个宽度。胜出宽度随后写回配置并冻结。该候选束不读取 hard answer，不读取训练后 MLP，对所有方法、lambda 和种子完全相同。DDE 按官方单跳候选接口计算；接口直接返回 candidate transition 与原始 MLP logit，不做 logit 阈值截断，不调用生成器。
 
 ## 6. 指标
 
