@@ -7,11 +7,16 @@ from collections import Counter
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import sys
 from typing import Sequence
 
 from .alignment import normalize_text, text_mentions_topic
 from .data import NLG_QUERY_SHAPE, LabelSnapshot, load_aligned_queries
 from .graph import build_deterministic_hypergraph
+from .provenance import collect_provenance
+
+
+REPOSITORY = Path(__file__).resolve().parents[3]
 
 
 def validate_domain(
@@ -174,6 +179,7 @@ def main() -> int:
         args.label_snapshot,
         args.domains,
     )
+    report["provenance"] = collect_provenance(REPOSITORY, sys.argv)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n",
