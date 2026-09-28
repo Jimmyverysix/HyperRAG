@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "validated_at": "2026-09-28T04:10:19.706820+00:00",
+  "scope": "zero_llm_deterministic_wikitopics_alignment",
+  "structured_root": "E:\\code\\HyperRAG\\tmp\\downloads\\WikiTopics_QE\\WikiTopics_QE",
+  "nlg_root": "E:\\code\\HyperRAG\\tmp\\downloads\\WikiTopics_NLG\\WikiTopicsQE_NLG",
+  "label_snapshot": "E:\\code\\HyperRAG\\research\\path_consistent_negative_learning\\artifacts\\retriever_only\\raw\\label_snapshot.json",
+  "label_source": "https://query.wikidata.org/sparql",
+  "label_retrieved_at": "2026-09-28T03:54:17.269091+00:00",
+  "domains": [
+    {
+      "domain": "art",
+      "graph_nodes": 35696,
+      "graph_edges": 122858,
+      "entity_nodes": 17848,
+      "hyperedge_nodes": 17848,
+      "fact_count": 105338,
+      "train_structured_groups": 9804,
+      "test_structured_groups": 9785,
+      "splits": {
+        "train": {
+          "aligned_queries": 9971,
+          "queries_with_current_topic_label": 9912,
+          "question_mentions_current_topic_label": 9498,
+          "topic_mention_rate": 0.9582324455205811,
+          "topic_in_graph": 9910,
+          "at_least_one_answer_in_graph": 9944,
+          "retriever_eligible_queries": 9887,
+          "excluded_queries": 84
+        },
+        "valid": {
+          "aligned_queries": 9963,
+          "queries_with_current_topic_label": 9912,
+          "question_mentions_current_topic_label": 9458,
+          "topic_mention_rate": 0.9541969330104924,
+          "topic_in_graph": 9911,
+          "at_least_one_answer_in_graph": 9935,
+          "retriever_eligible_queries": 9886,
+          "excluded_queries": 77
+        },
+        "test": {
+          "aligned_queries": 9951,
+          "queries_with_current_topic_label": 9909,
+          "question_mentions_current_topic_label": 9519,
+          "topic_mention_rate": 0.9606418407508326,
+          "topic_in_graph": 9906,
+          "at_least_one_answer_in_graph": 9920,
+          "retriever_eligible_queries": 9875,
+          "excluded_queries": 76
+        }
+      }
+    }
+  ],
+  "domain_count": 1,
+  "status": "passed"
+}

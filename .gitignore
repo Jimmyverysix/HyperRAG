@@ -24,6 +24,9 @@ data/
 models/
 runs/
 research/path_consistent_negative_learning/runs/
+research/path_consistent_negative_learning/artifacts/retriever_only/raw/runs/
+research/path_consistent_negative_learning/artifacts/retriever_only/cache/
+research/path_consistent_negative_learning/artifacts/retriever_only/checkpoints/
 research/path_consistent_negative_learning/proposal/build/
 research/path_consistent_negative_learning/proposal/rendered/
 research/path_consistent_negative_learning/proposal/*.aux
