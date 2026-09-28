@@ -178,11 +178,14 @@ def command_train(args: argparse.Namespace) -> dict[str, Any]:
 def command_evaluate(args: argparse.Namespace) -> dict[str, Any]:
     data = PreparedCandidates.load(args.evaluation_data)
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+    evaluation_arm = args.evaluation_arm or checkpoint["method"]
     if data.split == "test":
         selection = _require_selection(args)
         selected = float(selection["domains"][data.domain]["lambda"])
-        if checkpoint["method"] == "ours" and float(checkpoint["lambda"]) != selected:
+        if evaluation_arm == "ours" and float(checkpoint["lambda"]) != selected:
             raise ValueError("checkpoint lambda does not match frozen selection")
+        if evaluation_arm == "baseline" and float(checkpoint["lambda"]) != 1.0:
+            raise ValueError("baseline evaluation requires the lambda=1.0 checkpoint")
     scores = score_candidates(
         data,
         EmbeddingStore.load(args.embeddings),
@@ -196,7 +199,8 @@ def command_evaluate(args: argparse.Namespace) -> dict[str, Any]:
     result.update(
         {
             "stage": "evaluate",
-            "method": checkpoint["method"],
+            "method": evaluation_arm,
+            "checkpoint_training_method": checkpoint["method"],
             "lambda": checkpoint["lambda"],
             "seed": checkpoint["seed"],
             "checkpoint": str(args.checkpoint),
@@ -259,6 +263,9 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--evaluation-data", type=Path, required=True)
     evaluate.add_argument("--embeddings", type=Path, required=True)
     evaluate.add_argument("--checkpoint", type=Path, required=True)
+    evaluate.add_argument(
+        "--evaluation-arm", choices=("baseline", "ours", "matched_random")
+    )
     evaluate.add_argument("--device", required=True)
     evaluate.add_argument("--batch-size", type=int, default=1024)
     evaluate.add_argument("--selection-file", type=Path)

@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+from pathlib import Path
+import unittest
+import json
+import tempfile
+
+from research.path_consistent_negative_learning.scripts.build_retriever_manifest import (
+    build_jobs,
+)
+
+
+class RetrieverManifestTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.config = {
+            "domains": ["a", "b"],
+            "training": {"seeds": [42, 43]},
+            "selection": {"lambda_grid": [0.0, 1.0]},
+            "retrieval": {"beam_width": 10},
+            "path_selection_sensitivity": {"variant_seeds": [2718, 3141, 5772]},
+        }
+        self.arguments = {
+            "structured_root": Path("/structured"),
+            "nlg_root": Path("/nlg"),
+            "label_snapshot": Path("/labels.json"),
+            "model_path": Path("/gte"),
+            "run_root": Path("/runs"),
+        }
+
+    def test_phase_counts(self) -> None:
+        self.assertEqual(len(build_jobs("encode", self.config, **self.arguments)), 2)
+        self.assertEqual(len(build_jobs("prepare", self.config, **self.arguments)), 6)
+        self.assertEqual(len(build_jobs("sweep", self.config, **self.arguments)), 8)
+
+    def test_sweep_job_trains_then_evaluates_valid(self) -> None:
+        job = build_jobs("sweep", self.config, **self.arguments)[0]
+        self.assertEqual(len(job["commands"]), 2)
+        self.assertIn("train", job["commands"][0])
+        self.assertIn("evaluate", job["commands"][1])
+        self.assertTrue(any("valid.pt" in token for token in job["commands"][1]))
+
+    def test_post_selection_phase_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            selection_file = Path(temporary) / "selection.json"
+            selection_file.write_text(
+                json.dumps(
+                    {
+                        "domains": {
+                            "a": {"lambda": 0.25},
+                            "b": {"lambda": 0.0},
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            arguments = {**self.arguments, "selection_file": selection_file}
+            self.assertEqual(
+                len(build_jobs("prepare-test", self.config, **arguments)), 2
+            )
+            self.assertEqual(
+                len(build_jobs("main-test", self.config, **arguments)), 12
+            )
+            self.assertEqual(
+                len(build_jobs("path-sensitivity", self.config, **arguments)), 12
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
