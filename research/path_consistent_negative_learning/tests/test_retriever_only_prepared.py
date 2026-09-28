@@ -94,12 +94,36 @@ class PreparedWeightTests(unittest.TestCase):
         )
         for start, stop in ((0, 4), (4, 8)):
             self.assertEqual(int((weights[start:stop] == 0.25).sum()), 1)
-            self.assertFalse(
-                torch.any(
-                    (weights[start:stop] == 0.25)
-                    & self.data.path_consistent_mask[start:stop]
+            self.assertTrue(
+                torch.all(
+                    ~self.data.labels[start:stop][weights[start:stop] == 0.25]
                 )
             )
+
+    def test_matched_random_remains_defined_when_all_negatives_conflict(self) -> None:
+        data = PreparedCandidates(
+            domain="toy",
+            split="train",
+            seed=42,
+            query_keys=["q"],
+            query_topics=["a"],
+            query_answers=[("b",)],
+            query_offsets=torch.tensor([0, 2]),
+            query_embedding_indices=torch.zeros(2, dtype=torch.long),
+            head_embedding_indices=torch.zeros(2, dtype=torch.long),
+            edge_embedding_indices=torch.zeros(2, dtype=torch.long),
+            tail_embedding_indices=torch.zeros(2, dtype=torch.long),
+            dde_features=torch.zeros((2, 30)),
+            labels=torch.tensor([1, 0], dtype=torch.bool),
+            path_consistent_mask=torch.tensor([0, 1], dtype=torch.bool),
+        )
+        weights = method_weights(
+            data,
+            method="matched_random",
+            lambda_=0.0,
+            seed=42,
+        )
+        torch.testing.assert_close(weights, torch.tensor([1.0, 0.0]))
 
 
 if __name__ == "__main__":

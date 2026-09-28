@@ -99,7 +99,9 @@
   "matched_random": {
     "unit": "query",
     "count": "number_of_path_consistent_sampled_negatives_for_same_query",
-    "pool": "ordinary_sampled_negatives",
+    "pool": "all_sampled_negatives_without_using_path_identity",
+    "sampling": "uniform_without_replacement",
+    "path_consistent_overlap": "allowed_by_chance_conservative_control",
     "weight": "same_as_final_path_aware_method"
   },
   "path_selection_sensitivity": {

@@ -107,16 +107,9 @@ def method_weights(
         count = int(data.path_consistent_mask[start:stop].sum())
         if count == 0:
             continue
-        ordinary = torch.where(
-            ~data.labels[start:stop].bool()
-            & ~data.path_consistent_mask[start:stop]
-        )[0].tolist()
-        if len(ordinary) < count:
-            raise ValueError(
-                f"{query_key} has {count} conflicts but only {len(ordinary)} ordinary negatives"
-            )
+        negative = torch.where(~data.labels[start:stop].bool())[0].tolist()
         rng = random.Random(f"{seed}|{query_key}")
-        for local_index in rng.sample(ordinary, count):
+        for local_index in rng.sample(negative, count):
             weights[start + local_index] = lambda_
     return weights
 

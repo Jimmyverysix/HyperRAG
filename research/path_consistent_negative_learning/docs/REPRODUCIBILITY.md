@@ -86,7 +86,7 @@ for PHASE in prepare-test main-test path-sensitivity; do
 done
 ```
 
-主实验名称固定为策略1（Baseline）、策略2（Matched Random）和策略3（Ours）。敏感性统计只聚合至少一个 topic--answer 对具有多条等长最短路径的测试问题；先在每个路径变体内平均五个训练种子，再对三个变体均值计算 mean、standard deviation 和 range。
+主实验名称固定为策略1（Baseline）、策略2（Matched Random）和策略3（Ours）。策略2逐题从全部已采样负例中均匀无放回抽取 `|D_q|` 个，不查看路径身份；允许偶然与 `D_q` 重合。敏感性统计只聚合至少一个 topic--answer 对具有多条等长最短路径的测试问题；先在每个路径变体内平均五个训练种子，再对三个变体均值计算 mean、standard deviation 和 range。
 
 ## 6. 聚合与论文产物
 

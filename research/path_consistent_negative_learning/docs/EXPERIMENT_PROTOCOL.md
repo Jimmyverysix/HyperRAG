@@ -74,7 +74,9 @@ selected-path PR-AUC 等旧指标仅保留为历史 Appendix diagnostic，不作
 
 最终表只比较：1. Baseline；2. Matched Random；3. Ours。
 
-Matched Random 对每个 query 从普通 negatives 中随机选取恰好 `|D_q|` 个样本。若最终方法是 Masking，则屏蔽相同数量；若最终方法是 Soft Weighting，则赋予相同 lambda。其他设置全部一致。
+Matched Random 对每个 query 从该题的全部已采样 negatives 中均匀无放回选取恰好 `|D_q|` 个样本，抽样过程不查看路径一致身份。若最终方法是 Masking，则屏蔽相同数量；若最终方法是 Soft Weighting，则赋予相同 lambda。随机集合可能偶然与 `D_q` 重合，因此这是偏保守的路径无关对照。其他设置全部一致。
+
+该抽样池是正式 sweep 前的可行性修订：art/seed=42 的 P0 训练候选中有 96/9,876 个问题满足“普通负例数小于 `|D_q|`”，原先只从普通负例抽样的写法无法执行。修订不使用任何模型结果，不改变候选或降权数量，并保留这些冲突最集中的问题。
 
 ### C. Path-Selection Sensitivity
 
@@ -97,7 +99,7 @@ P0 完成前不开发第二数据集或新模型。
 - 局部降距成立但全局条件不成立的反例；
 - `lambda=1.00` 与 baseline loss/gradient 等价；
 - `lambda=0.00` 与删除路径一致负例后求均值等价；
-- Matched Random 每个 query 数量严格相同；
+- Matched Random 每个 query 数量严格相同，并在全部负例均属于 `D_q` 时仍有定义；
 - 相同 seed 的路径选择、采样和训练数据可复现；
 - NLG/结构 query 单调对齐完整；当前 Wikidata 已缺少英文标签的 topic/answer 单独计数并排除，不静默丢弃；
 - 答案实体不进入 inference feature；
