@@ -14,6 +14,7 @@ from .prepared import PreparedCandidates
 
 
 METRICS = ("reciprocal_rank", "answer_reach_10", "answer_reach_5")
+FORMAL_SEEDS = (42, 43, 44, 45, 46)
 
 
 def aggregate_conflict_prevalence(
@@ -99,6 +100,8 @@ def _load_method_reports(
         raise ValueError(f"missing or non-test reports for {domain}/{method}")
     if any(report.get("method") != method for report in reports):
         raise ValueError(f"method metadata mismatch for {domain}/{method}")
+    if {int(report["seed"]) for report in reports} != set(FORMAL_SEEDS):
+        raise ValueError(f"incomplete formal seed set for {domain}/{method}")
     return reports
 
 

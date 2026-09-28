@@ -5,10 +5,17 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 from research.path_consistent_negative_learning.retriever_only.selection import (
     select_all_domains,
 )
+from research.path_consistent_negative_learning.retriever_only.provenance import (
+    collect_provenance,
+)
+
+
+REPOSITORY = Path(__file__).resolve().parents[3]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -22,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = build_parser().parse_args()
     result = select_all_domains(args.run_root, args.domains)
+    result["provenance"] = collect_provenance(REPOSITORY, sys.argv)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n",
