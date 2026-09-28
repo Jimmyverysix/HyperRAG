@@ -1,53 +1,122 @@
-# WWW 修订版复现说明
+# Retriever-only 正式实验复现说明
 
-## 1. 环境与资源
+## 1. 环境与边界
 
-- 代码分支：`www-path-supervision-revision`
-- 服务器 Python：`/root/miniconda3/envs/sdhp/bin/python`
-- GPU：仅允许使用 RTX 3090 的 0--5 号卡；每个训练任务独占一张卡，不使用 DDP。
-- 正式配置：`configs/www_revision/proxy_main.json`
-- 新产物根目录：`artifacts/www_revision/`
+- 研究分支：`codex/www-retriever-only`
+- 官方上游提交：`6d5a9033353c516a9220d78591f2c666f19ee0b1`
+- 服务器 Python：`/root/miniconda3/envs/hyperrag_official/bin/python`
+- GPU：只允许使用 0--5 号 RTX 3090，最多六个独立进程，不使用 DDP
+- 正式配置：`configs/retriever_only/wiki_main.json`
+- 服务器运行根目录：`/root/hyperrag_pcneg/runs/retriever_only`
 
-服务器代码只能通过 GitHub 同步。2026-09-21 已通过 GitHub HTTPS 与 SSH 反向转发的本机 HTTP 代理完成 `fetch`、快进合并和分支校验；未使用 SCP、压缩包或镜像绕过 GitHub。
+本地与服务器的代码只通过 GitHub 快进同步。数据、GTE 张量、checkpoint 与 raw log 不进入 Git；聚合 JSON/CSV、论文表图和最终 `main.pdf` 才回到版本库。不要停止 GPU 0 上不属于本研究的历史进程。
 
-## 2. 数据
+整个正式流程不使用生成式 LLM，不调用 OpenAI、百炼或其他付费 API。唯一文本模型是本地 `Alibaba-NLP/gte-large-en-v1.5`；它只产生向量。topic entity 来自结构化 query，答案只用于训练监督和评价。
 
-结构代理实验使用完整 WikiTopics_QE 11 领域整数图。服务器路径为 `/root/hyperrag_pcneg/data_sources/WikiTopics_QE`。历史逐题审计位于 `/root/hyperrag_pcneg/runs/wikitopics_audit`。
-
-仓库和服务器均缺少官方完整 NLG、构建后 GraphML、GTE 表示、Retriever checkpoint、端到端输出与 API 配置；因此当前命令不会产生 official HyperRAG Retriever/QA 结果。
-
-## 3. 最小复现顺序
-
-在 `research/path_consistent_negative_learning/` 下执行：
+## 2. 数据与固定变量
 
 ```bash
-make test
-make verify-history
-make audit AUDIT_RAW=/root/hyperrag_pcneg/runs/wikitopics_audit
-make prepare DATA_SOURCE=/root/hyperrag_pcneg/data_sources/WikiTopics_QE
-make sweep-manifest
-make sweep
-make select-lambda
-make test-manifests
-make main-experiments
-make aggregate
-make figures
-make paper-results
-make paper
+PY=/root/miniconda3/envs/hyperrag_official/bin/python
+REPO=/root/hyperrag_pcneg/work/HyperRAG_official
+STRUCTURED=/root/hyperrag_pcneg/data_sources/WikiTopics_QE
+NLG=/root/hyperrag_pcneg/data_sources/WikiTopicsQE_NLG
+MODEL=/root/hyperrag_pcneg/data_sources/models/gte-large-en-v1.5
+RUN=/root/hyperrag_pcneg/runs/retriever_only
+CONFIG=research/path_consistent_negative_learning/configs/retriever_only/wiki_main.json
+LABELS=research/path_consistent_negative_learning/artifacts/retriever_only/raw/label_snapshot.json
+DOMAINS="art award edu health infra loc org people sci sport tax"
+cd "$REPO"
+export PYTHONPATH="$REPO"
 ```
 
-`make sweep` 先执行 11×5×6 个 selection 任务。`make select-lambda` 为每个领域写出独立 `lambda_star.json`。`make test-manifests` 只有在所有 λ 文件存在后才生成测试任务；`make main-experiments` 先评估冻结检查点，再训练 matched-random 与 all-positive 对照。
+图实体以 Wikidata QID 保持身份；冻结英文标签只作为 GTE 文本。同名实体不能合并。正式训练种子为 42--46，lambda 网格为 `0.00, 0.10, 0.25, 0.50, 0.75, 1.00`。
 
-## 4. 恢复与失败定位
+## 3. 预检与测试
 
-GPU 队列在每个实验目录保存 `command.json`、`stdout.log`、`stderr.log`、`result.json`、逐题指标与 checkpoint。重跑时，元数据完全匹配的结果自动跳过；不匹配则失败，不覆盖。队列根目录只有全部任务成功后才写 `COMPLETE`。
+```bash
+$PY -m unittest discover \
+  -s research/path_consistent_negative_learning/tests -p 'test_*.py'
 
-若出现 CUDA OOM，先检查任务是否确实一卡一进程，再减小 batch size；baseline 与所有实验臂必须同步修改并生成新配置，不得只改某个方法。若某领域输入缺失，数据准备阶段会在启动 GPU 前失败。
+$PY -m research.path_consistent_negative_learning.retriever_only.validate \
+  --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+  --label-snapshot "$LABELS" --domains $DOMAINS \
+  --output "$RUN/preflight/data_validation.json"
+```
 
-## 5. 随机性与统计
+预检必须在任何正式 GPU sweep 前通过，并报告每领域重复英文标签数量、结构/NLG 对齐数和可评价问题数。
 
-采样/训练种子固定为 42--46；问题划分种子为 20260920。lambda selection 只读取 selection split。正式差异按 query key 配对，先跨 seed 等权平均，再进行 10,000 次 paired bootstrap；领域宏平均以领域为等权单位。
+## 4. 编码、候选准备与验证集扫参
 
-## 6. 论文同步
+下列三个 phase 分别生成 manifest；GPU 队列会跳过已经完整产生预期文件的作业。
 
-表格、宏与图片必须由聚合 JSON/CSV 自动生成。禁止在 TeX 中手填实验数值。论文生成后应核对：源 JSON、生成 TeX、图注、正文结论四者口径一致。
+```bash
+for PHASE in encode prepare sweep; do
+  $PY -m research.path_consistent_negative_learning.scripts.build_retriever_manifest \
+    --phase "$PHASE" --config "$CONFIG" \
+    --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+    --label-snapshot "$LABELS" --model-path "$MODEL" \
+    --run-root "$RUN" --output "$RUN/manifests/$PHASE.json"
+  $PY -m research.path_consistent_negative_learning.scripts.run_retriever_queue \
+    --manifest "$RUN/manifests/$PHASE.json" --gpus 1 2 3 4 5
+done
+```
+
+每个领域只用 validation Answer-Path MRR 选择 lambda；完全并列时取更大的 lambda。选择文件产生前，`prepare-test`、`main-test` 与 `path-sensitivity` manifest 都会拒绝生成。
+
+```bash
+SELECTION="$RUN/selection/lambdas.json"
+$PY -m research.path_consistent_negative_learning.scripts.select_retriever_lambdas \
+  --run-root "$RUN" --domains $DOMAINS --output "$SELECTION"
+```
+
+## 5. 冻结测试、匹配随机与路径择一敏感性
+
+```bash
+for PHASE in prepare-test main-test path-sensitivity; do
+  $PY -m research.path_consistent_negative_learning.scripts.build_retriever_manifest \
+    --phase "$PHASE" --config "$CONFIG" \
+    --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+    --label-snapshot "$LABELS" --model-path "$MODEL" \
+    --run-root "$RUN" --selection-file "$SELECTION" \
+    --output "$RUN/manifests/$PHASE.json"
+  $PY -m research.path_consistent_negative_learning.scripts.run_retriever_queue \
+    --manifest "$RUN/manifests/$PHASE.json" --gpus 1 2 3 4 5
+done
+```
+
+主实验名称固定为策略 1（Baseline）、策略 2（Matched Random）和策略 3（Ours）。敏感性统计只聚合至少一个 topic--answer 对具有多条等长最短路径的测试问题。
+
+## 6. 聚合与论文产物
+
+```bash
+mkdir -p "$RUN/aggregate"
+for PHASE in prevalence main-test sensitivity; do
+  $PY -m research.path_consistent_negative_learning.scripts.aggregate_retriever_results \
+    --phase "$PHASE" --run-root "$RUN" --domains $DOMAINS \
+    --output "$RUN/aggregate/$PHASE.json"
+done
+
+$PY -m research.path_consistent_negative_learning.scripts.extract_retriever_case_study \
+  --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+  --label-snapshot "$LABELS" --domain art --seed 42 \
+  --output "$RUN/aggregate/case_study.json"
+```
+
+把小型 aggregate 产物同步到 `artifacts/retriever_only/` 后，分别运行：
+
+```bash
+$PY -m research.path_consistent_negative_learning.scripts.generate_retriever_paper_results --help
+$PY -m research.path_consistent_negative_learning.figures.gen_retriever_only --help
+```
+
+论文唯一主文件是 `paper/www2027/main.tex`，必须在该目录编译为 `main.pdf`。结果链固定为：
+
+```text
+raw artifacts -> aggregate JSON/CSV -> LaTeX macros/tables -> PDF/SVG figures -> main.pdf
+```
+
+## 7. 恢复与失败定位
+
+每个作业保存完整 command、stdout/stderr、Git commit、dirty state、环境、GPU、seed、lambda、逐题指标与 checkpoint 指针。若 CUDA OOM，先确认是否一卡一进程；只有编码阶段允许统一降低 GTE batch size，因为它只改变吞吐，不改变输出定义。训练 batch size 属于冻结协议，不得按方法单独修改。
+
+队列只在全部作业成功后写 `.complete`；失败清单写入 `.failures.json`。恢复时重新运行同一 manifest，不删除历史 runs，不覆盖元数据口径不同的目录。
