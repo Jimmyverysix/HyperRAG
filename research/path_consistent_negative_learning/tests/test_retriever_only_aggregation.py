@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+import tempfile
 import unittest
 
 import numpy as np
 
 from research.path_consistent_negative_learning.retriever_only.aggregation import (
+    aggregate_path_sensitivity,
     average_query_metrics,
     paired_equal_domain_bootstrap,
 )
@@ -73,6 +77,63 @@ class RetrieverAggregationTests(unittest.TestCase):
         self.assertEqual(len(rows), 6)
         self.assertEqual(rows[-1]["scope"], "equal_domain_macro")
         self.assertEqual(rows[-1]["answer_path_mrr"], 0.2)
+
+    def test_path_sensitivity_averages_seeds_before_variants(self) -> None:
+        variant_scores = {
+            2718: (0.0, 1.0),
+            3141: (0.2, 0.8),
+            5772: (0.4, 0.6),
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            run_root = Path(temporary)
+            for method in ("baseline", "ours"):
+                for variant, scores in variant_scores.items():
+                    for seed, score in zip((42, 43), scores):
+                        path = (
+                            run_root
+                            / "sensitivity"
+                            / "toy"
+                            / f"variant_{variant}"
+                            / f"seed_{seed}"
+                            / method
+                            / "test_scores.report.json"
+                        )
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_text(
+                            json.dumps(
+                                {
+                                    "evaluation_subset": (
+                                        "multiple_equal_shortest_paths"
+                                    ),
+                                    "method": method,
+                                    "seed": seed,
+                                    "query_count": 5,
+                                    "metrics": {
+                                        "answer_path_mrr": score,
+                                        "answer_reach_10": score,
+                                    },
+                                }
+                            ),
+                            encoding="utf-8",
+                        )
+            result = aggregate_path_sensitivity(
+                run_root,
+                ("toy",),
+                variants=(2718, 3141, 5772),
+                seeds=(42, 43),
+            )
+        baseline = result["domains"][0]
+        self.assertAlmostEqual(
+            baseline["answer_path_mrr"]["standard_deviation"],
+            0.0,
+        )
+        self.assertEqual(
+            baseline["answer_path_mrr"]["per_variant_seed_average"],
+            {"2718": 0.5, "3141": 0.5, "5772": 0.5},
+        )
+        fields, rows = _csv_rows("sensitivity", result)
+        self.assertIn("variant_2718_seed_average", fields)
+        self.assertEqual(list(rows)[0]["variant_2718_seed_average"], 0.5)
 
 
 if __name__ == "__main__":

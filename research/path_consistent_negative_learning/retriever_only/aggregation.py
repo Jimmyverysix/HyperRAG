@@ -228,12 +228,15 @@ def aggregate_path_sensitivity(
     seeds: Iterable[int],
 ) -> dict[str, Any]:
     rows = []
+    seed_values = tuple(seeds)
+    variant_values = tuple(variants)
     for domain in domains:
         for method in ("baseline", "ours"):
-            values = {"answer_path_mrr": [], "answer_reach_10": []}
+            per_variant: dict[int, dict[str, float]] = {}
             query_counts = set()
-            for variant in variants:
-                for seed in seeds:
+            for variant in variant_values:
+                per_seed = {"answer_path_mrr": [], "answer_reach_10": []}
+                for seed in seed_values:
                     path = (
                         run_root
                         / "sensitivity"
@@ -252,32 +255,45 @@ def aggregate_path_sensitivity(
                             "path sensitivity report has the wrong query subset: "
                             f"{path}"
                         )
+                    if report.get("method") != method or int(report["seed"]) != seed:
+                        raise ValueError(
+                            "path sensitivity report provenance mismatch: "
+                            f"{path}"
+                        )
                     query_counts.add(int(report["query_count"]))
-                    values["answer_path_mrr"].append(
+                    per_seed["answer_path_mrr"].append(
                         float(report["metrics"]["answer_path_mrr"])
                     )
-                    values["answer_reach_10"].append(
+                    per_seed["answer_reach_10"].append(
                         float(report["metrics"]["answer_reach_10"])
                     )
+                per_variant[variant] = {
+                    metric: fmean(scores) for metric, scores in per_seed.items()
+                }
             if len(query_counts) != 1:
                 raise ValueError(
                     f"path sensitivity query count changed for {domain}/{method}"
                 )
+            summaries = {}
+            for metric in ("answer_path_mrr", "answer_reach_10"):
+                values = [per_variant[variant][metric] for variant in variant_values]
+                summaries[metric] = {
+                    "mean": fmean(values),
+                    "standard_deviation": pstdev(values),
+                    "minimum": min(values),
+                    "maximum": max(values),
+                    "range": max(values) - min(values),
+                    "per_variant_seed_average": {
+                        str(variant): per_variant[variant][metric]
+                        for variant in variant_values
+                    },
+                }
             rows.append(
                 {
                     "domain": domain,
                     "method": method,
                     "query_count": next(iter(query_counts)),
-                    **{
-                        metric: {
-                            "mean": fmean(metric_values),
-                            "standard_deviation": pstdev(metric_values),
-                            "minimum": min(metric_values),
-                            "maximum": max(metric_values),
-                            "range": max(metric_values) - min(metric_values),
-                        }
-                        for metric, metric_values in values.items()
-                    },
+                    **summaries,
                 }
             )
     return {"domains": rows}

@@ -94,7 +94,7 @@ def _csv_rows(
                 }
             )
         return fields, rows
-    fields = [
+    summary_fields = [
         "domain",
         "method",
         "query_count",
@@ -105,16 +105,42 @@ def _csv_rows(
         "maximum",
         "range",
     ]
+    variant_ids = sorted(
+        {
+            int(variant)
+            for row in result["domains"]
+            for metric in ("answer_path_mrr", "answer_reach_10")
+            for variant in row[metric]["per_variant_seed_average"]
+        }
+    )
+    variant_fields = [f"variant_{variant}_seed_average" for variant in variant_ids]
+    fields = [*summary_fields, *variant_fields]
     rows = []
     for row in result["domains"]:
         for metric in ("answer_path_mrr", "answer_reach_10"):
+            values = row[metric]
             rows.append(
                 {
                     "domain": row["domain"],
                     "method": row["method"],
                     "query_count": row["query_count"],
                     "metric": metric,
-                    **row[metric],
+                    **{
+                        field: values[field]
+                        for field in (
+                            "mean",
+                            "standard_deviation",
+                            "minimum",
+                            "maximum",
+                            "range",
+                        )
+                    },
+                    **{
+                        f"variant_{variant}_seed_average": values[
+                            "per_variant_seed_average"
+                        ][str(variant)]
+                        for variant in variant_ids
+                    },
                 }
             )
     return fields, rows

@@ -165,7 +165,7 @@ $\{0.00,0.10,0.25,0.50,0.75,1.00\}$
 
 \subsection{最短路径选择敏感性}
 
-单路径监督还可能依赖``恰好选择了哪一条等长最短路径''。我们仅对确实存在多条等长最短答案路径的测试问题构造三个固定变体，使用种子 2718、3141 和 5772 改变 shortest-path DAG 中前驱的稳定顺序；不枚举指数数量的路径。每个变体分别训练策略1与策略3，并报告 Answer-Path MRR、Reach@10 及跨变体的均值、标准差和范围。
+单路径监督还可能依赖``恰好选择了哪一条等长最短路径''。我们仅对确实存在多条等长最短答案路径的测试问题构造三个固定变体，使用种子 2718、3141 和 5772 改变 shortest-path DAG 中前驱的稳定顺序；不枚举指数数量的路径。每个变体分别训练策略1与策略3。统计时先在每个变体内平均五个共享训练种子，再对三个变体均值报告 Answer-Path MRR、Reach@10 的均值、标准差和范围。
 
 图~\ref{fig:main-sensitivity}(a) 汇总策略3相对策略1和策略2的逐领域 MRR 差值，图~\ref{fig:main-sensitivity}(b) 比较路径选择变体间的波动。领域等权平均的 MRR 标准差由策略1的 \StrategyOneSensitivityMRRStd\% 变为策略3的 \StrategyThreeSensitivityMRRStd\%，平均范围由 \StrategyOneSensitivityMRRRange\% 变为 \StrategyThreeSensitivityMRRRange\%。若策略3的波动更小，则说明降低冲突负监督能够减弱训练标签对任意 tie-breaking 的依赖；若没有下降，则该机制解释不成立，应按实际结果保留这一否定结论。
 
