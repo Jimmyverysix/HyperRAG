@@ -153,9 +153,9 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         self.assertIn(r"\newcommand{\SoftSelectedDomainCount}{1}", macros)
-        self.assertIn("策略 1", table)
-        self.assertIn("策略 2", table)
-        self.assertIn("策略 3", table)
+        self.assertIn("策略1", table)
+        self.assertIn("策略2", table)
+        self.assertIn("策略3", table)
         self.assertIn("0.50", table)
 
 

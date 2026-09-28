@@ -259,7 +259,7 @@ def generate_main_figure(
         y_values - 0.13,
         color=COLORS["ours"],
         marker="o",
-        label="策略 3 $-$ 策略 1",
+        label="策略3 $-$ 策略1",
         zorder=3,
     )
     axes[0].scatter(
@@ -267,7 +267,7 @@ def generate_main_figure(
         y_values + 0.13,
         color=COLORS["random"],
         marker="s",
-        label="策略 3 $-$ 策略 2",
+        label="策略3 $-$ 策略2",
         zorder=3,
     )
     axes[0].set_xlabel("Answer-Path MRR 差值（百分点）")
@@ -287,7 +287,7 @@ def generate_main_figure(
         y_values,
         color=COLORS["baseline"],
         marker="o",
-        label="策略 1",
+        label="策略1",
         zorder=3,
     )
     axes[1].scatter(
@@ -295,7 +295,7 @@ def generate_main_figure(
         y_values,
         color=COLORS["ours"],
         marker="s",
-        label="策略 3",
+        label="策略3",
         zorder=3,
     )
     axes[1].set_xlabel("路径择一变体间 MRR 标准差（百分点）")

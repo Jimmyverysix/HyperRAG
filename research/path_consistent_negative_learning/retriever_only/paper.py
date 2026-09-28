@@ -10,9 +10,9 @@ from typing import Any, Mapping, Sequence
 
 METHODS = ("baseline", "matched_random", "ours")
 METHOD_LABELS = {
-    "baseline": "策略 1",
-    "matched_random": "策略 2",
-    "ours": "策略 3",
+    "baseline": "策略1",
+    "matched_random": "策略2",
+    "ours": "策略3",
 }
 
 
@@ -160,12 +160,12 @@ def _main_table(
     main: Mapping[str, Any],
 ) -> list[str]:
     lines = [
-        r"\begin{tabular}{lrrrrrrrr}",
+        r"\begin{tabular}{lrrrrrrr}",
         r"\toprule",
         r"领域 & $\lambda_D^*$ & \multicolumn{3}{c}{Answer-Path MRR (\%)} & "
         r"\multicolumn{3}{c}{Reach@10 (\%)} \\",
         r"\cmidrule(lr){3-5}\cmidrule(lr){6-8}",
-        r" & & 策略 1 & 策略 2 & 策略 3 & 策略 1 & 策略 2 & 策略 3 \\",
+        r" & & 策略1 & 策略2 & 策略3 & 策略1 & 策略2 & 策略3 \\",
         r"\midrule",
     ]
     for row in main["domains"]:
@@ -184,7 +184,7 @@ def _main_table(
     macro_reach = [float(macro[method]["answer_reach_10"]) for method in METHODS]
     lines.append(
         " & ".join(
-            ["等领域宏平均", "--", *_bold_best(macro_mrr), *_bold_best(macro_reach)]
+            ["领域等权宏平均", "--", *_bold_best(macro_mrr), *_bold_best(macro_reach)]
         )
         + r" \\"
     )
@@ -247,7 +247,7 @@ def _sensitivity_table(sensitivity: Mapping[str, Any]) -> list[str]:
     lines = [
         r"\begin{tabular}{lrrrrr}",
         r"\toprule",
-        r"领域 & 问题数 & 策略 1 MRR & 策略 3 MRR & 策略 1 范围 & 策略 3 范围 \\",
+        r"领域 & 问题数 & 策略1 MRR & 策略3 MRR & 策略1 范围 & 策略3 范围 \\",
         r"\midrule",
     ]
     for domain, methods in by_domain.items():
