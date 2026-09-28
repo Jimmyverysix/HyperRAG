@@ -91,7 +91,7 @@
   \label{fig:conflict-case}
 \end{figure}
 
-图~\ref{fig:conflict-case} 不是人工构造的示意图，而是按发布顺序从正式训练候选中确定性抽取的首个冲突样例。图中同时展示被选路径、包含实际采样负例的见证路径以及式~\eqref{eq:path-consistency} 的距离等式。该案例说明问题来自训练数据的真实交互，而非仅在理论候选空间中存在。
+图~\ref{fig:conflict-case} 不是人工构造的示意图，而是按发布顺序从正式训练候选中确定性抽取的首个冲突样例。问题询问``哪些作曲家与 Giancarlo Santi 从事同一类型''，其中一个正确答案是 Ennio Morricone。原流程选中的最短路径经由电影 \emph{The Return of Clint the Stranger} 到达该答案；另一条等长最短路径先由 Giancarlo Santi 到达类型 \emph{Spaghetti Western}，再经同一电影到达 Ennio Morricone。前一段 ``Giancarlo Santi $\rightarrow$ 事实节点 $\rightarrow$ Spaghetti Western'' 被原负采样器实际选中，却满足 $0+2+2=4$ 的完整距离等式。该案例说明冲突来自训练数据的真实交互，而非仅在理论候选空间中存在；它仍不构成语义正标签的人工判定。
 
 \subsection{加权目标与三个策略}
 
