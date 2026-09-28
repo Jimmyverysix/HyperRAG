@@ -139,4 +139,6 @@ def extract_case_study(
             ],
             "conflict_witness_path": _render_path(witness, bundle.node_texts),
         }
-    raise ValueError(f"no sampled path-consistent negative found in {domain}/seed={seed}")
+    raise ValueError(
+        f"no sampled path-consistent negative found in {domain}/seed={seed}"
+    )

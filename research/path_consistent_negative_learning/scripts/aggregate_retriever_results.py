@@ -97,6 +97,7 @@ def _csv_rows(
     fields = [
         "domain",
         "method",
+        "query_count",
         "metric",
         "mean",
         "standard_deviation",
@@ -111,6 +112,7 @@ def _csv_rows(
                 {
                     "domain": row["domain"],
                     "method": row["method"],
+                    "query_count": row["query_count"],
                     "metric": metric,
                     **row[metric],
                 }

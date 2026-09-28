@@ -105,7 +105,9 @@ def _load_method_reports(
     return reports
 
 
-def average_query_metrics(reports: Iterable[Mapping[str, Any]]) -> dict[str, dict[str, float]]:
+def average_query_metrics(
+    reports: Iterable[Mapping[str, Any]],
+) -> dict[str, dict[str, float]]:
     by_query: dict[str, dict[str, list[float]]] = defaultdict(
         lambda: defaultdict(list)
     )
@@ -212,7 +214,11 @@ def aggregate_main_test(
                 "ci_low_percentage_points": 100.0 * estimate["ci_low"],
                 "ci_high_percentage_points": 100.0 * estimate["ci_high"],
             }
-    return {"domains": domain_rows, "equal_domain_macro": macro, "comparisons": comparisons}
+    return {
+        "domains": domain_rows,
+        "equal_domain_macro": macro,
+        "comparisons": comparisons,
+    }
 
 
 def aggregate_path_sensitivity(
@@ -225,6 +231,7 @@ def aggregate_path_sensitivity(
     for domain in domains:
         for method in ("baseline", "ours"):
             values = {"answer_path_mrr": [], "answer_reach_10": []}
+            query_counts = set()
             for variant in variants:
                 for seed in seeds:
                     path = (
@@ -242,18 +249,25 @@ def aggregate_path_sensitivity(
                         != "multiple_equal_shortest_paths"
                     ):
                         raise ValueError(
-                            f"path sensitivity report has the wrong query subset: {path}"
+                            "path sensitivity report has the wrong query subset: "
+                            f"{path}"
                         )
+                    query_counts.add(int(report["query_count"]))
                     values["answer_path_mrr"].append(
                         float(report["metrics"]["answer_path_mrr"])
                     )
                     values["answer_reach_10"].append(
                         float(report["metrics"]["answer_reach_10"])
                     )
+            if len(query_counts) != 1:
+                raise ValueError(
+                    f"path sensitivity query count changed for {domain}/{method}"
+                )
             rows.append(
                 {
                     "domain": domain,
                     "method": method,
+                    "query_count": next(iter(query_counts)),
                     **{
                         metric: {
                             "mean": fmean(metric_values),
