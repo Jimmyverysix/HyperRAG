@@ -117,7 +117,7 @@ class RetrieverBatchPreparationTests(unittest.TestCase):
                 else:
                     self.assertEqual(actual, expected, field.name)
 
-    def test_batched_official_dde_matches_individual_calls_exactly(self) -> None:
+    def test_grouped_official_dde_matches_individual_calls_exactly(self) -> None:
         groups = (
             (("s", "H:1", "b"), ("b", "H:2", "a")),
             (("x", "H:3", "y"), ("x", "H:4", "z")),

@@ -35,45 +35,15 @@ class OfficialDDE:
         self,
         groups: Sequence[tuple[Sequence[Transition], str]],
     ) -> list[torch.Tensor]:
-        """Encode independent candidate graphs in one official DDE call.
+        """Encode several groups without changing CUDA reduction boundaries.
 
-        Entity and hyperedge IDs are namespaced per group, so the combined
-        graph is a disjoint union.  The official propagation, edge order, and
-        float32 operations within every group are unchanged; batching only
-        removes repeated Python and CUDA-launch overhead.
+        Combining disjoint graphs into one CUDA ``scatter_add`` changes atomic
+        reduction scheduling and can move float32 values by one ULP.  Keeping
+        the released call boundary per query preserves bitwise-equivalent DDE
+        tensors while the caller still shares the expensive graph searches.
         """
 
-        combined: list[Transition] = []
-        combined_topics: list[str] = []
-        namespaced_groups: list[list[Transition]] = []
-        for group_index, (transitions, topic) in enumerate(groups):
-            prefix = f"{group_index}:"
-            values = [
-                (prefix + head, prefix + edge, prefix + tail)
-                for head, edge, tail in transitions
-            ]
-            namespaced_groups.append(values)
-            combined.extend(values)
-            combined_topics.append(prefix + topic)
-        if not combined:
-            return [
-                torch.empty((0, 30), dtype=torch.float32)
-                for transitions, _ in groups
-            ]
-        values = self.encoder.compute_dde(combined, combined_topics)
-        outputs = []
-        for namespaced in namespaced_groups:
-            if not namespaced:
-                outputs.append(torch.empty((0, 30), dtype=torch.float32))
-                continue
-            features = np.stack([values[transition] for transition in namespaced])
-            output = torch.from_numpy(features).float()
-            if output.shape != (len(namespaced), 30):
-                raise ValueError(
-                    f"official batched DDE returned shape {tuple(output.shape)}"
-                )
-            outputs.append(output)
-        return outputs
+        return [self.encode(transitions, topic) for transitions, topic in groups]
 
 
 def create_official_mlp(*, device: torch.device) -> MLP:
