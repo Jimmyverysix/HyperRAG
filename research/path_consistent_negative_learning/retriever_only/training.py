@@ -88,6 +88,39 @@ def _index_batches(
         torch.randperm(len(indices), generator=generator)
 
 
+def _ordered_weighted_mean(
+    values: torch.Tensor,
+    weights: torch.Tensor,
+) -> float:
+    """Reproduce the original ordered Python-float weighted accumulation."""
+
+    value_list = values.detach().cpu().tolist()
+    weight_list = weights.detach().cpu().tolist()
+    weighted_sum = 0.0
+    weight_sum = 0.0
+    for value, weight in zip(value_list, weight_list):
+        weighted_sum += value * weight
+        weight_sum += weight
+    return weighted_sum / weight_sum
+
+
+def _ordered_ratio(
+    numerators: torch.Tensor,
+    denominators: torch.Tensor,
+) -> float:
+    """Reproduce the original ordered Python-float ratio accumulation."""
+
+    numerator_sum = 0.0
+    denominator_sum = 0.0
+    for numerator, denominator in zip(
+        numerators.detach().cpu().tolist(),
+        denominators.detach().cpu().tolist(),
+    ):
+        numerator_sum += numerator
+        denominator_sum += denominator
+    return numerator_sum / denominator_sum
+
+
 def train_retriever(
     data: PreparedCandidates,
     embeddings: EmbeddingStore,
@@ -133,14 +166,17 @@ def train_retriever(
 
     for epoch in range(1, config.maximum_epochs + 1):
         model.train()
-        train_weighted_loss = 0.0
-        train_weight_sum = 0.0
-        for indices in _index_batches(
+        train_batch_count = (
+            len(train_indices) + config.batch_size - 1
+        ) // config.batch_size
+        train_losses = torch.empty(train_batch_count, device=device)
+        train_weight_sums = torch.empty(train_batch_count, device=device)
+        for batch_index, indices in enumerate(_index_batches(
             train_indices,
             batch_size=config.batch_size,
             generator=train_generator,
             shuffle=True,
-        ):
+        )):
             device_indices = indices.to(device)
             batch_features = features[device_indices]
             batch_labels = labels[device_indices]
@@ -154,20 +190,22 @@ def train_retriever(
             )
             loss.backward()
             optimizer.step()
-            weight_sum = float(batch_weights.sum())
-            train_weighted_loss += float(loss.detach()) * weight_sum
-            train_weight_sum += weight_sum
+            train_losses[batch_index] = loss.detach()
+            train_weight_sums[batch_index] = batch_weights.sum()
 
         model.eval()
-        validation_weighted_loss = 0.0
-        validation_weight_sum = 0.0
+        validation_batch_count = (
+            len(validation_indices) + config.batch_size - 1
+        ) // config.batch_size
+        validation_numerators = torch.empty(validation_batch_count, device=device)
+        validation_weight_sums = torch.empty(validation_batch_count, device=device)
         with torch.no_grad():
-            for indices in _index_batches(
+            for batch_index, indices in enumerate(_index_batches(
                 validation_indices,
                 batch_size=config.batch_size,
                 generator=validation_generator,
                 shuffle=False,
-            ):
+            )):
                 device_indices = indices.to(device)
                 batch_features = features[device_indices]
                 batch_labels = labels[device_indices]
@@ -178,10 +216,15 @@ def train_retriever(
                     batch_labels,
                     reduction="none",
                 )
-                validation_weighted_loss += float((elementwise * batch_weights).sum())
-                validation_weight_sum += float(batch_weights.sum())
-        train_loss = train_weighted_loss / train_weight_sum
-        validation_loss = validation_weighted_loss / validation_weight_sum
+                validation_numerators[batch_index] = (
+                    elementwise * batch_weights
+                ).sum()
+                validation_weight_sums[batch_index] = batch_weights.sum()
+        train_loss = _ordered_weighted_mean(train_losses, train_weight_sums)
+        validation_loss = _ordered_ratio(
+            validation_numerators,
+            validation_weight_sums,
+        )
         history.append(
             {
                 "epoch": epoch,

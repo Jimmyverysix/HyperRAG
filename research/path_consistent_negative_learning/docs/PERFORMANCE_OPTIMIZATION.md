@@ -13,6 +13,7 @@
 - `scripts/build_retriever_manifest.py` 提供 `path-sensitivity-prepare`（33 个作业）和 `path-sensitivity-train`（330 个训练/评估作业），让准备与训练分别按空闲 GPU 动态调度。
 - `scripts/run_retriever_queue.py` 支持 `--workers-per-gpu`。预处理在每张空闲卡上运行六个独立槽，以并行利用 CPU；训练仍为每卡一个槽。
 - `retriever_only/training.py` 直接生成与冻结 DataLoader 完全相同的批索引，省去完整排列转 Python 列表、逐样本 `TensorDataset` 访问和逐批 collate；batch size、随机数消耗、批顺序及参数更新顺序均不变。
+- 训练和验证的逐批 loss/权重标量先按原顺序写入 GPU 缓冲区，每个 epoch 结束时一次性传回 CPU，再按原来的 Python `float` 顺序累加。这样消除了每批多次 CPU--GPU 强制同步，同时保持早停数值和最佳 checkpoint 判定不变。
 
 没有修改训练 batch size、网络、损失、lambda、种子、候选定义、测试集合或聚合口径。
 

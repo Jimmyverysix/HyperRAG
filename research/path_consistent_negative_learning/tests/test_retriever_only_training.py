@@ -16,6 +16,8 @@ from research.path_consistent_negative_learning.retriever_only import training
 from research.path_consistent_negative_learning.retriever_only.training import (
     TrainingConfig,
     _index_batches,
+    _ordered_ratio,
+    _ordered_weighted_mean,
     train_retriever,
 )
 
@@ -92,6 +94,25 @@ def _training_fixture() -> tuple[PreparedCandidates, EmbeddingStore]:
 
 
 class RetrieverTrainingTests(unittest.TestCase):
+    def test_deferred_metric_accumulation_matches_per_batch_float(self) -> None:
+        values = torch.tensor([0.1234567, 2.75, 0.03125, 1.0000001])
+        weights = torch.tensor([31.0, 17.0, 32.0, 5.5])
+        expected_weighted = 0.0
+        expected_weight_sum = 0.0
+        expected_numerator = 0.0
+        for value, weight in zip(values, weights):
+            expected_weighted += float(value) * float(weight)
+            expected_weight_sum += float(weight)
+            expected_numerator += float(value)
+        self.assertEqual(
+            _ordered_weighted_mean(values, weights),
+            expected_weighted / expected_weight_sum,
+        )
+        self.assertEqual(
+            _ordered_ratio(values, weights),
+            expected_numerator / expected_weight_sum,
+        )
+
     def test_direct_shuffled_batches_match_dataloader_across_epochs(self) -> None:
         indices = torch.tensor([41, 7, 19, 101, 3, 89, 23, 67, 11, 5, 47])
         legacy = _legacy_loader(indices, batch_size=4, seed=43, shuffle=True)
