@@ -8,6 +8,7 @@
 
 - `retriever_only/candidates.py` 将单题准备拆成种子无关的结构构建和种子相关的负例抽样。
 - `retriever_only/preparation.py` 为五个种子保留各自独立的 `random.Random(seed)` 流，共享图结构计算，并缓存图的有序邻接表。
+- `retriever_only/graph.py` 在目标第一次被 BFS 发现、最短路径父节点已经固定时立即返回，不再等待目标从队列弹出；返回路径与原实现逐条一致。
 - `scripts/prepare_retriever_training_batch.py` 一次产生同一领域、同一路径变体的五份 `training.pt` 和独立 report。
 - `scripts/build_retriever_manifest.py` 提供 `path-sensitivity-prepare`（33 个作业）和 `path-sensitivity-train`（330 个训练/评估作业），让准备与训练分别按空闲 GPU 动态调度。
 - `scripts/run_retriever_queue.py` 支持 `--workers-per-gpu`。预处理在每张空闲卡上运行六个独立槽，以并行利用 CPU；训练仍为每卡一个槽。

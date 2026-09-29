@@ -210,6 +210,11 @@ def _shortest_path_tree(
                 continue
             parents[neighbor] = current
             distances[neighbor] = distances[current] + 1
+            # BFS fixes a node's shortest-path parent at first discovery.
+            # Nothing processed before the target is later popped can change
+            # its reconstructed path, so do not traverse that irrelevant tail.
+            if target is not None and neighbor == target:
+                return parents
             queue.append(neighbor)
     return parents
 
