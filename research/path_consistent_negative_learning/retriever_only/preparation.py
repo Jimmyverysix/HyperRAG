@@ -176,7 +176,6 @@ def prepare_training_candidates_multi(
     seeds: Sequence[int],
     variant_seed: int | None = None,
     progress_every: int = 500,
-    dde_batch_size: int = 1024,
 ) -> dict[int, PreparedCandidates]:
     """Prepare several seeds while sharing all seed-independent graph work.
 
@@ -189,44 +188,11 @@ def prepare_training_candidates_multi(
     seed_values = tuple(int(seed) for seed in seeds)
     if not seed_values or len(seed_values) != len(set(seed_values)):
         raise ValueError("seeds must be nonempty and unique")
-    if dde_batch_size <= 0:
-        raise ValueError("dde_batch_size must be positive")
-    accumulators = {
-        seed: _Accumulator(domain=domain, split="train", seed=seed)
-        for seed in seed_values
-    }
     random_streams = {seed: random.Random(seed) for seed in seed_values}
+    prepared_by_seed: dict[int, list[TrainingQuery]] = {
+        seed: [] for seed in seed_values
+    }
     prepared_query_count = 0
-
-    pending: list[tuple[int, TrainingQuery]] = []
-
-    def flush_pending() -> None:
-        if not pending:
-            return
-        dde_values = dde_encoder.encode_many(
-            [
-                (prepared.candidates, prepared.topic)
-                for _, prepared in pending
-            ]
-        )
-        for (seed, prepared), dde in zip(pending, dde_values, strict=True):
-            candidates = prepared.candidates
-            path_consistent = set(prepared.path_consistent_negatives)
-            accumulators[seed].add(
-                key=prepared.key,
-                text=prepared.text,
-                topic=prepared.topic,
-                answers=prepared.answers,
-                candidates=candidates,
-                dde=dde,
-                embeddings=embeddings,
-                labels=[True] * len(prepared.positives)
-                + [False] * len(prepared.negatives),
-                path_mask=[False] * len(prepared.positives)
-                + [value in path_consistent for value in prepared.negatives],
-            )
-        pending.clear()
-
     for query in queries:
         structure = build_training_query_structure(
             query,
@@ -242,17 +208,35 @@ def prepare_training_candidates_multi(
                 bundle.graph,
                 rng=random_streams[seed],
             )
-            pending.append((seed, prepared))
-            if len(pending) >= dde_batch_size:
-                flush_pending()
+            prepared_by_seed[seed].append(prepared)
         if progress_every and prepared_query_count % progress_every == 0:
             seed_text = ",".join(str(seed) for seed in seed_values)
             print(
                 f"[{domain}/train/seeds={seed_text}] {prepared_query_count} queries",
                 flush=True,
             )
-    flush_pending()
-    return {seed: accumulator.finish() for seed, accumulator in accumulators.items()}
+
+    output = {}
+    for seed in seed_values:
+        accumulator = _Accumulator(domain=domain, split="train", seed=seed)
+        for prepared in prepared_by_seed[seed]:
+            candidates = prepared.candidates
+            path_consistent = set(prepared.path_consistent_negatives)
+            accumulator.add(
+                key=prepared.key,
+                text=prepared.text,
+                topic=prepared.topic,
+                answers=prepared.answers,
+                candidates=candidates,
+                dde=dde_encoder.encode(candidates, prepared.topic),
+                embeddings=embeddings,
+                labels=[True] * len(prepared.positives)
+                + [False] * len(prepared.negatives),
+                path_mask=[False] * len(prepared.positives)
+                + [value in path_consistent for value in prepared.negatives],
+            )
+        output[seed] = accumulator.finish()
+    return output
 
 
 def prepare_evaluation_candidates(

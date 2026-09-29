@@ -31,20 +31,5 @@ class OfficialDDE:
             raise ValueError(f"official DDE returned shape {tuple(output.shape)}")
         return output
 
-    def encode_many(
-        self,
-        groups: Sequence[tuple[Sequence[Transition], str]],
-    ) -> list[torch.Tensor]:
-        """Encode several groups without changing CUDA reduction boundaries.
-
-        Combining disjoint graphs into one CUDA ``scatter_add`` changes atomic
-        reduction scheduling and can move float32 values by one ULP.  Keeping
-        the released call boundary per query preserves bitwise-equivalent DDE
-        tensors while the caller still shares the expensive graph searches.
-        """
-
-        return [self.encode(transitions, topic) for transitions, topic in groups]
-
-
 def create_official_mlp(*, device: torch.device) -> MLP:
     return MLP(pred_in_size=4126, emb_size=256).to(device)

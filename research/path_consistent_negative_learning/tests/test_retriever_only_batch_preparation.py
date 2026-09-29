@@ -13,9 +13,6 @@ from research.path_consistent_negative_learning.retriever_only.embeddings import
 from research.path_consistent_negative_learning.retriever_only.graph import (
     DeterministicHypergraph,
 )
-from research.path_consistent_negative_learning.retriever_only.official import (
-    OfficialDDE,
-)
 from research.path_consistent_negative_learning.retriever_only.preparation import (
     prepare_training_candidates,
     prepare_training_candidates_multi,
@@ -36,10 +33,6 @@ class _FakeDDE:
         return torch.arange(len(transitions) * 30, dtype=torch.float32).reshape(
             len(transitions), 30
         )
-
-    def encode_many(self, groups):
-        return [self.encode(transitions, topic) for transitions, topic in groups]
-
 
 class RetrieverBatchPreparationTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -106,7 +99,6 @@ class RetrieverBatchPreparationTests(unittest.TestCase):
             seeds=seeds,
             variant_seed=2718,
             progress_every=0,
-            dde_batch_size=1,
         )
         for seed in seeds:
             for field in fields(PreparedCandidates):
@@ -116,22 +108,6 @@ class RetrieverBatchPreparationTests(unittest.TestCase):
                     self.assertTrue(torch.equal(actual, expected), field.name)
                 else:
                     self.assertEqual(actual, expected, field.name)
-
-    def test_grouped_official_dde_matches_individual_calls_exactly(self) -> None:
-        groups = (
-            (("s", "H:1", "b"), ("b", "H:2", "a")),
-            (("x", "H:3", "y"), ("x", "H:4", "z")),
-        )
-        topics = ("s", "x")
-        encoder = OfficialDDE(device="cpu")
-        expected = [
-            encoder.encode(transitions, topic)
-            for transitions, topic in zip(groups, topics, strict=True)
-        ]
-        actual = encoder.encode_many(list(zip(groups, topics, strict=True)))
-        for first, second in zip(expected, actual, strict=True):
-            self.assertTrue(torch.equal(first, second))
-
 
 if __name__ == "__main__":
     unittest.main()
