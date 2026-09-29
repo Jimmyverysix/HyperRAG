@@ -59,10 +59,13 @@ def run_manifest(
     *,
     gpus: Sequence[int],
     maximum_used_mib: int,
+    workers_per_gpu: int = 1,
 ) -> None:
     requested = tuple(dict.fromkeys(gpus))
     if not requested or len(requested) > 6 or not set(requested) <= ALLOWED_GPUS:
         raise ValueError("GPU IDs must be a nonempty subset of 0--5")
+    if workers_per_gpu <= 0:
+        raise ValueError("workers_per_gpu must be positive")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     jobs = manifest["jobs"]
     job_ids = [job["job_id"] for job in jobs]
@@ -72,8 +75,11 @@ def run_manifest(
     if not available:
         raise RuntimeError("none of the requested GPUs became available")
 
+    gpu_slots = tuple(
+        gpu for gpu in available for _ in range(workers_per_gpu)
+    )
     gpu_pool: queue.Queue[int] = queue.Queue()
-    for gpu in available:
+    for gpu in gpu_slots:
         gpu_pool.put(gpu)
 
     def execute(job: dict[str, Any]) -> tuple[str, int]:
@@ -127,6 +133,7 @@ def run_manifest(
                         "started_at": started,
                         "completed_at": _timestamp(),
                         "physical_gpu_id": gpu,
+                        "workers_per_gpu": workers_per_gpu,
                         "commands": commands,
                         "expected_files": [str(path) for path in expected],
                         "manifest": str(manifest_path.resolve()),
@@ -142,7 +149,7 @@ def run_manifest(
             gpu_pool.put(gpu)
 
     failures = []
-    with ThreadPoolExecutor(max_workers=len(available)) as executor:
+    with ThreadPoolExecutor(max_workers=len(gpu_slots)) as executor:
         futures = {executor.submit(execute, job): job for job in jobs}
         for future in as_completed(futures):
             job = futures[future]
@@ -170,6 +177,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--gpus", type=int, nargs="+", default=[1, 2, 3, 4, 5])
     parser.add_argument("--maximum-used-mib", type=int, default=512)
+    parser.add_argument(
+        "--workers-per-gpu",
+        type=int,
+        default=1,
+        help=(
+            "independent process slots assigned to each available GPU; use more "
+            "than one for CPU-bound preparation"
+        ),
+    )
     return parser
 
 
@@ -179,6 +195,7 @@ def main() -> int:
         args.manifest,
         gpus=args.gpus,
         maximum_used_mib=args.maximum_used_mib,
+        workers_per_gpu=args.workers_per_gpu,
     )
     return 0
 
