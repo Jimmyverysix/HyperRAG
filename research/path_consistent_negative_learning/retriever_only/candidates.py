@@ -41,6 +41,21 @@ class TrainingQuery:
 
 
 @dataclass(frozen=True)
+class TrainingQueryStructure:
+    """Seed-independent work shared by sensitivity training seeds."""
+
+    key: str
+    text: str
+    topic: str
+    answers: tuple[str, ...]
+    positives: tuple[Transition, ...]
+    negative_pool: nx.Graph
+    source_distances: dict[str, int]
+    shortest_path_nodes: set[str]
+    maximum_hops: int
+
+
+@dataclass(frozen=True)
 class RetrievalCandidate:
     transition: Transition
     first_hop: int
@@ -122,20 +137,119 @@ def path_consistent_transitions(
     """Select candidates satisfying the complete topic-answer equality."""
 
     distances, on_answer_path = shortest_path_dag_nodes(graph, topic, answers)
+    return path_consistent_transitions_from_dag(
+        graph,
+        candidates,
+        source_distances=distances,
+        shortest_path_nodes=on_answer_path,
+    )
+
+
+def path_consistent_transitions_from_dag(
+    graph: nx.Graph,
+    candidates: Iterable[Transition],
+    *,
+    source_distances: dict[str, int],
+    shortest_path_nodes: set[str],
+) -> tuple[Transition, ...]:
+    """Apply the path condition using a previously computed shortest-path DAG."""
+
     selected = []
     for transition in candidates:
         head, edge, tail = transition
         if not graph.has_edge(head, edge) or not graph.has_edge(edge, tail):
             continue
-        head_distance = distances.get(head)
-        tail_distance = distances.get(tail)
+        head_distance = source_distances.get(head)
+        tail_distance = source_distances.get(tail)
         if (
             head_distance is not None
             and tail_distance == head_distance + LOGICAL_TRANSITION_COST
-            and tail in on_answer_path
+            and tail in shortest_path_nodes
         ):
             selected.append(transition)
     return tuple(sorted(set(selected)))
+
+
+def build_training_query_structure(
+    query: AlignedQuery,
+    graph: nx.Graph,
+    *,
+    variant_seed: int | None = None,
+) -> TrainingQueryStructure | None:
+    """Build the seed-independent portion of one training query."""
+
+    if (
+        not query.alignment_supported
+        or query.topic_node is None
+        or query.topic_node not in graph
+    ):
+        return None
+    answers = tuple(sorted(answer for answer in query.answer_nodes if answer in graph))
+    if not answers:
+        return None
+    paths = selected_paths(
+        graph,
+        query.topic_node,
+        answers,
+        variant_seed=variant_seed,
+    )
+    if not paths:
+        return None
+    positives = tuple(
+        sorted({transition for path in paths for transition in transitions_from_path(path)})
+    )
+    maximum_hops = max((len(path) - 1) // LOGICAL_TRANSITION_COST for path in paths)
+    negative_pool = path_guided_subgraph(graph, [query.topic_node], paths)
+    distances, shortest_path_nodes = shortest_path_dag_nodes(
+        graph,
+        query.topic_node,
+        answers,
+    )
+    return TrainingQueryStructure(
+        key=query.key,
+        text=query.text,
+        topic=query.topic_node,
+        answers=answers,
+        positives=positives,
+        negative_pool=negative_pool,
+        source_distances=distances,
+        shortest_path_nodes=shortest_path_nodes,
+        maximum_hops=maximum_hops,
+    )
+
+
+def sample_training_query(
+    structure: TrainingQueryStructure,
+    graph: nx.Graph,
+    *,
+    rng: random.Random,
+    maximum_attempt_multiplier: int = 20,
+) -> TrainingQuery:
+    """Materialize the seed-dependent negatives for a cached query structure."""
+
+    negatives = sample_negative_transitions(
+        structure.negative_pool,
+        structure.positives,
+        rng=rng,
+        count=len(structure.positives),
+        maximum_attempt_multiplier=maximum_attempt_multiplier,
+    )
+    consistent = path_consistent_transitions_from_dag(
+        graph,
+        negatives,
+        source_distances=structure.source_distances,
+        shortest_path_nodes=structure.shortest_path_nodes,
+    )
+    return TrainingQuery(
+        key=structure.key,
+        text=structure.text,
+        topic=structure.topic,
+        answers=structure.answers,
+        positives=structure.positives,
+        negatives=negatives,
+        path_consistent_negatives=consistent,
+        maximum_hops=structure.maximum_hops,
+    )
 
 
 def build_training_query(

@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import random
 from typing import Sequence
 
 import torch
 
 from .candidates import (
+    TrainingQuery,
+    build_training_query_structure,
     build_training_queries,
+    sample_training_query,
     semantic_beam_candidates,
 )
 from .data import AlignedQuery
@@ -160,6 +164,95 @@ def prepare_training_candidates(
         if progress_every and index % progress_every == 0:
             print(f"[{domain}/train/seed={seed}] {index} queries", flush=True)
     return accumulator.finish()
+
+
+def prepare_training_candidates_multi(
+    domain: str,
+    queries: Sequence[AlignedQuery],
+    bundle: DeterministicHypergraph,
+    embeddings: EmbeddingStore,
+    dde_encoder: OfficialDDE,
+    *,
+    seeds: Sequence[int],
+    variant_seed: int | None = None,
+    progress_every: int = 500,
+    dde_batch_size: int = 1024,
+) -> dict[int, PreparedCandidates]:
+    """Prepare several seeds while sharing all seed-independent graph work.
+
+    Each seed owns the same domain-level ``random.Random`` stream used by
+    :func:`prepare_training_candidates`.  Only shortest paths, the guided
+    subgraph, and the shortest-path DAG are shared, so every emitted tensor is
+    semantically identical to preparing that seed in a separate process.
+    """
+
+    seed_values = tuple(int(seed) for seed in seeds)
+    if not seed_values or len(seed_values) != len(set(seed_values)):
+        raise ValueError("seeds must be nonempty and unique")
+    if dde_batch_size <= 0:
+        raise ValueError("dde_batch_size must be positive")
+    accumulators = {
+        seed: _Accumulator(domain=domain, split="train", seed=seed)
+        for seed in seed_values
+    }
+    random_streams = {seed: random.Random(seed) for seed in seed_values}
+    prepared_query_count = 0
+
+    pending: list[tuple[int, TrainingQuery]] = []
+
+    def flush_pending() -> None:
+        if not pending:
+            return
+        dde_values = dde_encoder.encode_many(
+            [
+                (prepared.candidates, prepared.topic)
+                for _, prepared in pending
+            ]
+        )
+        for (seed, prepared), dde in zip(pending, dde_values, strict=True):
+            candidates = prepared.candidates
+            path_consistent = set(prepared.path_consistent_negatives)
+            accumulators[seed].add(
+                key=prepared.key,
+                text=prepared.text,
+                topic=prepared.topic,
+                answers=prepared.answers,
+                candidates=candidates,
+                dde=dde,
+                embeddings=embeddings,
+                labels=[True] * len(prepared.positives)
+                + [False] * len(prepared.negatives),
+                path_mask=[False] * len(prepared.positives)
+                + [value in path_consistent for value in prepared.negatives],
+            )
+        pending.clear()
+
+    for query in queries:
+        structure = build_training_query_structure(
+            query,
+            bundle.graph,
+            variant_seed=variant_seed,
+        )
+        if structure is None:
+            continue
+        prepared_query_count += 1
+        for seed in seed_values:
+            prepared = sample_training_query(
+                structure,
+                bundle.graph,
+                rng=random_streams[seed],
+            )
+            pending.append((seed, prepared))
+            if len(pending) >= dde_batch_size:
+                flush_pending()
+        if progress_every and prepared_query_count % progress_every == 0:
+            seed_text = ",".join(str(seed) for seed in seed_values)
+            print(
+                f"[{domain}/train/seeds={seed_text}] {prepared_query_count} queries",
+                flush=True,
+            )
+    flush_pending()
+    return {seed: accumulator.finish() for seed, accumulator in accumulators.items()}
 
 
 def prepare_evaluation_candidates(

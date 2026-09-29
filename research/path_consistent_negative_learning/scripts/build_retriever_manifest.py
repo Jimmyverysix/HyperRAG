@@ -12,6 +12,10 @@ from typing import Any
 PIPELINE_MODULE = (
     "research.path_consistent_negative_learning.scripts.retriever_only_pipeline"
 )
+PREPARE_BATCH_MODULE = (
+    "research.path_consistent_negative_learning.scripts."
+    "prepare_retriever_training_batch"
+)
 
 
 def _lambda_token(value: float) -> str:
@@ -326,6 +330,109 @@ def build_jobs(
                         }
                     )
         return jobs
+    if phase == "path-sensitivity-prepare":
+        variants = config["path_selection_sensitivity"]["variant_seeds"]
+        for domain in domains:
+            embedding = run_root / "embeddings" / f"{domain}.pt"
+            for variant in variants:
+                output_dir = (
+                    run_root / "sensitivity" / domain / f"variant_{variant}"
+                )
+                outputs = [
+                    output_dir / f"seed_{seed}" / "training.pt"
+                    for seed in seeds
+                ]
+                report = output_dir / "prepare_batch.report.json"
+                jobs.append(
+                    {
+                        "job_id": f"sensitivity-prepare-{domain}-v{variant}",
+                        "output_dir": str(output_dir / "prepare"),
+                        "commands": [[
+                            "{python}", "-m", PREPARE_BATCH_MODULE,
+                            "--structured-root", str(structured_root),
+                            "--nlg-root", str(nlg_root),
+                            "--label-snapshot", str(label_snapshot),
+                            "--domain", domain,
+                            "--embeddings", str(embedding),
+                            "--variant-seed", str(variant),
+                            "--seeds", *(str(seed) for seed in seeds),
+                            "--outputs", *(str(output) for output in outputs),
+                            "--device", "cuda",
+                            "--report", str(report),
+                        ]],
+                        "expected_files": [
+                            *(
+                                value
+                                for output in outputs
+                                for value in (str(output), str(output) + ".report.json")
+                            ),
+                            str(report),
+                        ],
+                    }
+                )
+        return jobs
+    if phase == "path-sensitivity-train":
+        variants = config["path_selection_sensitivity"]["variant_seeds"]
+        for domain in domains:
+            selected_lambda = float(selection["domains"][domain]["lambda"])
+            embedding = run_root / "embeddings" / f"{domain}.pt"
+            test_data = run_root / "prepared" / "eval" / domain / "test.pt"
+            for variant in variants:
+                for seed in seeds:
+                    seed_dir = (
+                        run_root
+                        / "sensitivity"
+                        / domain
+                        / f"variant_{variant}"
+                        / f"seed_{seed}"
+                    )
+                    training = seed_dir / "training.pt"
+                    for method, lambda_ in (
+                        ("baseline", 1.0),
+                        ("ours", selected_lambda),
+                    ):
+                        method_dir = seed_dir / method
+                        checkpoint = method_dir / "checkpoint.pt"
+                        scores = method_dir / "test_scores.pt"
+                        jobs.append(
+                            {
+                                "job_id": (
+                                    f"sensitivity-train-{domain}-v{variant}-"
+                                    f"s{seed}-{method}"
+                                ),
+                                "output_dir": str(method_dir),
+                                "commands": [
+                                    [
+                                        "{python}", "-m", PIPELINE_MODULE, "train",
+                                        "--training-data", str(training),
+                                        "--embeddings", str(embedding),
+                                        "--method", method,
+                                        "--lambda", str(lambda_),
+                                        "--seed", str(seed),
+                                        "--device", "cuda",
+                                        "--checkpoint", str(checkpoint),
+                                    ],
+                                    [
+                                        "{python}", "-m", PIPELINE_MODULE, "evaluate",
+                                        "--evaluation-data", str(test_data),
+                                        "--embeddings", str(embedding),
+                                        "--checkpoint", str(checkpoint),
+                                        "--evaluation-arm", method,
+                                        "--device", "cuda",
+                                        "--selection-file", str(selection_file),
+                                        "--multiple-shortest-only",
+                                        "--scores", str(scores),
+                                    ],
+                                ],
+                                "expected_files": [
+                                    str(checkpoint),
+                                    str(checkpoint.with_suffix(".report.json")),
+                                    str(scores),
+                                    str(scores.with_suffix(".report.json")),
+                                ],
+                            }
+                        )
+        return jobs
     raise ValueError(f"unsupported phase: {phase}")
 
 
@@ -340,6 +447,8 @@ def build_parser() -> argparse.ArgumentParser:
             "prepare-test",
             "main-test",
             "path-sensitivity",
+            "path-sensitivity-prepare",
+            "path-sensitivity-train",
         ),
         required=True,
     )
