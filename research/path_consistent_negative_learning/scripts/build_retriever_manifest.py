@@ -52,12 +52,26 @@ def build_jobs(
     model_path: Path,
     run_root: Path,
     selection_file: Path | None = None,
+    domains: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     if phase != "encode" and config.get("status") == "p0_beam_selection_pending":
         raise ValueError(
             "formal manifests require the art/valid beam P0 decision to be frozen"
         )
-    domains = config["domains"]
+    configured_domains = list(config["domains"])
+    if domains is None:
+        domains = configured_domains
+    else:
+        if len(domains) != len(set(domains)):
+            raise ValueError("domains must not contain duplicates")
+        unknown_domains = sorted(set(domains) - set(configured_domains))
+        if unknown_domains:
+            raise ValueError(
+                "domains are not present in the frozen config: "
+                + ", ".join(unknown_domains)
+            )
+        if not domains:
+            raise ValueError("at least one domain is required")
     seeds = config["training"]["seeds"]
     lambdas = config["selection"]["lambda_grid"]
     jobs = []
@@ -459,6 +473,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", type=Path, required=True)
     parser.add_argument("--run-root", type=Path, required=True)
     parser.add_argument("--selection-file", type=Path)
+    parser.add_argument(
+        "--domains",
+        nargs="+",
+        help="optional ordered subset of domains from the frozen config",
+    )
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
@@ -475,12 +494,14 @@ def main() -> int:
         model_path=args.model_path,
         run_root=args.run_root,
         selection_file=args.selection_file,
+        domains=args.domains,
     )
     payload = {
         "schema_version": 1,
         "phase": args.phase,
         "config": str(args.config),
         "config_snapshot": config,
+        "domain_subset": args.domains or list(config["domains"]),
         "job_count": len(jobs),
         "jobs": jobs,
     }

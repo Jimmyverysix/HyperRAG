@@ -101,15 +101,34 @@ $PY -m research.path_consistent_negative_learning.scripts.run_retriever_queue \
   --manifest "$RUN/manifests/path-sensitivity-prepare.json" \
   --gpus 0 1 2 3 4 5 --workers-per-gpu 6
 
-# 训练会在 GPU 上物化完整特征矩阵，保持每卡一个作业以避免显存溢出。
+# 训练按实测峰值显存拆分。award/health 保持每卡一个作业。
+$PY -m research.path_consistent_negative_learning.scripts.build_retriever_manifest \
+  --phase path-sensitivity-train --config "$CONFIG" \
+  --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+  --label-snapshot "$LABELS" --model-path "$MODEL" \
+  --run-root "$RUN" --selection-file "$SELECTION" \
+  --domains award health \
+  --output "$RUN/manifests/path-sensitivity-train-heavy.json"
 $PY -m research.path_consistent_negative_learning.scripts.run_retriever_queue \
-  --manifest "$RUN/manifests/path-sensitivity-train.json" \
-  --gpus 0 1 2 3 4 5 --workers-per-gpu 1
+  --manifest "$RUN/manifests/path-sensitivity-train-heavy.json" \
+  --gpus 1 2 3 --workers-per-gpu 1
+
+# art 与其余八个较小领域每卡三个独立作业；只改变调度，不改变作业内计算。
+$PY -m research.path_consistent_negative_learning.scripts.build_retriever_manifest \
+  --phase path-sensitivity-train --config "$CONFIG" \
+  --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+  --label-snapshot "$LABELS" --model-path "$MODEL" \
+  --run-root "$RUN" --selection-file "$SELECTION" \
+  --domains art edu infra loc org people sci sport tax \
+  --output "$RUN/manifests/path-sensitivity-train-light.json"
+$PY -m research.path_consistent_negative_learning.scripts.run_retriever_queue \
+  --manifest "$RUN/manifests/path-sensitivity-train-light.json" \
+  --gpus 1 2 3 --workers-per-gpu 3
 ```
 
 主实验名称固定为策略1（Baseline）、策略2（Matched Random）和策略3（Ours）。策略2逐题从全部已采样负例中均匀无放回抽取 `|D_q|` 个，不查看路径身份；允许偶然与 `D_q` 重合。敏感性统计只聚合至少一个 topic--answer 对具有多条等长最短路径的测试问题；先在每个路径变体内平均五个训练种子，再对三个变体均值计算 mean、standard deviation 和 range。
 
-批量预处理保持每个种子独立的 `random.Random(seed)` 流，候选、标签、路径一致掩码及其顺序与逐种子运行相同。`workers-per-gpu` 只改变独立作业的调度并发，不改变任何作业内部执行顺序。DDE 仍逐题调用原实现；CUDA `float32` 归约允许出现至多一个 ULP 的数值噪声，不改变协议、候选或监督信号。若中途恢复，完整的 `training.pt` 与对应 report 会被跳过；只存在其中一个文件时会拒绝覆盖并明确报错。
+批量预处理保持每个种子独立的 `random.Random(seed)` 流，候选、标签、路径一致掩码及其顺序与逐种子运行相同。`--domains` 只从冻结配置中选取一个无重复的有序子集，两个训练清单的并集仍是原始 330 个作业；`workers-per-gpu` 只改变独立作业的调度并发，不改变任何作业内部执行顺序。DDE 仍逐题调用原实现；CUDA `float32` 归约允许出现至多一个 ULP 的数值噪声，不改变协议、候选或监督信号。若中途恢复，完整的 `training.pt` 与对应 report 会被跳过；只存在其中一个文件时会拒绝覆盖并明确报错。
 
 ## 6. 聚合与论文产物
 

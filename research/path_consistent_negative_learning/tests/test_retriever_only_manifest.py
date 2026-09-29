@@ -32,6 +32,20 @@ class RetrieverManifestTests(unittest.TestCase):
         self.assertEqual(len(build_jobs("prepare", self.config, **self.arguments)), 6)
         self.assertEqual(len(build_jobs("sweep", self.config, **self.arguments)), 8)
 
+    def test_domain_subset_preserves_requested_order(self) -> None:
+        jobs = build_jobs(
+            "encode", self.config, domains=["b", "a"], **self.arguments
+        )
+        self.assertEqual([job["job_id"] for job in jobs], ["encode-b", "encode-a"])
+
+    def test_domain_subset_rejects_domain_outside_frozen_config(self) -> None:
+        with self.assertRaisesRegex(ValueError, "not present in the frozen config"):
+            build_jobs("encode", self.config, domains=["c"], **self.arguments)
+
+    def test_domain_subset_rejects_duplicates(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must not contain duplicates"):
+            build_jobs("encode", self.config, domains=["a", "a"], **self.arguments)
+
     def test_formal_manifest_rejects_pending_beam_decision(self) -> None:
         pending = {**self.config, "status": "p0_beam_selection_pending"}
         with self.assertRaisesRegex(ValueError, "beam P0 decision"):

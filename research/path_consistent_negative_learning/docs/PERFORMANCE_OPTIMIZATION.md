@@ -11,7 +11,7 @@
 - `retriever_only/graph.py` 在目标第一次被 BFS 发现、最短路径父节点已经固定时立即返回，不再等待目标从队列弹出；返回路径与原实现逐条一致。
 - `scripts/prepare_retriever_training_batch.py` 一次产生同一领域、同一路径变体的五份 `training.pt` 和独立 report。
 - `scripts/build_retriever_manifest.py` 提供 `path-sensitivity-prepare`（33 个作业）和 `path-sensitivity-train`（330 个训练/评估作业），让准备与训练分别按空闲 GPU 动态调度。
-- `scripts/run_retriever_queue.py` 支持 `--workers-per-gpu`。预处理在每张空闲卡上运行六个独立槽，以并行利用 CPU；训练仍为每卡一个槽。
+- `scripts/run_retriever_queue.py` 支持 `--workers-per-gpu`。预处理在每张空闲卡上运行六个独立槽，以并行利用 CPU；训练按领域峰值显存分级调度。
 - `retriever_only/training.py` 直接生成与冻结 DataLoader 完全相同的批索引，省去完整排列转 Python 列表、逐样本 `TensorDataset` 访问和逐批 collate；batch size、随机数消耗、批顺序及参数更新顺序均不变。
 - 训练和验证的逐批 loss/权重标量先按原顺序写入 GPU 缓冲区，每个 epoch 结束时一次性传回 CPU，再按原来的 Python `float` 顺序累加。这样消除了每批多次 CPU--GPU 强制同步，同时保持早停数值和最佳 checkpoint 判定不变。
 
@@ -29,6 +29,8 @@
 
 ## 运行边界
 
-服务器有 64 个逻辑核和 251 GiB 内存。单个预处理进程实测约占 0.8 GiB 内存、一个 CPU 核，DDE 只构造小型传播张量，因此在三张空闲 3090 上使用 `6 × 3 = 18` 个预处理槽仍有充足 CPU、内存和显存余量。训练作业最多会物化约 65.6 万条 4126 维特征，单作业可能接近 11 GiB，所以训练阶段不启用同卡并发。
+服务器有 64 个逻辑核和 251 GiB 内存。单个预处理进程实测约占 0.8 GiB 内存、一个 CPU 核，DDE 只构造小型传播张量，因此在三张空闲 3090 上使用 `6 × 3 = 18` 个预处理槽仍有充足 CPU、内存和显存余量。训练特征矩阵按候选数线性占用显存：`award` 实测单作业约 13.8 GiB，`health` 估算约 11 GiB，二者保持每卡一个作业；`art/edu/infra/loc/org/people/sci/sport/tax` 单作业约 4--7 GiB，每张 24 GiB 3090 运行三个独立作业。重、轻领域分别生成 manifest，前者 `--workers-per-gpu 1`，后者 `--workers-per-gpu 3`。
+
+分级调度没有合并作业，也没有改变 batch size、随机数流或浮点运算顺序。队列仍逐作业检查四个预期产物并跳过完整结果；最终聚合前用原始 330 作业清单核对全集。2026-09-29 的正式敏感性恢复运行中，`art` 的 30 个作业已在切换前全部完成，因此轻领域恢复清单只含其余八个领域；该次运行只使用 GPU 1--3，避免干扰 GPU 0/4/5 上已有任务。中断切换前未完成的三个日志目录保存在运行根目录的 `archives/resource_schedule_switch_*` 下。
 
 只调度启动时显存占用不超过阈值的 GPU，不终止其他任务。完整输出会自动跳过；不完整的历史输出不会被静默覆盖。每个槽只运行 manifest 中一个具有独立输出目录的作业，正式结果仍由聚合器从独立训练和评估 report 读取，科研 provenance 保持不变。
