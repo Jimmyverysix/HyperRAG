@@ -13,7 +13,6 @@ from sklearn.model_selection import train_test_split
 import torch
 from torch.nn import functional as functional
 from torch.optim import Adam
-from torch.utils.data import DataLoader, TensorDataset
 
 from ..path_supervision.weighted_loss import weighted_binary_cross_entropy
 from .embeddings import EmbeddingStore
@@ -54,15 +53,39 @@ def stratified_candidate_split(
     return torch.from_numpy(train).long(), torch.from_numpy(validation).long()
 
 
-def _loader(indices: torch.Tensor, *, batch_size: int, seed: int, shuffle: bool) -> DataLoader:
-    generator = torch.Generator().manual_seed(seed)
-    return DataLoader(
-        TensorDataset(indices),
-        batch_size=batch_size,
-        shuffle=shuffle,
-        num_workers=0,
-        generator=generator,
-    )
+def _index_batches(
+    indices: torch.Tensor,
+    *,
+    batch_size: int,
+    generator: torch.Generator,
+    shuffle: bool,
+):
+    """Yield the exact index batches produced by the frozen DataLoader.
+
+    PyTorch's single-process DataLoader consumes one base-seed draw whenever
+    an iterator is created.  RandomSampler then generates one full
+    permutation and, because ``num_samples % n == 0``, a second discarded
+    permutation.  Replaying those draws keeps every epoch's order identical
+    while avoiding ``tolist()``, per-sample TensorDataset access, and collate.
+    """
+
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive")
+    torch.empty((), dtype=torch.int64).random_(generator=generator)
+    if shuffle:
+        positions = torch.randperm(len(indices), generator=generator)
+    else:
+        positions = None
+    for start in range(0, len(indices), batch_size):
+        stop = min(start + batch_size, len(indices))
+        yield (
+            indices[positions[start:stop]]
+            if positions is not None
+            else indices[start:stop]
+        )
+    if shuffle:
+        # RandomSampler evaluates a second randperm(...).tolist()[:0].
+        torch.randperm(len(indices), generator=generator)
 
 
 def train_retriever(
@@ -90,18 +113,8 @@ def train_retriever(
         data.labels,
         seed=seed,
     )
-    train_loader = _loader(
-        train_indices,
-        batch_size=config.batch_size,
-        seed=seed,
-        shuffle=True,
-    )
-    validation_loader = _loader(
-        validation_indices,
-        batch_size=config.batch_size,
-        seed=seed,
-        shuffle=False,
-    )
+    train_generator = torch.Generator().manual_seed(seed)
+    validation_generator = torch.Generator().manual_seed(seed)
     model = create_official_mlp(device=device)
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
     features = materialize_features(
@@ -122,7 +135,12 @@ def train_retriever(
         model.train()
         train_weighted_loss = 0.0
         train_weight_sum = 0.0
-        for (indices,) in train_loader:
+        for indices in _index_batches(
+            train_indices,
+            batch_size=config.batch_size,
+            generator=train_generator,
+            shuffle=True,
+        ):
             device_indices = indices.to(device)
             batch_features = features[device_indices]
             batch_labels = labels[device_indices]
@@ -144,7 +162,12 @@ def train_retriever(
         validation_weighted_loss = 0.0
         validation_weight_sum = 0.0
         with torch.no_grad():
-            for (indices,) in validation_loader:
+            for indices in _index_batches(
+                validation_indices,
+                batch_size=config.batch_size,
+                generator=validation_generator,
+                shuffle=False,
+            ):
                 device_indices = indices.to(device)
                 batch_features = features[device_indices]
                 batch_labels = labels[device_indices]

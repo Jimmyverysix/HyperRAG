@@ -12,6 +12,7 @@
 - `scripts/prepare_retriever_training_batch.py` 一次产生同一领域、同一路径变体的五份 `training.pt` 和独立 report。
 - `scripts/build_retriever_manifest.py` 提供 `path-sensitivity-prepare`（33 个作业）和 `path-sensitivity-train`（330 个训练/评估作业），让准备与训练分别按空闲 GPU 动态调度。
 - `scripts/run_retriever_queue.py` 支持 `--workers-per-gpu`。预处理在每张空闲卡上运行六个独立槽，以并行利用 CPU；训练仍为每卡一个槽。
+- `retriever_only/training.py` 直接生成与冻结 DataLoader 完全相同的批索引，省去完整排列转 Python 列表、逐样本 `TensorDataset` 访问和逐批 collate；batch size、随机数消耗、批顺序及参数更新顺序均不变。
 
 没有修改训练 batch size、网络、损失、lambda、种子、候选定义、测试集合或聚合口径。
 
@@ -22,6 +23,8 @@
 服务器以 `art` 前 20 个有效训练问题、五个种子进行端到端准备基准：原路径 85.314 秒，批量路径 15.000 秒，加速 5.688 倍。这个基准主要衡量被消除的重复图计算，不用于推断模型指标。
 
 在同一服务器负载下，对 `art` 前 20 个有效问题单独剖析结构构建：等待目标出队的旧 BFS 为 44.860 秒，目标首次发现即返回的新 BFS 为 19.299 秒，加速 2.325 倍。测试以旧实现作为判定器，对三张随机图、三个正式路径变体种子及所有源--目标组合逐条比较，所选路径完全一致。
+
+以 67.7 万个训练索引、batch size 32 模拟 `award` 的一个 epoch，旧 DataLoader 索引迭代为 3.983 秒，直接批索引为 0.397 秒，索引层加速 10.025 倍。多 epoch 测试逐批比较索引完全一致；完整小模型训练的每轮 loss 历史和 checkpoint 参数张量也逐位一致。该优化只消除 Python 数据管线开销，不改变矩阵运算。
 
 ## 运行边界
 
