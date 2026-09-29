@@ -63,7 +63,7 @@ for PHASE in encode prepare sweep; do
 done
 ```
 
-每个领域只用 validation Answer-Path MRR 选择 lambda；完全并列时取更大的 lambda。选择文件产生前，`prepare-test`、`main-test` 与 `path-sensitivity` manifest 都会拒绝生成。
+每个领域只用 validation Answer-Path MRR 选择 lambda；完全并列时取更大的 lambda。选择文件产生前，`prepare-test`、`main-test` 与两个 `path-sensitivity-*` manifest 都会拒绝生成。
 
 ```bash
 SELECTION="$RUN/selection/lambdas.json"
@@ -73,8 +73,21 @@ $PY -m research.path_consistent_negative_learning.scripts.select_retriever_lambd
 
 ## 5. 冻结测试、匹配随机与路径择一敏感性
 
+先运行冻结测试。路径择一敏感性使用两个 phase：`path-sensitivity-prepare` 对同一“领域 × 路径变体”的五个训练种子共享与种子无关的图计算，`path-sensitivity-train` 再执行与原协议完全相同的 330 个训练和评估作业。旧的 `path-sensitivity` 一体式 phase 仅为历史复现保留，不用于新的正式运行。
+
 ```bash
-for PHASE in prepare-test main-test path-sensitivity; do
+for PHASE in prepare-test main-test; do
+  $PY -m research.path_consistent_negative_learning.scripts.build_retriever_manifest \
+    --phase "$PHASE" --config "$CONFIG" \
+    --structured-root "$STRUCTURED" --nlg-root "$NLG" \
+    --label-snapshot "$LABELS" --model-path "$MODEL" \
+    --run-root "$RUN" --selection-file "$SELECTION" \
+    --output "$RUN/manifests/$PHASE.json"
+  $PY -m research.path_consistent_negative_learning.scripts.run_retriever_queue \
+    --manifest "$RUN/manifests/$PHASE.json" --gpus 1 2 3 4 5
+done
+
+for PHASE in path-sensitivity-prepare path-sensitivity-train; do
   $PY -m research.path_consistent_negative_learning.scripts.build_retriever_manifest \
     --phase "$PHASE" --config "$CONFIG" \
     --structured-root "$STRUCTURED" --nlg-root "$NLG" \
@@ -88,20 +101,23 @@ done
 
 主实验名称固定为策略1（Baseline）、策略2（Matched Random）和策略3（Ours）。策略2逐题从全部已采样负例中均匀无放回抽取 `|D_q|` 个，不查看路径身份；允许偶然与 `D_q` 重合。敏感性统计只聚合至少一个 topic--answer 对具有多条等长最短路径的测试问题；先在每个路径变体内平均五个训练种子，再对三个变体均值计算 mean、standard deviation 和 range。
 
+批量预处理保持每个种子独立的 `random.Random(seed)` 流，候选、标签、路径一致掩码及其顺序与逐种子运行相同。DDE 仍逐题调用原实现；CUDA `float32` 归约允许出现至多一个 ULP 的数值噪声，不改变协议、候选或监督信号。若中途恢复，完整的 `training.pt` 与对应 report 会被跳过；只存在其中一个文件时会拒绝覆盖并明确报错。
+
 ## 6. 聚合与论文产物
 
 ```bash
-mkdir -p "$RUN/aggregate"
+mkdir -p "$RUN/aggregates"
 for PHASE in prevalence main-test sensitivity; do
   $PY -m research.path_consistent_negative_learning.scripts.aggregate_retriever_results \
     --phase "$PHASE" --run-root "$RUN" --domains $DOMAINS \
-    --output "$RUN/aggregate/$PHASE.json"
+    --output "$RUN/aggregates/$PHASE.json" \
+    --csv-output "$RUN/aggregates/$PHASE.csv"
 done
 
 $PY -m research.path_consistent_negative_learning.scripts.extract_retriever_case_study \
   --structured-root "$STRUCTURED" --nlg-root "$NLG" \
   --label-snapshot "$LABELS" --domain art --seed 42 \
-  --output "$RUN/aggregate/case_study.json"
+  --output "$RUN/aggregates/case_study.json"
 ```
 
 把小型 aggregate 产物同步到 `artifacts/retriever_only/` 后，分别运行：
@@ -121,4 +137,4 @@ raw artifacts -> aggregate JSON/CSV -> LaTeX macros/tables -> PDF/SVG figures ->
 
 每个作业保存完整 command、stdout/stderr、Git commit、dirty state、环境、GPU、seed、lambda、逐题指标与 checkpoint 指针。若 CUDA OOM，先确认是否一卡一进程；只有编码阶段允许统一降低 GTE batch size，因为它只改变吞吐，不改变输出定义。训练 batch size 属于冻结协议，不得按方法单独修改。
 
-队列只在全部作业成功后写 `.complete`；失败清单写入 `.failures.json`。恢复时重新运行同一 manifest，不删除历史 runs，不覆盖元数据口径不同的目录。
+队列只在全部作业成功后写 `.complete`；失败清单写入 `.failures.json`。恢复时重新运行同一 manifest，不删除历史 runs，不覆盖元数据口径不同的目录。敏感性预处理结束后必须先确认 `path-sensitivity-prepare.complete`，再启动训练 phase；这样不会让预处理与训练争抢同一张卡。
