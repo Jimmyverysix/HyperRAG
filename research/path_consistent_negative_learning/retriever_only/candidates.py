@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 import random
-from typing import Callable, Iterable, Iterator, Sequence
+from typing import Callable, Iterable, Iterator, Mapping, Sequence
 
 import networkx as nx
 
@@ -102,6 +102,8 @@ def shortest_path_dag_nodes(
     graph: nx.Graph,
     topic: str,
     answers: Iterable[str],
+    *,
+    neighbor_cache: Mapping[str, Sequence[str]] | None = None,
 ) -> tuple[dict[str, int], set[str]]:
     """Return source distances and nodes lying on any shortest answer path."""
 
@@ -109,6 +111,7 @@ def shortest_path_dag_nodes(
         graph,
         topic,
         cutoff=MAX_INCIDENCE_DISTANCE,
+        neighbor_cache=neighbor_cache,
     )
     reachable_answers = sorted(
         answer for answer in set(answers) if answer in distances
@@ -118,7 +121,12 @@ def shortest_path_dag_nodes(
     while queue:
         current = queue.popleft()
         current_distance = distances[current]
-        for predecessor in sorted(graph.neighbors(current)):
+        predecessors = (
+            neighbor_cache[current]
+            if neighbor_cache is not None
+            else sorted(graph.neighbors(current))
+        )
+        for predecessor in predecessors:
             if (
                 distances.get(predecessor) == current_distance - 1
                 and predecessor not in on_answer_path
@@ -175,6 +183,7 @@ def build_training_query_structure(
     graph: nx.Graph,
     *,
     variant_seed: int | None = None,
+    neighbor_cache: Mapping[str, Sequence[str]] | None = None,
 ) -> TrainingQueryStructure | None:
     """Build the seed-independent portion of one training query."""
 
@@ -192,6 +201,7 @@ def build_training_query_structure(
         query.topic_node,
         answers,
         variant_seed=variant_seed,
+        neighbor_cache=neighbor_cache,
     )
     if not paths:
         return None
@@ -199,11 +209,17 @@ def build_training_query_structure(
         sorted({transition for path in paths for transition in transitions_from_path(path)})
     )
     maximum_hops = max((len(path) - 1) // LOGICAL_TRANSITION_COST for path in paths)
-    negative_pool = path_guided_subgraph(graph, [query.topic_node], paths)
+    negative_pool = path_guided_subgraph(
+        graph,
+        [query.topic_node],
+        paths,
+        neighbor_cache=neighbor_cache,
+    )
     distances, shortest_path_nodes = shortest_path_dag_nodes(
         graph,
         query.topic_node,
         answers,
+        neighbor_cache=neighbor_cache,
     )
     return TrainingQueryStructure(
         key=query.key,

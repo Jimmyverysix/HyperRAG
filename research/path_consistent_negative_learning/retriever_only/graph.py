@@ -18,6 +18,7 @@ HYPEREDGE_PREFIX = "H:"
 LOGICAL_TRANSITION_COST = 2
 MAX_INCIDENCE_DISTANCE = 6
 Transition = tuple[str, str, str]
+NeighborCache = Mapping[str, Sequence[str]]
 
 
 def hyperedge_id(owner_qid: str) -> str:
@@ -142,8 +143,13 @@ def _ordered_neighbors(
     graph: nx.Graph,
     node: str,
     rng: random.Random | None,
+    neighbor_cache: NeighborCache | None = None,
 ) -> list[str]:
-    values = sorted(graph.neighbors(node))
+    values = list(
+        neighbor_cache[node]
+        if neighbor_cache is not None
+        else sorted(graph.neighbors(node))
+    )
     if rng is not None:
         rng.shuffle(values)
     return values
@@ -156,6 +162,7 @@ def shortest_path(
     *,
     variant_seed: int | None = None,
     cutoff: int = MAX_INCIDENCE_DISTANCE,
+    neighbor_cache: NeighborCache | None = None,
 ) -> tuple[str, ...] | None:
     """Return one stable shortest path, optionally using seeded tie-breaking."""
 
@@ -165,6 +172,7 @@ def shortest_path(
         variant_seed=variant_seed,
         target=target,
         cutoff=cutoff,
+        neighbor_cache=neighbor_cache,
     )
     return _path_from_tree(parents, target)
 
@@ -176,6 +184,7 @@ def _shortest_path_tree(
     variant_seed: int | None,
     target: str | None,
     cutoff: int,
+    neighbor_cache: NeighborCache | None = None,
 ) -> dict[str, str | None]:
     if source not in graph or (target is not None and target not in graph):
         return {}
@@ -191,7 +200,12 @@ def _shortest_path_tree(
             break
         if distances[current] >= cutoff:
             continue
-        for neighbor in _ordered_neighbors(graph, current, rng):
+        for neighbor in _ordered_neighbors(
+            graph,
+            current,
+            rng,
+            neighbor_cache,
+        ):
             if neighbor in parents:
                 continue
             parents[neighbor] = current
@@ -230,6 +244,7 @@ def selected_paths(
     answers: Iterable[str],
     *,
     variant_seed: int | None = None,
+    neighbor_cache: NeighborCache | None = None,
 ) -> tuple[tuple[str, ...], ...]:
     answer_values = sorted(set(answers))
     paths = []
@@ -241,6 +256,7 @@ def selected_paths(
             variant_seed=None,
             target=None,
             cutoff=MAX_INCIDENCE_DISTANCE,
+            neighbor_cache=neighbor_cache,
         )
     for answer in answer_values:
         path = (
@@ -251,6 +267,7 @@ def selected_paths(
                 topic,
                 answer,
                 variant_seed=variant_seed,
+                neighbor_cache=neighbor_cache,
             )
         )
         if path is not None:
@@ -262,6 +279,8 @@ def path_guided_subgraph(
     graph: nx.Graph,
     topics: Sequence[str],
     paths: Sequence[Sequence[str]],
+    *,
+    neighbor_cache: NeighborCache | None = None,
 ) -> nx.Graph:
     """Replay the released path-guided expansion with stable iteration order."""
 
@@ -279,12 +298,22 @@ def path_guided_subgraph(
         expanded.update(frontier)
         next_frontier: set[str] = set()
         for entity in sorted(frontier):
-            for hyperedge in sorted(graph.neighbors(entity)):
+            hyperedges = (
+                neighbor_cache[entity]
+                if neighbor_cache is not None
+                else sorted(graph.neighbors(entity))
+            )
+            for hyperedge in hyperedges:
                 if not is_hyperedge(hyperedge):
                     continue
                 nodes.add(hyperedge)
                 edges.add((entity, hyperedge))
-                for next_entity in sorted(graph.neighbors(hyperedge)):
+                next_entities = (
+                    neighbor_cache[hyperedge]
+                    if neighbor_cache is not None
+                    else sorted(graph.neighbors(hyperedge))
+                )
+                for next_entity in next_entities:
                     if is_hyperedge(next_entity):
                         continue
                     nodes.add(next_entity)
@@ -303,9 +332,24 @@ def all_shortest_distances(
     source: str,
     *,
     cutoff: int = MAX_INCIDENCE_DISTANCE,
+    neighbor_cache: NeighborCache | None = None,
 ) -> dict[str, int]:
     if source not in graph:
         return {}
+    if neighbor_cache is not None:
+        distances = {source: 0}
+        queue: deque[str] = deque([source])
+        while queue:
+            current = queue.popleft()
+            distance = distances[current]
+            if distance >= cutoff:
+                continue
+            for neighbor in neighbor_cache[current]:
+                if neighbor in distances:
+                    continue
+                distances[neighbor] = distance + 1
+                queue.append(neighbor)
+        return distances
     return dict(nx.single_source_shortest_path_length(graph, source, cutoff=cutoff))
 
 

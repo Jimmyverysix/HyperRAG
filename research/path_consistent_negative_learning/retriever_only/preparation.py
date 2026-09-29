@@ -189,6 +189,10 @@ def prepare_training_candidates_multi(
     if not seed_values or len(seed_values) != len(set(seed_values)):
         raise ValueError("seeds must be nonempty and unique")
     random_streams = {seed: random.Random(seed) for seed in seed_values}
+    neighbor_cache = {
+        node: tuple(sorted(bundle.graph.neighbors(node)))
+        for node in bundle.graph
+    }
     prepared_by_seed: dict[int, list[TrainingQuery]] = {
         seed: [] for seed in seed_values
     }
@@ -198,6 +202,7 @@ def prepare_training_candidates_multi(
             query,
             bundle.graph,
             variant_seed=variant_seed,
+            neighbor_cache=neighbor_cache,
         )
         if structure is None:
             continue
