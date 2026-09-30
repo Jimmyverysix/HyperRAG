@@ -159,6 +159,7 @@ def train_retriever(
     )
     labels = data.labels.float().to(device).unsqueeze(1)
     device_weights = weights.to(device).unsqueeze(1)
+    positive_weight_mask = weights > 0
     best_loss = float("inf")
     best_state: dict[str, torch.Tensor] | None = None
     epochs_without_improvement = 0
@@ -177,6 +178,14 @@ def train_retriever(
             generator=train_generator,
             shuffle=True,
         )):
+            if not bool(positive_weight_mask[indices].any()):
+                # With lambda=0, a shuffled batch can contain only excluded
+                # samples.  Skipping the optimizer step is the exact analogue
+                # of that batch carrying no supervision; an Adam step with
+                # zero gradients could still move parameters via momentum.
+                train_losses[batch_index] = 0.0
+                train_weight_sums[batch_index] = 0.0
+                continue
             device_indices = indices.to(device)
             batch_features = features[device_indices]
             batch_labels = labels[device_indices]

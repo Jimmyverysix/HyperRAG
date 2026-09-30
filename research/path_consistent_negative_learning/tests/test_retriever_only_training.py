@@ -206,6 +206,47 @@ class RetrieverTrainingTests(unittest.TestCase):
                     torch.equal(legacy_state[name], direct_state[name]), name
                 )
 
+    def test_zero_weight_batch_skips_adam_step(self) -> None:
+        data, embeddings = _training_fixture()
+        data.path_consistent_mask = ~data.labels
+        config = TrainingConfig(
+            batch_size=1,
+            maximum_epochs=2,
+            patience=2,
+            feature_materialization_chunk_size=16,
+        )
+        step_count = 0
+
+        class CountingAdam(torch.optim.Adam):
+            def step(self, *args, **kwargs):
+                nonlocal step_count
+                step_count += 1
+                return super().step(*args, **kwargs)
+
+        train_indices, _ = training.stratified_candidate_split(
+            data.labels,
+            seed=42,
+        )
+        positive_train_count = int(data.labels[train_indices].sum())
+        with tempfile.TemporaryDirectory() as temporary:
+            checkpoint = Path(temporary) / "checkpoint.pt"
+            with patch.object(training, "Adam", CountingAdam):
+                result = train_retriever(
+                    data,
+                    embeddings,
+                    method="ours",
+                    lambda_=0.0,
+                    seed=42,
+                    device_name="cpu",
+                    checkpoint_path=checkpoint,
+                    config=config,
+                )
+
+        self.assertEqual(
+            step_count,
+            positive_train_count * result["epochs_run"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
