@@ -311,11 +311,11 @@ def generate_paper_artifacts(
         "schema_version": 1,
         "scope": "formal_zero_llm_retriever_only",
         "sources": {
-            "preflight": str(preflight_path),
-            "selection": str(selection_path),
-            "prevalence": str(prevalence_path),
-            "main_test": str(main_path),
-            "sensitivity": str(sensitivity_path),
+            "preflight": preflight_path.as_posix(),
+            "selection": selection_path.as_posix(),
+            "prevalence": prevalence_path.as_posix(),
+            "main_test": main_path.as_posix(),
+            "sensitivity": sensitivity_path.as_posix(),
         },
         "outputs": [
             path.relative_to(output_dir).as_posix()

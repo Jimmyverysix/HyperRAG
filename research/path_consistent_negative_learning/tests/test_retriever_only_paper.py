@@ -162,6 +162,7 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
         self.assertIn("0.50", table)
         self.assertEqual(manifest["scope"], "formal_zero_llm_retriever_only")
         self.assertEqual(manifest["dataset_count"], 1)
+        self.assertEqual(manifest["sources"]["preflight"], preflight.as_posix())
         self.assertIn("tables/main_retriever.tex", manifest["outputs"])
 
 
