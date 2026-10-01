@@ -1,0 +1,608 @@
+{
+  "domains": [
+    {
+      "domain": "art",
+      "sampled_negative_count": 859645,
+      "path_consistent_negative_count": 26440,
+      "path_consistent_negative_rate": 0.030756882201373823,
+      "query_count": 9887,
+      "affected_query_count_across_seeds": 4416,
+      "affected_query_rate_across_seeds": 0.4466471123697785,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 171929,
+          "path_consistent_negative_count": 5379,
+          "path_consistent_negative_rate": 0.03128617045408279,
+          "affected_query_count": 2186,
+          "affected_query_rate": 0.22109841205623545
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 171929,
+          "path_consistent_negative_count": 5180,
+          "path_consistent_negative_rate": 0.03012871592343351,
+          "affected_query_count": 2121,
+          "affected_query_rate": 0.21452412258521292
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 171929,
+          "path_consistent_negative_count": 5334,
+          "path_consistent_negative_rate": 0.031024434504940992,
+          "affected_query_count": 2140,
+          "affected_query_rate": 0.21644583796905026
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 171929,
+          "path_consistent_negative_count": 5311,
+          "path_consistent_negative_rate": 0.030890658353157407,
+          "affected_query_count": 2158,
+          "affected_query_rate": 0.2182664104379488
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 171929,
+          "path_consistent_negative_count": 5236,
+          "path_consistent_negative_rate": 0.03045443177125441,
+          "affected_query_count": 2119,
+          "affected_query_rate": 0.21432183675533528
+        }
+      ]
+    },
+    {
+      "domain": "award",
+      "sampled_negative_count": 1643565,
+      "path_consistent_negative_count": 103372,
+      "path_consistent_negative_rate": 0.06289498742063745,
+      "query_count": 9830,
+      "affected_query_count_across_seeds": 8327,
+      "affected_query_rate_across_seeds": 0.8471007121057986,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 328713,
+          "path_consistent_negative_count": 20727,
+          "path_consistent_negative_rate": 0.06305500543026896,
+          "affected_query_count": 6185,
+          "affected_query_rate": 0.6291963377416073
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 328713,
+          "path_consistent_negative_count": 20639,
+          "path_consistent_negative_rate": 0.06278729469172196,
+          "affected_query_count": 6197,
+          "affected_query_rate": 0.6304170905391658
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 328713,
+          "path_consistent_negative_count": 20682,
+          "path_consistent_negative_rate": 0.06291810789351197,
+          "affected_query_count": 6193,
+          "affected_query_rate": 0.6300101729399796
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 328713,
+          "path_consistent_negative_count": 20694,
+          "path_consistent_negative_rate": 0.06295461390331383,
+          "affected_query_count": 6202,
+          "affected_query_rate": 0.6309257375381485
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 328713,
+          "path_consistent_negative_count": 20630,
+          "path_consistent_negative_rate": 0.06275991518437056,
+          "affected_query_count": 6215,
+          "affected_query_rate": 0.6322482197355036
+        }
+      ]
+    },
+    {
+      "domain": "edu",
+      "sampled_negative_count": 847430,
+      "path_consistent_negative_count": 49978,
+      "path_consistent_negative_rate": 0.05897596261638129,
+      "query_count": 9785,
+      "affected_query_count_across_seeds": 6622,
+      "affected_query_rate_across_seeds": 0.6767501277465509,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 169486,
+          "path_consistent_negative_count": 9916,
+          "path_consistent_negative_rate": 0.05850630730561816,
+          "affected_query_count": 3865,
+          "affected_query_rate": 0.39499233520694943
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 169486,
+          "path_consistent_negative_count": 10007,
+          "path_consistent_negative_rate": 0.059043224809128776,
+          "affected_query_count": 3906,
+          "affected_query_rate": 0.39918242207460397
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 169486,
+          "path_consistent_negative_count": 10028,
+          "path_consistent_negative_rate": 0.05916712884840046,
+          "affected_query_count": 3906,
+          "affected_query_rate": 0.39918242207460397
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 169486,
+          "path_consistent_negative_count": 10043,
+          "path_consistent_negative_rate": 0.059255631733594515,
+          "affected_query_count": 3928,
+          "affected_query_rate": 0.401430761369443
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 169486,
+          "path_consistent_negative_count": 9984,
+          "path_consistent_negative_rate": 0.05890752038516456,
+          "affected_query_count": 3839,
+          "affected_query_rate": 0.3923352069494124
+        }
+      ]
+    },
+    {
+      "domain": "health",
+      "sampled_negative_count": 1442125,
+      "path_consistent_negative_count": 62105,
+      "path_consistent_negative_rate": 0.04306492155673052,
+      "query_count": 9920,
+      "affected_query_count_across_seeds": 6651,
+      "affected_query_rate_across_seeds": 0.6704637096774193,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 288425,
+          "path_consistent_negative_count": 12416,
+          "path_consistent_negative_rate": 0.04304758602756349,
+          "affected_query_count": 4260,
+          "affected_query_rate": 0.42943548387096775
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 288425,
+          "path_consistent_negative_count": 12440,
+          "path_consistent_negative_rate": 0.04313079656756522,
+          "affected_query_count": 4221,
+          "affected_query_rate": 0.4255040322580645
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 288425,
+          "path_consistent_negative_count": 12455,
+          "path_consistent_negative_rate": 0.043182803155066306,
+          "affected_query_count": 4244,
+          "affected_query_rate": 0.42782258064516127
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 288425,
+          "path_consistent_negative_count": 12434,
+          "path_consistent_negative_rate": 0.04310999393256479,
+          "affected_query_count": 4156,
+          "affected_query_rate": 0.4189516129032258
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 288425,
+          "path_consistent_negative_count": 12360,
+          "path_consistent_negative_rate": 0.04285342810089278,
+          "affected_query_count": 4193,
+          "affected_query_rate": 0.4226814516129032
+        }
+      ]
+    },
+    {
+      "domain": "infra",
+      "sampled_negative_count": 925610,
+      "path_consistent_negative_count": 48891,
+      "path_consistent_negative_rate": 0.052820302287140374,
+      "query_count": 9933,
+      "affected_query_count_across_seeds": 6963,
+      "affected_query_rate_across_seeds": 0.7009966777408638,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 185122,
+          "path_consistent_negative_count": 9820,
+          "path_consistent_negative_rate": 0.05304609932909109,
+          "affected_query_count": 4044,
+          "affected_query_rate": 0.40712775596496525
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 185122,
+          "path_consistent_negative_count": 9783,
+          "path_consistent_negative_rate": 0.05284623113406294,
+          "affected_query_count": 4053,
+          "affected_query_rate": 0.4080338266384778
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 185122,
+          "path_consistent_negative_count": 9697,
+          "path_consistent_negative_rate": 0.05238167262670023,
+          "affected_query_count": 3996,
+          "affected_query_rate": 0.4022953790395651
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 185122,
+          "path_consistent_negative_count": 9732,
+          "path_consistent_negative_rate": 0.05257073713551064,
+          "affected_query_count": 4025,
+          "affected_query_rate": 0.40521494009866105
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 185122,
+          "path_consistent_negative_count": 9859,
+          "path_consistent_negative_rate": 0.053256771210336964,
+          "affected_query_count": 4055,
+          "affected_query_rate": 0.40823517567703616
+        }
+      ]
+    },
+    {
+      "domain": "loc",
+      "sampled_negative_count": 582285,
+      "path_consistent_negative_count": 12119,
+      "path_consistent_negative_rate": 0.02081283220416119,
+      "query_count": 3997,
+      "affected_query_count_across_seeds": 2508,
+      "affected_query_rate_across_seeds": 0.6274706029522141,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 116457,
+          "path_consistent_negative_count": 2414,
+          "path_consistent_negative_rate": 0.02072868097237607,
+          "affected_query_count": 1384,
+          "affected_query_rate": 0.3462596947710783
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 116457,
+          "path_consistent_negative_count": 2486,
+          "path_consistent_negative_rate": 0.021346934920185134,
+          "affected_query_count": 1426,
+          "affected_query_rate": 0.3567675756817613
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 116457,
+          "path_consistent_negative_count": 2441,
+          "path_consistent_negative_rate": 0.020960526202804468,
+          "affected_query_count": 1395,
+          "affected_query_rate": 0.34901175881911434
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 116457,
+          "path_consistent_negative_count": 2431,
+          "path_consistent_negative_rate": 0.0208746575989421,
+          "affected_query_count": 1370,
+          "affected_query_rate": 0.34275706780085063
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 116457,
+          "path_consistent_negative_count": 2347,
+          "path_consistent_negative_rate": 0.02015336132649819,
+          "affected_query_count": 1334,
+          "affected_query_rate": 0.3337503127345509
+        }
+      ]
+    },
+    {
+      "domain": "org",
+      "sampled_negative_count": 703965,
+      "path_consistent_negative_count": 60380,
+      "path_consistent_negative_rate": 0.08577130965317878,
+      "query_count": 3952,
+      "affected_query_count_across_seeds": 2791,
+      "affected_query_rate_across_seeds": 0.7062246963562753,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 140793,
+          "path_consistent_negative_count": 12174,
+          "path_consistent_negative_rate": 0.08646736698557457,
+          "affected_query_count": 2373,
+          "affected_query_rate": 0.6004554655870445
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 140793,
+          "path_consistent_negative_count": 12100,
+          "path_consistent_negative_rate": 0.08594177267335734,
+          "affected_query_count": 2348,
+          "affected_query_rate": 0.5941295546558705
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 140793,
+          "path_consistent_negative_count": 12213,
+          "path_consistent_negative_rate": 0.08674436939336473,
+          "affected_query_count": 2384,
+          "affected_query_rate": 0.6032388663967612
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 140793,
+          "path_consistent_negative_count": 11931,
+          "path_consistent_negative_rate": 0.08474142890626665,
+          "affected_query_count": 2337,
+          "affected_query_rate": 0.5913461538461539
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 140793,
+          "path_consistent_negative_count": 11962,
+          "path_consistent_negative_rate": 0.08496161030733063,
+          "affected_query_count": 2364,
+          "affected_query_rate": 0.5981781376518218
+        }
+      ]
+    },
+    {
+      "domain": "people",
+      "sampled_negative_count": 730805,
+      "path_consistent_negative_count": 12419,
+      "path_consistent_negative_rate": 0.016993589261157217,
+      "query_count": 9875,
+      "affected_query_count_across_seeds": 3791,
+      "affected_query_rate_across_seeds": 0.3838987341772152,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 146161,
+          "path_consistent_negative_count": 2436,
+          "path_consistent_negative_rate": 0.01666655263716039,
+          "affected_query_count": 1577,
+          "affected_query_rate": 0.15969620253164557
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 146161,
+          "path_consistent_negative_count": 2504,
+          "path_consistent_negative_rate": 0.01713179302276257,
+          "affected_query_count": 1595,
+          "affected_query_rate": 0.16151898734177214
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 146161,
+          "path_consistent_negative_count": 2474,
+          "path_consistent_negative_rate": 0.016926539911467493,
+          "affected_query_count": 1563,
+          "affected_query_rate": 0.15827848101265823
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 146161,
+          "path_consistent_negative_count": 2484,
+          "path_consistent_negative_rate": 0.01699495761523252,
+          "affected_query_count": 1592,
+          "affected_query_rate": 0.1612151898734177
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 146161,
+          "path_consistent_negative_count": 2521,
+          "path_consistent_negative_rate": 0.017248103119163114,
+          "affected_query_count": 1604,
+          "affected_query_rate": 0.16243037974683544
+        }
+      ]
+    },
+    {
+      "domain": "sci",
+      "sampled_negative_count": 707240,
+      "path_consistent_negative_count": 42489,
+      "path_consistent_negative_rate": 0.06007720151575137,
+      "query_count": 9491,
+      "affected_query_count_across_seeds": 5936,
+      "affected_query_rate_across_seeds": 0.625434622273733,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 141448,
+          "path_consistent_negative_count": 8512,
+          "path_consistent_negative_rate": 0.06017759176517165,
+          "affected_query_count": 3292,
+          "affected_query_rate": 0.34685491518280476
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 141448,
+          "path_consistent_negative_count": 8492,
+          "path_consistent_negative_rate": 0.0600361970476783,
+          "affected_query_count": 3318,
+          "affected_query_rate": 0.3495943525445159
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 141448,
+          "path_consistent_negative_count": 8489,
+          "path_consistent_negative_rate": 0.060014987840054296,
+          "affected_query_count": 3258,
+          "affected_query_rate": 0.34327257401749023
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 141448,
+          "path_consistent_negative_count": 8486,
+          "path_consistent_negative_rate": 0.05999377863243029,
+          "affected_query_count": 3355,
+          "affected_query_rate": 0.35349278263618167
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 141448,
+          "path_consistent_negative_count": 8510,
+          "path_consistent_negative_rate": 0.06016345229342232,
+          "affected_query_count": 3297,
+          "affected_query_rate": 0.3473817300600569
+        }
+      ]
+    },
+    {
+      "domain": "sport",
+      "sampled_negative_count": 654890,
+      "path_consistent_negative_count": 5936,
+      "path_consistent_negative_rate": 0.009064117638076623,
+      "query_count": 3964,
+      "affected_query_count_across_seeds": 1285,
+      "affected_query_rate_across_seeds": 0.324167507568113,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 130978,
+          "path_consistent_negative_count": 1195,
+          "path_consistent_negative_rate": 0.009123669623906304,
+          "affected_query_count": 589,
+          "affected_query_rate": 0.14858728557013118
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 130978,
+          "path_consistent_negative_count": 1181,
+          "path_consistent_negative_rate": 0.009016781444212005,
+          "affected_query_count": 583,
+          "affected_query_rate": 0.1470736629667003
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 130978,
+          "path_consistent_negative_count": 1164,
+          "path_consistent_negative_rate": 0.008886988654583212,
+          "affected_query_count": 576,
+          "affected_query_rate": 0.14530776992936428
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 130978,
+          "path_consistent_negative_count": 1188,
+          "path_consistent_negative_rate": 0.009070225534059156,
+          "affected_query_count": 566,
+          "affected_query_rate": 0.14278506559031282
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 130978,
+          "path_consistent_negative_count": 1208,
+          "path_consistent_negative_rate": 0.009222922933622441,
+          "affected_query_count": 599,
+          "affected_query_rate": 0.15110998990918265
+        }
+      ]
+    },
+    {
+      "domain": "tax",
+      "sampled_negative_count": 787445,
+      "path_consistent_negative_count": 29352,
+      "path_consistent_negative_rate": 0.0372749842846167,
+      "query_count": 7563,
+      "affected_query_count_across_seeds": 3784,
+      "affected_query_rate_across_seeds": 0.5003305566574111,
+      "per_seed": [
+        {
+          "seed": 42,
+          "sampled_negative_count": 157489,
+          "path_consistent_negative_count": 5991,
+          "path_consistent_negative_rate": 0.0380407520525243,
+          "affected_query_count": 2104,
+          "affected_query_rate": 0.27819648287716514
+        },
+        {
+          "seed": 43,
+          "sampled_negative_count": 157489,
+          "path_consistent_negative_count": 5880,
+          "path_consistent_negative_rate": 0.03733594092285811,
+          "affected_query_count": 2033,
+          "affected_query_rate": 0.2688086738066905
+        },
+        {
+          "seed": 44,
+          "sampled_negative_count": 157489,
+          "path_consistent_negative_count": 5819,
+          "path_consistent_negative_rate": 0.03694861228403253,
+          "affected_query_count": 2055,
+          "affected_query_rate": 0.27171757239190797
+        },
+        {
+          "seed": 45,
+          "sampled_negative_count": 157489,
+          "path_consistent_negative_count": 5898,
+          "path_consistent_negative_rate": 0.03745023461956073,
+          "affected_query_count": 2070,
+          "affected_query_rate": 0.27370091233637445
+        },
+        {
+          "seed": 46,
+          "sampled_negative_count": 157489,
+          "path_consistent_negative_count": 5764,
+          "path_consistent_negative_rate": 0.03659938154410784,
+          "affected_query_count": 2054,
+          "affected_query_rate": 0.27158534972894355
+        }
+      ]
+    }
+  ],
+  "overall": {
+    "sampled_negative_count": 9885005,
+    "path_consistent_negative_count": 453481,
+    "path_consistent_negative_rate": 0.04587564700270764,
+    "equal_domain_affected_query_rate": 0.5917713690568521
+  },
+  "schema_version": 1,
+  "phase": "prevalence",
+  "provenance": {
+    "created_at": "2026-10-01T19:03:02.371563+00:00",
+    "research_commit": "487802e531e61edc3e8c6600701b8dc28633a9c1",
+    "research_worktree_dirty": false,
+    "official_upstream_commit": "6d5a9033353c516a9220d78591f2c666f19ee0b1",
+    "command": [
+      "/root/hyperrag_pcneg/work/HyperRAG_official/research/path_consistent_negative_learning/scripts/aggregate_retriever_results.py",
+      "--phase",
+      "prevalence",
+      "--run-root",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free",
+      "--domains",
+      "art",
+      "award",
+      "edu",
+      "health",
+      "infra",
+      "loc",
+      "org",
+      "people",
+      "sci",
+      "sport",
+      "tax",
+      "--output",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/aggregates/prevalence.json",
+      "--csv-output",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/aggregates/prevalence.csv"
+    ],
+    "python": "3.11.16 (main, Aug 27 2026, 14:44:21) [GCC 14.3.0]",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.35",
+    "torch": "2.3.0+cu121",
+    "cuda_available": true,
+    "cuda_visible_devices": null,
+    "gpu_name": "NVIDIA GeForce RTX 3090"
+  }
+}

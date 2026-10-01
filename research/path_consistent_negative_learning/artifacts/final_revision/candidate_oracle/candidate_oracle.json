@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "split": "test",
+  "beam_width": 32,
+  "definition": "complete directed topic-to-answer path exists in fixed pool",
+  "domains": [
+    {
+      "domain": "art",
+      "query_count": 9872,
+      "candidate_count": 914023,
+      "oracle_reachable_query_count": 2084,
+      "candidate_oracle_reach": 0.21110210696920584,
+      "mean_candidate_count": 92.58741896272285
+    },
+    {
+      "domain": "award",
+      "query_count": 9833,
+      "candidate_count": 890646,
+      "oracle_reachable_query_count": 3075,
+      "candidate_oracle_reach": 0.3127224651683108,
+      "mean_candidate_count": 90.57723990643751
+    },
+    {
+      "domain": "edu",
+      "query_count": 9746,
+      "candidate_count": 853095,
+      "oracle_reachable_query_count": 3874,
+      "candidate_oracle_reach": 0.3974964087830905,
+      "mean_candidate_count": 87.53283398317258
+    },
+    {
+      "domain": "health",
+      "query_count": 9895,
+      "candidate_count": 901843,
+      "oracle_reachable_query_count": 4014,
+      "candidate_oracle_reach": 0.4056594239514906,
+      "mean_candidate_count": 91.14128347650329
+    },
+    {
+      "domain": "infra",
+      "query_count": 9952,
+      "candidate_count": 894072,
+      "oracle_reachable_query_count": 5849,
+      "candidate_oracle_reach": 0.5877210610932476,
+      "mean_candidate_count": 89.83842443729904
+    },
+    {
+      "domain": "loc",
+      "query_count": 3997,
+      "candidate_count": 365222,
+      "oracle_reachable_query_count": 1067,
+      "candidate_oracle_reach": 0.26695021265949465,
+      "mean_candidate_count": 91.37403052289217
+    },
+    {
+      "domain": "org",
+      "query_count": 3973,
+      "candidate_count": 364724,
+      "oracle_reachable_query_count": 805,
+      "candidate_oracle_reach": 0.202617669267556,
+      "mean_candidate_count": 91.80065441731689
+    },
+    {
+      "domain": "people",
+      "query_count": 9848,
+      "candidate_count": 897713,
+      "oracle_reachable_query_count": 3838,
+      "candidate_oracle_reach": 0.3897238017871649,
+      "mean_candidate_count": 91.15688464662875
+    },
+    {
+      "domain": "sci",
+      "query_count": 9312,
+      "candidate_count": 812296,
+      "oracle_reachable_query_count": 4090,
+      "candidate_oracle_reach": 0.43921821305841924,
+      "mean_candidate_count": 87.23109965635739
+    },
+    {
+      "domain": "sport",
+      "query_count": 3966,
+      "candidate_count": 361248,
+      "oracle_reachable_query_count": 581,
+      "candidate_oracle_reach": 0.1464952092788704,
+      "mean_candidate_count": 91.08623298033282
+    },
+    {
+      "domain": "tax",
+      "query_count": 7679,
+      "candidate_count": 716149,
+      "oracle_reachable_query_count": 1851,
+      "candidate_oracle_reach": 0.2410470113296002,
+      "mean_candidate_count": 93.26071103008204
+    }
+  ],
+  "equal_domain_macro_candidate_oracle_reach": 0.32734123484967736,
+  "overall_query_count": 88073,
+  "overall_reachable_query_count": 31128,
+  "micro_candidate_oracle_reach": 0.35343408309016383,
+  "provenance": {
+    "created_at": "2026-10-01T16:18:39.819951+00:00",
+    "research_commit": "487802e531e61edc3e8c6600701b8dc28633a9c1",
+    "research_worktree_dirty": false,
+    "official_upstream_commit": "6d5a9033353c516a9220d78591f2c666f19ee0b1",
+    "command": [
+      "/root/hyperrag_pcneg/work/HyperRAG_official/research/path_consistent_negative_learning/scripts/analyze_final_revision.py",
+      "candidate-oracle",
+      "--run-root",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free",
+      "--domains",
+      "art",
+      "award",
+      "edu",
+      "health",
+      "infra",
+      "loc",
+      "org",
+      "people",
+      "sci",
+      "sport",
+      "tax",
+      "--output-dir",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/final_revision/candidate_oracle"
+    ],
+    "python": "3.11.16 (main, Aug 27 2026, 14:44:21) [GCC 14.3.0]",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.35",
+    "torch": "2.3.0+cu121",
+    "cuda_available": true,
+    "cuda_visible_devices": null,
+    "gpu_name": "NVIDIA GeForce RTX 3090"
+  }
+}

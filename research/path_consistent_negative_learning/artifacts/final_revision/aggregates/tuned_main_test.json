@@ -1,0 +1,524 @@
+{
+  "domains": [
+    {
+      "domain": "art",
+      "baseline": {
+        "reciprocal_rank": 0.034668725539414046,
+        "answer_reach_10": 0.07240680713128038,
+        "answer_reach_5": 0.04426661264181524
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.03527100543926143,
+        "answer_reach_10": 0.0730551053484603,
+        "answer_reach_5": 0.04519854132901134
+      },
+      "ours": {
+        "reciprocal_rank": 0.03669728889404557,
+        "answer_reach_10": 0.0757293354943274,
+        "answer_reach_5": 0.04758914100486224
+      }
+    },
+    {
+      "domain": "award",
+      "baseline": {
+        "reciprocal_rank": 0.05246332849316882,
+        "answer_reach_10": 0.1206956168005695,
+        "answer_reach_5": 0.07444320146445642
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.05250453481894923,
+        "answer_reach_10": 0.12106173090613243,
+        "answer_reach_5": 0.07393470965117462
+      },
+      "ours": {
+        "reciprocal_rank": 0.052373890952580035,
+        "answer_reach_10": 0.12193633682497712,
+        "answer_reach_5": 0.07487033458761315
+      }
+    },
+    {
+      "domain": "edu",
+      "baseline": {
+        "reciprocal_rank": 0.06969655134602896,
+        "answer_reach_10": 0.1353991381079417,
+        "answer_reach_5": 0.08384978452698544
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.06978179565051022,
+        "answer_reach_10": 0.13480402216293863,
+        "answer_reach_5": 0.08438333675353991
+      },
+      "ours": {
+        "reciprocal_rank": 0.0761141951461069,
+        "answer_reach_10": 0.14514672686230248,
+        "answer_reach_5": 0.09265339626513441
+      }
+    },
+    {
+      "domain": "health",
+      "baseline": {
+        "reciprocal_rank": 0.0692946573656302,
+        "answer_reach_10": 0.15668519454269833,
+        "answer_reach_5": 0.0923698837796867
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.0693121936816413,
+        "answer_reach_10": 0.1566245578575038,
+        "answer_reach_5": 0.0931177362304194
+      },
+      "ours": {
+        "reciprocal_rank": 0.07537548067215667,
+        "answer_reach_10": 0.1700454775138959,
+        "answer_reach_5": 0.1025568468923699
+      }
+    },
+    {
+      "domain": "infra",
+      "baseline": {
+        "reciprocal_rank": 0.15009748872822926,
+        "answer_reach_10": 0.2916197749196141,
+        "answer_reach_5": 0.18995176848874598
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.15095226976041906,
+        "answer_reach_10": 0.2942524115755627,
+        "answer_reach_5": 0.19232315112540194
+      },
+      "ours": {
+        "reciprocal_rank": 0.15257177036759184,
+        "answer_reach_10": 0.2969855305466238,
+        "answer_reach_5": 0.1944533762057878
+      }
+    },
+    {
+      "domain": "loc",
+      "baseline": {
+        "reciprocal_rank": 0.07542133716778318,
+        "answer_reach_10": 0.14235676757568178,
+        "answer_reach_5": 0.09752314235676758
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.07593823760025101,
+        "answer_reach_10": 0.14235676757568178,
+        "answer_reach_5": 0.09692269201901425
+      },
+      "ours": {
+        "reciprocal_rank": 0.07723409167607871,
+        "answer_reach_10": 0.14545909432074056,
+        "answer_reach_5": 0.09967475606705029
+      }
+    },
+    {
+      "domain": "org",
+      "baseline": {
+        "reciprocal_rank": 0.0128109270220477,
+        "answer_reach_10": 0.029851497608859807,
+        "answer_reach_5": 0.012937326956959476
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.012932674708792903,
+        "answer_reach_10": 0.029700478228039263,
+        "answer_reach_5": 0.012584948401711553
+      },
+      "ours": {
+        "reciprocal_rank": 0.013152660525371352,
+        "answer_reach_10": 0.03070727410017619,
+        "answer_reach_5": 0.01303800654417317
+      }
+    },
+    {
+      "domain": "people",
+      "baseline": {
+        "reciprocal_rank": 0.09677375910764381,
+        "answer_reach_10": 0.18629163281884645,
+        "answer_reach_5": 0.12520308692120227
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.09649086380286456,
+        "answer_reach_10": 0.18708367181153535,
+        "answer_reach_5": 0.12497969130787977
+      },
+      "ours": {
+        "reciprocal_rank": 0.09715386380795511,
+        "answer_reach_10": 0.18803818034118602,
+        "answer_reach_5": 0.12632006498781478
+      }
+    },
+    {
+      "domain": "sci",
+      "baseline": {
+        "reciprocal_rank": 0.051395410272190516,
+        "answer_reach_10": 0.11823453608247422,
+        "answer_reach_5": 0.05889175257731959
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.052088402038784946,
+        "answer_reach_10": 0.11990979381443298,
+        "answer_reach_5": 0.06026632302405499
+      },
+      "ours": {
+        "reciprocal_rank": 0.06247175622223253,
+        "answer_reach_10": 0.14718642611683846,
+        "answer_reach_5": 0.07966065292096221
+      }
+    },
+    {
+      "domain": "sport",
+      "baseline": {
+        "reciprocal_rank": 0.027756974345603043,
+        "answer_reach_10": 0.053555219364599095,
+        "answer_reach_5": 0.03358547655068078
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.027802011783813706,
+        "answer_reach_10": 0.05395864851235502,
+        "answer_reach_5": 0.03474533535047907
+      },
+      "ours": {
+        "reciprocal_rank": 0.027755511294090034,
+        "answer_reach_10": 0.05436207766011094,
+        "answer_reach_5": 0.034190620272314676
+      }
+    },
+    {
+      "domain": "tax",
+      "baseline": {
+        "reciprocal_rank": 0.025608140800458676,
+        "answer_reach_10": 0.050813908060945434,
+        "answer_reach_5": 0.03000390675869254
+      },
+      "matched_random": {
+        "reciprocal_rank": 0.025461168692887864,
+        "answer_reach_10": 0.05024091678603985,
+        "answer_reach_5": 0.03013413204844381
+      },
+      "ours": {
+        "reciprocal_rank": 0.025959107514764275,
+        "answer_reach_10": 0.05008464643833833,
+        "answer_reach_5": 0.030108086990493554
+      }
+    }
+  ],
+  "equal_domain_macro": {
+    "baseline": {
+      "reciprocal_rank": 0.06054430001710893,
+      "answer_reach_10": 0.12344637209213735,
+      "answer_reach_5": 0.07663872209302837
+    },
+    "matched_random": {
+      "reciprocal_rank": 0.06077592345256147,
+      "answer_reach_10": 0.12391346405260745,
+      "answer_reach_5": 0.07714459974919369
+    },
+    "ours": {
+      "reciprocal_rank": 0.06335087427936119,
+      "answer_reach_10": 0.12960737329268338,
+      "answer_reach_5": 0.08137411661259784
+    }
+  },
+  "comparisons": {
+    "ours_minus_baseline": {
+      "reciprocal_rank": {
+        "difference": 0.002806574262252258,
+        "ci_low": 0.002488091118307798,
+        "ci_high": 0.003140834084960741,
+        "resamples": 10000,
+        "seed": 20260928,
+        "difference_percentage_points": 0.2806574262252258,
+        "ci_low_percentage_points": 0.2488091118307798,
+        "ci_high_percentage_points": 0.3140834084960741
+      },
+      "answer_reach_10": {
+        "difference": 0.006161001200546031,
+        "ci_low": 0.005509417366605084,
+        "ci_high": 0.006833485879272036,
+        "resamples": 10000,
+        "seed": 20260928,
+        "difference_percentage_points": 0.6161001200546031,
+        "ci_low_percentage_points": 0.5509417366605084,
+        "ci_high_percentage_points": 0.6833485879272035
+      }
+    },
+    "ours_minus_matched_random": {
+      "reciprocal_rank": {
+        "difference": 0.0025749508267997098,
+        "ci_low": 0.0022598323421788307,
+        "ci_high": 0.002897186652174565,
+        "resamples": 10000,
+        "seed": 20260928,
+        "difference_percentage_points": 0.25749508267997095,
+        "ci_low_percentage_points": 0.22598323421788308,
+        "ci_high_percentage_points": 0.28971866521745654
+      },
+      "answer_reach_10": {
+        "difference": 0.005693909240075925,
+        "ci_low": 0.005053079889453606,
+        "ci_high": 0.006354375768823587,
+        "resamples": 10000,
+        "seed": 20260928,
+        "difference_percentage_points": 0.5693909240075925,
+        "ci_low_percentage_points": 0.5053079889453606,
+        "ci_high_percentage_points": 0.6354375768823587
+      }
+    }
+  },
+  "domain_comparisons": [
+    {
+      "domain": "art",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.20285633546315235,
+      "ci_low_percentage_points": 0.13280648087471472,
+      "ci_high_percentage_points": 0.27369043838942886,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "award",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": -0.008943754058877394,
+      "ci_low_percentage_points": -0.07628200742605155,
+      "ci_high_percentage_points": 0.060373135775017024,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "edu",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.6417643800077945,
+      "ci_low_percentage_points": 0.5187361165468222,
+      "ci_high_percentage_points": 0.7688167893127956,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "health",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.6080823306526469,
+      "ci_low_percentage_points": 0.46972045098577114,
+      "ci_high_percentage_points": 0.7519614254569785,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "infra",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.24742816393625683,
+      "ci_low_percentage_points": 0.10727217154551043,
+      "ci_high_percentage_points": 0.386645184345841,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "loc",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.18127545082955315,
+      "ci_low_percentage_points": 0.024052993085695615,
+      "ci_high_percentage_points": 0.3385485443425912,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "org",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.034173350332365265,
+      "ci_low_percentage_points": 0.010091266187713905,
+      "ci_high_percentage_points": 0.05981449657131133,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "people",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.03801047003113185,
+      "ci_low_percentage_points": -0.044972080620428276,
+      "ci_high_percentage_points": 0.11985105793679134,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "sci",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 1.1076345950042017,
+      "ci_low_percentage_points": 0.9634989569985831,
+      "ci_high_percentage_points": 1.2526695000208485,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "sport",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": -0.00014630515130084897,
+      "ci_low_percentage_points": -0.052342373334695866,
+      "ci_high_percentage_points": 0.05271412720694687,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "tax",
+      "reference": "baseline",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.03509667143055977,
+      "ci_low_percentage_points": -0.04668932152009277,
+      "ci_high_percentage_points": 0.1175669809875565,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "art",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.14262834547841396,
+      "ci_low_percentage_points": 0.07242114511318502,
+      "ci_high_percentage_points": 0.21301421250461272,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "award",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": -0.01306438663691956,
+      "ci_low_percentage_points": -0.08198556555862176,
+      "ci_high_percentage_points": 0.05622333097739324,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "edu",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.6332399495596683,
+      "ci_low_percentage_points": 0.5128502940015272,
+      "ci_high_percentage_points": 0.7568877487306844,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "health",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.6063286990515367,
+      "ci_low_percentage_points": 0.4676160001037379,
+      "ci_high_percentage_points": 0.7509766741312578,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "infra",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.16195006071727688,
+      "ci_low_percentage_points": 0.021898637145938985,
+      "ci_high_percentage_points": 0.29903850752652317,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "loc",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.1295854075827715,
+      "ci_low_percentage_points": -0.03107789213006993,
+      "ci_high_percentage_points": 0.28876632057372076,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "org",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.021998581657844907,
+      "ci_low_percentage_points": -0.004692202880943249,
+      "ci_high_percentage_points": 0.05021101672341761,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "people",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.06630000050905575,
+      "ci_low_percentage_points": -0.012958345563951769,
+      "ci_high_percentage_points": 0.14497631789330653,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "sci",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 1.0383354183447584,
+      "ci_low_percentage_points": 0.8992490111561048,
+      "ci_high_percentage_points": 1.1798992869987865,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "sport",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": -0.004650048972367168,
+      "ci_low_percentage_points": -0.05694598072994428,
+      "ci_high_percentage_points": 0.04670435394740549,
+      "resamples": 10000,
+      "seed": 20260928
+    },
+    {
+      "domain": "tax",
+      "reference": "matched_random",
+      "metric": "APC-MRR",
+      "difference_percentage_points": 0.04979388218764124,
+      "ci_low_percentage_points": -0.022365734454183075,
+      "ci_high_percentage_points": 0.12347609918819571,
+      "resamples": 10000,
+      "seed": 20260928
+    }
+  ],
+  "schema_version": 1,
+  "phase": "main-test",
+  "provenance": {
+    "created_at": "2026-10-01T19:03:38.341264+00:00",
+    "research_commit": "487802e531e61edc3e8c6600701b8dc28633a9c1",
+    "research_worktree_dirty": false,
+    "official_upstream_commit": "6d5a9033353c516a9220d78591f2c666f19ee0b1",
+    "command": [
+      "/root/hyperrag_pcneg/work/HyperRAG_official/research/path_consistent_negative_learning/scripts/aggregate_retriever_results.py",
+      "--phase",
+      "main-test",
+      "--run-root",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free",
+      "--domains",
+      "art",
+      "award",
+      "edu",
+      "health",
+      "infra",
+      "loc",
+      "org",
+      "people",
+      "sci",
+      "sport",
+      "tax",
+      "--output",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/aggregates/tuned_main_test.json",
+      "--csv-output",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/aggregates/tuned_main_test.csv"
+    ],
+    "python": "3.11.16 (main, Aug 27 2026, 14:44:21) [GCC 14.3.0]",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.35",
+    "torch": "2.3.0+cu121",
+    "cuda_available": true,
+    "cuda_visible_devices": null,
+    "gpu_name": "NVIDIA GeForce RTX 3090"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "analysis_split": "valid",
+  "metric": "APC-MRR",
+  "aggregation": "equal-domain macro after five-seed domain means",
+  "rows": [
+    {
+      "lambda": 0.0,
+      "equal_domain_macro_apc_mrr": 0.06188283264040117,
+      "per_domain_apc_mrr": {
+        "art": 0.035989673238063555,
+        "award": 0.05237664466644611,
+        "edu": 0.07479763924584573,
+        "health": 0.07607347477203087,
+        "infra": 0.12806361363648952,
+        "loc": 0.06485260433649709,
+        "org": 0.007894751139005122,
+        "people": 0.10460666481031167,
+        "sci": 0.0673538665083521,
+        "sport": 0.022576929464656757,
+        "tax": 0.04612529722671434
+      }
+    },
+    {
+      "lambda": 0.1,
+      "equal_domain_macro_apc_mrr": 0.06092632627127939,
+      "per_domain_apc_mrr": {
+        "art": 0.035630546266420246,
+        "award": 0.05316664427051261,
+        "edu": 0.07302217590578129,
+        "health": 0.07493129577848262,
+        "infra": 0.12694456691743264,
+        "loc": 0.06383164163225324,
+        "org": 0.008357959208082627,
+        "people": 0.10427394506028816,
+        "sci": 0.06218018428627505,
+        "sport": 0.02283405835750943,
+        "tax": 0.04501657130103542
+      }
+    },
+    {
+      "lambda": 0.25,
+      "equal_domain_macro_apc_mrr": 0.06021416811193277,
+      "per_domain_apc_mrr": {
+        "art": 0.035371199727126455,
+        "award": 0.05332465299819846,
+        "edu": 0.07114342826361583,
+        "health": 0.07285210111952675,
+        "infra": 0.1259696679188267,
+        "loc": 0.06312357572245905,
+        "org": 0.00867392064401752,
+        "people": 0.10423402629165932,
+        "sci": 0.060032318273789055,
+        "sport": 0.023053329544776284,
+        "tax": 0.044577628727265076
+      }
+    },
+    {
+      "lambda": 0.5,
+      "equal_domain_macro_apc_mrr": 0.05944310026078505,
+      "per_domain_apc_mrr": {
+        "art": 0.03462956335511573,
+        "award": 0.053589578513868884,
+        "edu": 0.0692498480937209,
+        "health": 0.07071798270790468,
+        "infra": 0.12551338304097198,
+        "loc": 0.06319941008571747,
+        "org": 0.008770734998354669,
+        "people": 0.1034117625759485,
+        "sci": 0.05821991846575523,
+        "sport": 0.023339525945210333,
+        "tax": 0.04323239508606723
+      }
+    },
+    {
+      "lambda": 0.75,
+      "equal_domain_macro_apc_mrr": 0.05908426110391273,
+      "per_domain_apc_mrr": {
+        "art": 0.034199731200070235,
+        "award": 0.053518270152443835,
+        "edu": 0.06913098173152979,
+        "health": 0.0715444733468886,
+        "infra": 0.12477104326895327,
+        "loc": 0.06266935794031102,
+        "org": 0.008779493136249004,
+        "people": 0.10319417151998289,
+        "sci": 0.056677326929447255,
+        "sport": 0.02310690966959858,
+        "tax": 0.042335113247565545
+      }
+    },
+    {
+      "lambda": 1.0,
+      "equal_domain_macro_apc_mrr": 0.05880777040299194,
+      "per_domain_apc_mrr": {
+        "art": 0.03434894832639155,
+        "award": 0.053549720903258866,
+        "edu": 0.06797715664472134,
+        "health": 0.07005805535821354,
+        "infra": 0.12467064731883515,
+        "loc": 0.06242397473516927,
+        "org": 0.008747279061128583,
+        "people": 0.10278916710475919,
+        "sci": 0.05692553057649441,
+        "sport": 0.023099656773031014,
+        "tax": 0.04229533763090847
+      }
+    }
+  ],
+  "best_global_lambda": 0.0,
+  "test_metrics_accessed": false,
+  "provenance": {
+    "created_at": "2026-10-01T15:25:30.998734+00:00",
+    "research_commit": "487802e531e61edc3e8c6600701b8dc28633a9c1",
+    "research_worktree_dirty": false,
+    "official_upstream_commit": "6d5a9033353c516a9220d78591f2c666f19ee0b1",
+    "command": [
+      "/root/hyperrag_pcneg/work/HyperRAG_official/research/path_consistent_negative_learning/scripts/analyze_final_revision.py",
+      "lambda-validation",
+      "--selection",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/selection/lambdas.json",
+      "--output-dir",
+      "/root/hyperrag_pcneg/runs/final_revision_answer_free/final_revision/lambda_validation"
+    ],
+    "python": "3.11.16 (main, Aug 27 2026, 14:44:21) [GCC 14.3.0]",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.35",
+    "torch": "2.3.0+cu121",
+    "cuda_available": true,
+    "cuda_visible_devices": null,
+    "gpu_name": "NVIDIA GeForce RTX 3090"
+  }
+}
