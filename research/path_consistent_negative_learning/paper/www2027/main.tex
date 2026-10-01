@@ -9,6 +9,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{microtype}
+\usepackage{float}
 
 \settopmatter{printacmref=true}
 \acmConference[WWW '27]{The ACM Web Conference 2027}{May 10--14, 2027}{Dublin, Ireland}
@@ -154,7 +155,7 @@ $\lambda=1$ 与原 mean BCE 的数值和梯度严格等价；$\lambda=0$ 与删�
 
 冻结网格的领域级选择见附录。另行进行的验证集领域等权分析在不读取 test 的前提下选择全局 $\lambda=\GlobalValidationLambda$。由于早期正式 test 已在该简化问题提出前访问，固定 $\lambda=0$ 的 test 比较被明确标记为\textbf{事后简化分析}，不伪装成原始确认性协议。它同时回答一个方法设计问题：固定屏蔽是否足以替代按领域校准的软抑制。
 
-固定屏蔽与原领域校准策略的 APC-MRR 差值为 \FixedTunedMRRDelta{} 个百分点，\mbox{95\% CI} [\FixedTunedMRRCILow, \FixedTunedMRRCIHigh]；Reach@10 差值为 \FixedTunedReachTenDelta{} 个百分点，\mbox{95\% CI} [\FixedTunedReachTenCILow, \FixedTunedReachTenCIHigh]。依据验证集全局最优与该差异区间，最终方法采用无领域超参数的路径一致负例屏蔽；完整校准网格保留在附录作为分析而非主方法。
+固定屏蔽与原领域校准策略的 APC-MRR 差值为 \FixedTunedMRRDelta{} 个百分点，\mbox{95\% CI} [\FixedTunedMRRCILow, \FixedTunedMRRCIHigh]；Reach@10 差值为 \FixedTunedReachTenDelta{} 个百分点，\mbox{95\% CI} [\FixedTunedReachTenCILow, \FixedTunedReachTenCIHigh]。两个区间均低于零，因此数据不支持二者统计等价；但绝对差异很小，而固定屏蔽仍保留了相对基线的大部分收益。结合验证集的全局最优为零，最终方法采用无领域超参数的路径一致负例屏蔽；完整校准网格保留在附录作为性能上界分析，而不是主方法。
 
 \subsection{RQ2：主检索结果}
 
@@ -202,7 +203,7 @@ $\lambda=1$ 与原 mean BCE 的数值和梯度严格等价；$\lambda=0$ 与删�
 
 \section{逐领域冲突发生率}
 
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \caption{实际采样负例的逐领域路径一致冲突统计。}
   \label{tab:prevalence}
@@ -217,10 +218,11 @@ $\lambda=1$ 与原 mean BCE 的数值和梯度严格等价；$\lambda=0$ 与删�
   \label{tab:lambda}
   \resizebox{0.84\textwidth}{!}{\input{generated/tables/lambda_validation.tex}}
 \end{table*}
+\clearpage
 
 \section{Candidate Oracle 明细}
 
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \caption{固定候选池中的完整答案路径上限。宏平均对领域等权。}
   \label{tab:oracle}
@@ -229,7 +231,7 @@ $\lambda=1$ 与原 mean BCE 的数值和梯度严格等价；$\lambda=0$ 与删�
 
 \section{Reach@5 补充结果}
 
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \caption{固定屏蔽比较的 Reach@5（\%）；该指标未用于方法选择。}
   \label{tab:reach-five}

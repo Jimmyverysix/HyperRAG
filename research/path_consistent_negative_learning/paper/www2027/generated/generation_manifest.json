@@ -2,18 +2,24 @@
   "schema_version": 1,
   "scope": "formal_zero_llm_retriever_only",
   "sources": {
-    "preflight": "research/path_consistent_negative_learning/artifacts/retriever_only/preflight/data_validation.json",
-    "selection": "research/path_consistent_negative_learning/artifacts/retriever_only/selection/lambdas.json",
-    "prevalence": "research/path_consistent_negative_learning/artifacts/retriever_only/aggregates/prevalence.json",
-    "main_test": "research/path_consistent_negative_learning/artifacts/retriever_only/aggregates/main_test.json",
-    "sensitivity": "research/path_consistent_negative_learning/artifacts/retriever_only/aggregates/sensitivity.json"
+    "preflight": "research/path_consistent_negative_learning/artifacts/final_revision/preflight/data_validation.json",
+    "selection": "research/path_consistent_negative_learning/artifacts/final_revision/selection/lambdas.json",
+    "prevalence": "research/path_consistent_negative_learning/artifacts/final_revision/aggregates/prevalence.json",
+    "main_test": "research/path_consistent_negative_learning/artifacts/final_revision/fixed_masking/final_main_results.json",
+    "fixed_masking": "research/path_consistent_negative_learning/artifacts/final_revision/fixed_masking/fixed_masking.json",
+    "candidate_oracle": "research/path_consistent_negative_learning/artifacts/final_revision/candidate_oracle/candidate_oracle.json",
+    "lambda_validation": "research/path_consistent_negative_learning/artifacts/final_revision/lambda_validation/lambda_validation.json",
+    "beam_selection": "research/path_consistent_negative_learning/artifacts/retriever_only/p0/beam_selection.json",
+    "config": "research/path_consistent_negative_learning/configs/retriever_only/wiki_main.json"
   },
   "outputs": [
     "results.tex",
     "tables/main_retriever.tex",
     "tables/prevalence.tex",
     "tables/lambda_validation.tex",
-    "tables/path_sensitivity.tex"
+    "tables/candidate_oracle.tex",
+    "tables/reach_five.tex",
+    "tables/per_seed.tex"
   ],
   "dataset_count": 11
 }

@@ -16,6 +16,7 @@
 - 修正版服务器 run root：`/root/hyperrag_pcneg/runs/final_revision_answer_free`。
 - 冻结上游 HyperRAG 提交：`6d5a9033353c516a9220d78591f2c666f19ee0b1`。
 - 修正版聚合目录：`research/path_consistent_negative_learning/artifacts/final_revision/`。
+- 修正版正式结果提交：`f73b6e1`。
 
 每个训练/评价 report 保存研究提交、dirty state、上游提交、完整命令、环境、GPU、领域、split、seed、方法、lambda、checkpoint 与逐问题指标。修正版没有写入或覆盖历史 run root。
 
@@ -114,3 +115,16 @@ RR_q = 0             if P_q is empty
 - 固定 masking test：明确标记为事后简化分析。
 - 历史路径选择敏感性产物：保留只读，但不进入论文、附录或新实验计划。
 - 第二数据集：本轮不追加。当前正确性问题已通过重跑处理，新增不兼容 benchmark 会引入新的监督定义，不能替代本轮审计。
+
+## 7. 最终运行完整性对账
+
+修正版流水线的正式产物数量与冻结协议完全一致：
+
+- validation sweep：`11 领域 × 6 个 lambda × 5 个种子 = 330` 个完整 report；
+- 主 test：`11 领域 × 3 个策略 × 5 个种子 = 165` 个完整 report；
+- 事后固定 masking：仅对原选择非零 lambda 的 award、org、sport 重跑，`3 领域 × 2 个策略 × 5 个种子 = 30` 个完整 report；
+- Candidate Oracle：覆盖 11 个领域的 88,073 个 test 查询；
+- 最终选择文件仍记录 `test_metrics_accessed=false`；
+- 训练、评价与聚合队列没有非空 stderr 或失败标记。
+
+最终四类 CSV 由同一聚合链生成：`final_main_results.csv`、`lambda_validation.csv`、`fixed_masking_results.csv` 和 `candidate_oracle.csv`。论文表格与宏不手工录入数字，只从对应 JSON/CSV 再生。
