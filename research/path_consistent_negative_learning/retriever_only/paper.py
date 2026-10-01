@@ -74,6 +74,8 @@ def _macro_lines(
     fixed: Mapping[str, Any],
     oracle: Mapping[str, Any],
     lambda_validation: Mapping[str, Any],
+    beam_selection: Mapping[str, Any],
+    config: Mapping[str, Any],
 ) -> list[str]:
     aligned, eligible = _preflight_counts(preflight)
     masking, soft, baseline = _selection_counts(selection)
@@ -112,6 +114,32 @@ def _macro_lines(
             float(oracle["micro_candidate_oracle_reach"])
         ),
         "CandidateOracleQueryCount": _count(int(oracle["overall_query_count"])),
+        "SelectedBeamWidth": int(beam_selection["selected_beam_width"]),
+        "BeamTenCoverage": _percent(
+            float(beam_selection["candidates"]["10"]["path_reachable_query_rate"])
+        ),
+        "BeamThirtyTwoCoverage": _percent(
+            float(beam_selection["candidates"]["32"]["path_reachable_query_rate"])
+        ),
+        "BeamTenReachableCount": _count(
+            int(beam_selection["candidates"]["10"]["path_reachable_query_count"])
+        ),
+        "BeamThirtyTwoReachableCount": _count(
+            int(beam_selection["candidates"]["32"]["path_reachable_query_count"])
+        ),
+        "BeamValidationQueryCount": _count(
+            int(beam_selection["candidates"]["32"]["query_count"])
+        ),
+        "MaximumLogicalHops": int(config["retrieval"]["maximum_logical_hops"]),
+        "DDEDimension": int(config["model"]["dde_dimension"]),
+        "TrainingBatchSize": int(config["training"]["batch_size"]),
+        "MaximumEpochs": int(config["training"]["maximum_epochs"]),
+        "EarlyStoppingPatience": int(config["training"]["patience"]),
+        "TrainingSeedCount": len(config["training"]["seeds"]),
+        "BootstrapResamples": _count(
+            int(config["statistics"]["paired_bootstrap_resamples"])
+        ),
+        "BootstrapSeed": int(config["statistics"]["paired_bootstrap_seed"]),
     }
     for method, prefix in (
         ("baseline", "StrategyOne"),
@@ -221,6 +249,31 @@ def _prevalence_table(prevalence: Mapping[str, Any]) -> list[str]:
     return lines
 
 
+def _reach_five_table(main: Mapping[str, Any]) -> list[str]:
+    lines = [
+        r"\begin{tabular}{lrrr}",
+        r"\toprule",
+        r"领域 & 策略1 & 策略2 & 策略3 \\",
+        r"\midrule",
+    ]
+    for row in main["domains"]:
+        values = [float(row[method]["answer_reach_5"]) for method in METHODS]
+        lines.append(
+            " & ".join([_escape(row["domain"]), *_bold_best(values)]) + r" \\"
+        )
+    macro = main["equal_domain_macro"]
+    values = [float(macro[method]["answer_reach_5"]) for method in METHODS]
+    lines.extend(
+        (
+            r"\midrule",
+            " & ".join(["领域等权宏平均", *_bold_best(values)]) + r" \\",
+            r"\bottomrule",
+            r"\end{tabular}",
+        )
+    )
+    return lines
+
+
 def _lambda_table(selection: Mapping[str, Any]) -> list[str]:
     grid = [float(value) for value in selection["lambda_grid"]]
     lines = [
@@ -290,6 +343,8 @@ def generate_paper_artifacts(
     fixed_path: Path,
     oracle_path: Path,
     lambda_validation_path: Path,
+    beam_selection_path: Path,
+    config_path: Path,
     output_dir: Path,
 ) -> dict[str, str]:
     """Write every numeric LaTeX artifact consumed by the paper."""
@@ -301,6 +356,8 @@ def generate_paper_artifacts(
     fixed = _load(fixed_path)
     oracle = _load(oracle_path)
     lambda_validation = _load(lambda_validation_path)
+    beam_selection = _load(beam_selection_path)
+    config = _load(config_path)
     output_dir.mkdir(parents=True, exist_ok=True)
     tables = output_dir / "tables"
     tables.mkdir(parents=True, exist_ok=True)
@@ -310,6 +367,7 @@ def generate_paper_artifacts(
         "prevalence": tables / "prevalence.tex",
         "lambda": tables / "lambda_validation.tex",
         "oracle": tables / "candidate_oracle.tex",
+        "reach_five": tables / "reach_five.tex",
         "manifest": output_dir / "generation_manifest.json",
     }
     contents = {
@@ -321,11 +379,14 @@ def generate_paper_artifacts(
             fixed,
             oracle,
             lambda_validation,
+            beam_selection,
+            config,
         ),
         "main": _main_table(main),
         "prevalence": _prevalence_table(prevalence),
         "lambda": _lambda_table(selection),
         "oracle": _oracle_table(oracle),
+        "reach_five": _reach_five_table(main),
     }
     for name, path in outputs.items():
         if name == "manifest":
@@ -342,6 +403,8 @@ def generate_paper_artifacts(
             "fixed_masking": fixed_path.as_posix(),
             "candidate_oracle": oracle_path.as_posix(),
             "lambda_validation": lambda_validation_path.as_posix(),
+            "beam_selection": beam_selection_path.as_posix(),
+            "config": config_path.as_posix(),
         },
         "outputs": [
             path.relative_to(output_dir).as_posix()

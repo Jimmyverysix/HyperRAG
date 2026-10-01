@@ -17,173 +17,177 @@
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \pagestyle{plain}
 
-\graphicspath{{../../artifacts/retriever_only/figures/}}
+\graphicspath{{../../artifacts/final_revision/figures/}}
 \IfFileExists{generated/results.tex}{
   \input{generated/results.tex}
 }{
-  \PackageError{path-supervision}{缺少正式实验结果}{请先运行 Retriever-only 聚合与论文产物生成命令；禁止使用占位数字。}
+  \PackageError{path-supervision}{缺少正式实验结果}{请先生成 final-revision 论文产物；禁止使用占位数字。}
 }
 
 \newtheorem{definition}{定义}
 
-\title{未被选中的路径并非都是负例：重新审视超图检索中的路径监督}
+\title{未被选中的路径并非都是负例：超图检索中的路径一致负监督冲突}
 \ccsdesc[500]{Information systems~Retrieval models and ranking}
 \ccsdesc[300]{Information systems~Question answering}
 \keywords{超图检索，路径监督，负采样，弱监督，检索增强生成}
 
 \begin{document}
+
+\begin{abstract}
+图与超图检索器通常缺少逐步证据标签，因而从主题实体到答案实体选择一条最短路径作为正监督，并把未被选中的候选采样为负例。然而，未被选中并不等于安全负例：候选可能仍位于另一条完整最短答案路径上。本文将同时具有负标签与完整最短答案路径成员资格的实际采样候选定义为路径一致负例。对 WikiTopics 的 \DatasetCount{} 个领域审计表明，这类候选占全部采样负例的 \ConflictRate\%，并影响 \AffectedQueryRate\% 的训练问题。我们提出不改标签、不增参数且不改变推理的最小修正：仅屏蔽这些候选的负损失。验证集领域等权分析选择全局 $\lambda=\GlobalValidationLambda$；随后明确标记的事后简化分析显示，相对原基线，路径一致屏蔽将 APC-MRR 和 Reach@10 分别改变 \OursBaselineMRRDelta{} 与 \OursBaselineReachTenDelta{} 个百分点；相对等量随机屏蔽，对应差值为 \OursRandomMRRDelta{} 与 \OursRandomReachTenDelta{} 个百分点。该随机对照表明，关键是屏蔽哪些负例，而非仅减少多少负监督。本文结论限于结构性质和 Retriever-only 设置，不把路径一致性解释为语义真值，也不声称复现端到端生成质量。
+\end{abstract}
+
 \maketitle
 
 \section{引言}
 
-检索增强生成（retrieval-augmented generation, RAG）把外部证据检索与生成模型结合，使知识更新、证据追踪和长尾事实访问不再完全依赖参数记忆\cite{lewis2020rag}。当知识以图或超图组织时，检索器还需要从巨大的结构空间中找出能够连接问题实体与答案实体的紧凑证据子图\cite{sun2019pullnet,zhang2022subgraph,he2024gretriever,lien2026hyperrag}。然而，基准通常只给出问题和最终答案，而不提供逐步检索标签。一个常用的弱监督做法是：为每个可达的主题实体---答案实体对选择一条最短路径，将所选路径上的转移作为正例，再从路径引导的候选子图中采样负例。
+检索增强生成将外部证据检索与生成模型结合，使知识访问不再完全依赖参数记忆\cite{lewis2020rag}。当证据以图或超图组织时，检索器还需从庞大的结构空间中找出连接问题实体与答案实体的紧凑子图\cite{sun2019pullnet,zhang2022subgraph,he2024gretriever,lien2026hyperrag}。然而，多跳问答基准通常只提供最终答案，缺少逐步检索标签。常见做法是从主题实体到答案实体选择一条最短路径作为正监督，再从路径引导的候选子图中采样负例。
 
-这一过程把``未被所选路径包含''近似成``与答案无关''。问题在于最短路径可能不唯一。某个未进入所选路径的候选转移，仍可能位于另一条等长的完整最短答案路径上；如果它同时被负采样器选中，训练目标便会对同一结构事实给出相冲突的信号：它既具有完整最短答案路径成员资格，又被当作确定负例压低。本文称这类实际采样到的候选为\emph{路径一致负例（Path-consistent Negative）}。这是结构性质，而非语义判断：本文不声称它一定是语义正例或人工确认的错误负例。
+这一做法隐含了``未被选中即为负例''。当多个完整最短答案路径共享相同长度时，某条未被选路径上的转移仍可能被负采样器选中。于是同一个候选一方面属于完整最短答案路径，另一方面又被作为确定负例压低。我们称其为\emph{路径一致负例（Path-consistent Negative）}。该名称只描述结构成员资格：它不是语义正例、人工确认的错误负例，也不改变 benchmark 标签。
 
-我们研究一个最小干预问题：在候选、文本与结构特征、模型架构、优化器和推理过程全部保持不变时，是否应降低这类冲突负例的监督强度？我们只引入一个领域级权重 $\lambda\in[0,1]$。$\lambda=1.00$ 精确恢复原训练目标，$\lambda=0.00$ 屏蔽冲突负例，中间值保留较弱的负向约束。每个领域仅用验证集 Answer-Path MRR 从预先冻结的网格中选择 $\lambda_D^*$；测试集在选择完成前不可访问。
+这不是仅存在于理论候选空间的边缘情形。对正式训练输入的审计发现，\SampledNegativeCount{} 个实际采样负例中有 \PathConsistentNegativeCount{} 个满足完整路径条件；按领域等权，\AffectedQueryRate\% 的问题至少在一个训练种子中受到影响。由此产生一个直接问题：若其他候选、特征、模型和推理保持不变，只去除这部分结构冲突的负监督，能否改善检索？
 
-实验完全隔离检索器，不调用任何生成式大语言模型，也不进行人工标注或 LLM Judge。我们复用 HyperRAG 官方 HyperRetriever 的 GTE、DDE 和两层 MLP，在由 WikiTopics 结构化数据确定性构建的超图上开展实验。该设置不是对端到端 HyperRAG 问答质量的完整复现，而是对其检索训练监督的受控研究。
+本文采用最小干预。最终方法\emph{路径一致负例屏蔽}只把这类候选的损失权重置零。为排除``少训练了一些负例''这一解释，我们构造逐问题等量随机屏蔽：它从同一批采样负例中均匀选择恰好 $|D_q|$ 个候选，但不查看路径身份。正式实验隔离 HyperRetriever 的 GTE 文本表示、DDE 结构编码和两层 MLP，不调用生成式模型、人工标注或 LLM Judge。
 
-本文贡献如下：
+本文贡献不超过三点：
 
 \begin{itemize}
-  \item 给出只作用于实际采样负例的完整主题---答案最短路径判据，并在 WikiTopics 的 \DatasetCount{} 个领域中量化这种监督冲突；
-  \item 提出不增加模型参数、不改变候选和推理过程的最小降权目标，并让验证集实验决定最终采用硬屏蔽还是软加权；
-  \item 通过等量随机降权对照和最短路径选择敏感性实验，分别检验收益是否来自路径定位信息，以及方法是否降低了单路径监督的任意性。
+  \item 形式化单路径弱监督中的路径一致负例，并量化其真实进入 Retriever 损失的规模；
+  \item 提出不增参数、不改标签和推理的路径一致负例屏蔽，将修正严格限制在已采样的结构冲突候选；
+  \item 通过逐问题等量随机屏蔽对照，区分路径定位信息与单纯减少负监督，并用固定候选池上限诊断候选生成与排序误差。
 \end{itemize}
 
 \section{相关工作}
 
-\subsection{RAG 与图结构检索}
+\paragraph{图结构检索。}
+稠密检索与 RAG 奠定了可学习检索器访问外部证据的基础\cite{karpukhin2020dpr,lewis2020rag}。PullNet 迭代扩展问题相关子图\cite{sun2019pullnet}，可微子图检索研究答案覆盖与噪声之间的权衡\cite{zhang2022subgraph}，G-Retriever 和 SubgraphRAG 分别从文本属性图和知识图谱 RAG 角度研究结构证据选择\cite{he2024gretriever,li2025subgraphrag}。HyperRAG 以超图保留高元事实，并从答案路径派生 HyperRetriever 标签\cite{lien2026hyperrag}。本文不替换检索骨干，而是审查路径派生监督本身。
 
-稠密检索和 RAG 奠定了以可学习检索器访问外部证据的基础\cite{karpukhin2020dpr,lewis2020rag}。面向知识图谱问答，PullNet 迭代扩展与问题相关的子图\cite{sun2019pullnet}，可微子图检索进一步研究答案覆盖与噪声控制之间的关系\cite{zhang2022subgraph}。G-Retriever 将文本属性图上的证据选择表述为结构优化问题\cite{he2024gretriever}，SubgraphRAG 重新考察图结构与语言模型在知识图谱 RAG 中的分工\cite{li2025subgraphrag}。HyperRAG 使用超图保留不宜拆成独立二元边的高元事实，并以路径派生标签训练 HyperRetriever\cite{lien2026hyperrag}。本文不增加新的检索骨干，而是研究这种路径派生监督本身。
+\paragraph{不完整监督与负例。}
+正例---未标注学习指出，未观察到正标签不自动构成可靠负标签\cite{elkan2008pu,kiryo2017nnpu}；去偏对比学习也揭示了假负例对表示目标的影响\cite{chuang2020debiased}。与估计语义真值不同，我们只使用可复算的完整最短路径条件定位监督冲突，不把这些候选重新标为正例。
 
-\subsection{不完整监督与困难负例}
+\paragraph{路径派生监督。}
+已有工作利用答案可达路径构造检索监督或学习信息量更高的路径\cite{zhang2022subgraph,cattaneo2025groundtruth,gao2026pathise}。我们的关注点更窄：单路径监督会把另一条完整最短答案路径上的实际采样转移当作负例。方法既不枚举所有路径，也不扩大正例集合，而是只屏蔽进入损失的冲突负项。
 
-正例---未标注学习表明，未观察到正标签并不自动构成可靠负标签\cite{elkan2008pu,kiryo2017nnpu}；去偏对比学习也揭示了假负例对表示目标的扭曲\cite{chuang2020debiased}。超边预测中的困难负采样同样说明负例构造会改变训练信号\cite{deng2026hns}。这些工作通常估计未标注样本的语义状态。本文采用更窄的立场：只识别同时拥有负标签和完整最短答案路径成员资格的候选，并校准其损失强度，不把结构可达性改写成语义正标签。
-
-\subsection{路径派生监督}
-
-已有研究从答案可达路径构造检索监督，或显式学习信息量更高的路径\cite{zhang2022subgraph,cattaneo2025groundtruth,gao2026pathise}。本文关注此前较少被隔离的选择效应：当训练过程只选择一条最短路径时，其他等长最短路径上的转移可能被负采样。我们不枚举所有路径，也不把所有最短路径转移一律标正，而是仅对实际进入损失的冲突负例实施最小干预。
-
-\section{路径监督冲突与最小干预}
+\section{路径一致负例屏蔽}
 
 \subsection{完整路径判据}
 
-对问题 $q$，令 $S_q$ 和 $A_q$ 分别为主题实体集合与正确答案实体集合。确定性超图以无向 incidence graph $G_I$ 表示：实体节点与事实节点相连；一个候选转移 $t=(v,f,u)$ 表示从实体 $v$ 经事实 $f$ 到实体 $u$，消耗两条 incidence edge。令 $d_I(x,y)$ 为 $G_I$ 上的无权最短距离。
+对问题 $q$，令 $S_q$ 和 $A_q$ 分别为主题实体集合与正确答案实体集合。确定性超图以 incidence graph $G_I$ 表示；候选转移 $t=(v,f,u)$ 表示从实体 $v$ 经事实节点 $f$ 到实体 $u$，消耗两条 incidence edge。令 $d_I(x,y)$ 为无权最短距离。
 
 \begin{definition}[路径一致负例]
-设 $N_q$ 是原训练流程为问题 $q$ 实际采样的负例集合。若 $t=(v,f,u)\in N_q$，且存在 $(s,a)\in S_q\times A_q$ 满足
+设 $N_q$ 为原训练流程实际采样的负例集合。若 $t=(v,f,u)\in N_q$，且存在 $(s,a)\in S_q\times A_q$ 满足
 \begin{equation}
   d_I(s,v)+2+d_I(u,a)=d_I(s,a),
   \label{eq:path-consistency}
 \end{equation}
-则称 $t$ 为路径一致负例，并记所有此类转移构成 $D_q\subseteq N_q$。
+则称 $t$ 为路径一致负例，并记所有此类候选构成 $D_q\subseteq N_q$。
 \end{definition}
 
-式~\eqref{eq:path-consistency} 检查的是完整主题---答案最短路径，而不是局部朝答案靠近。仅有 $d_I(u,a)<d_I(v,a)$ 并不充分，因为到达 $v$ 的前缀可能已经绕远。实现中先从主题实体计算有界最短路径树，再在最短路径有向无环结构上判断候选；判据只扫描已经采样的负例，不枚举组合候选空间。
+式~\eqref{eq:path-consistency} 检查完整主题---答案最短路径，而非局部朝答案靠近。实现先计算有界最短路径 DAG，再扫描已经采样的负例；它不枚举组合候选空间。
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{supervision_conflict.pdf}
-  \Description{从发布训练数据自动抽取的真实路径监督冲突。上方是被选为正监督的最短路径，下方是另一条等长最短路径，其中一段被原负采样器采为负例。}
-  \caption{真实训练样例中的监督冲突。橙色转移没有进入被选路径，却属于另一条完整等长最短答案路径。本文保留其原负标签，只调整其损失权重。}
-  \label{fig:conflict-case}
+  \Description{真实训练数据中的两条完整最短答案路径，其中未被选路径的一段被采样为负例。}
+  \caption{真实训练样例中的监督冲突。橙色转移未进入被选路径，却属于另一条完整最短答案路径；我们保留其标签，只屏蔽其负损失。}
+  \label{fig:case}
 \end{figure}
 
-图~\ref{fig:conflict-case} 不是人工构造的示意图，而是按发布顺序从正式训练候选中确定性抽取的首个冲突样例。问题询问``哪些作曲家与 Giancarlo Santi 从事同一类型''，其中一个正确答案是 Ennio Morricone。原流程选中的最短路径经由电影 \emph{The Return of Clint the Stranger} 到达该答案；另一条等长最短路径先由 Giancarlo Santi 到达类型 \emph{Spaghetti Western}，再经同一电影到达 Ennio Morricone。前一段 ``Giancarlo Santi $\rightarrow$ 事实节点 $\rightarrow$ Spaghetti Western'' 被原负采样器实际选中，却满足 $0+2+2=4$ 的完整距离等式。该案例说明冲突来自训练数据的真实交互，而非仅在理论候选空间中存在；它仍不构成语义正标签的人工判定。
+图~\ref{fig:case} 由正式训练候选确定性抽取，而非人工构造。它展示被选为正监督的路径与另一条完整最短答案路径；后一条路径中的橙色转移被原采样器实际标为负例。这个案例说明我们处理的是训练流程产生的真实冲突，而非把任意可达候选扩张为正例。
 
-\subsection{加权目标与三个策略}
+\subsection{训练目标与三个策略}
 
-对训练候选 $i$ 的原二元标签 $y_i\in\{0,1\}$ 和模型 logit $z_i$，定义
+对候选 $i$ 的标签 $y_i$、logit $z_i$，令
 \begin{equation}
   w_i(\lambda)=
   \begin{cases}
     \lambda, & i\in D_q,\\
     1, & \text{其他候选},
   \end{cases}
-  \qquad \lambda\in[0,1].
 \end{equation}
-一个 batch $B$ 的损失为
+并以权重和归一化逐样本 BCE：
 \begin{equation}
   \mathcal L_B(\lambda)=
-  \frac{\sum_{i\in B}w_i(\lambda)\,
-  \operatorname{BCEWithLogits}(z_i,y_i)}
+  \frac{\sum_{i\in B}w_i(\lambda)\operatorname{BCEWithLogits}(z_i,y_i)}
   {\sum_{i\in B}w_i(\lambda)}.
-  \label{eq:weighted-loss}
+  \label{eq:loss}
 \end{equation}
-分母使用权重和，因此 $\lambda=0.00$ 与删除 $D_q$ 后对剩余样本求均值严格等价，$\lambda=1.00$ 则与原 mean BCE 的数值和梯度严格等价。当 $\lambda=0.00$ 且一个随机 batch 全部来自 $D_q$ 时，该 batch 不含有效监督；实现会跳过其反向传播和优化器更新，避免 Adam 动量在零梯度下仍改变参数。
+$\lambda=1$ 与原 mean BCE 的数值和梯度严格等价；$\lambda=0$ 与删除 $D_q$ 后在剩余样本上求均值严格等价。若整个 batch 均被屏蔽，则跳过该步反向传播和 Adam 更新。
 
-正式主实验只比较三种策略。\textbf{策略1}是原始基线，即所有候选权重均为 $1.00$。\textbf{策略2}是匹配随机对照：对每个问题从全部已采样负例中均匀无放回选择恰好 $|D_q|$ 个，抽样不查看路径身份，并赋予与最终方法相同的权重。随机集合可能偶然与 $D_q$ 重合，因而该对照对策略3是保守的。\textbf{策略3}使用路径判据定位 $D_q$，并赋予验证集冻结的 $\lambda_D^*$。三者共享同一候选集合、特征、模型架构、初始化协议和训练配置；因此策略2专门排除``只因减少了相同数量的负监督''这一解释。
+主文只比较三个策略。\textbf{策略1}保留所有原负监督。\textbf{策略2}对每个问题从全部已采样负例中均匀无放回屏蔽恰好 $|D_q|$ 个候选，不读取路径身份。\textbf{策略3}只屏蔽 $D_q$。三者共享候选池、GTE、DDE、MLP、优化器、种子、早停和推理候选，因此策略2专门检验收益来自``屏蔽哪些负例''还是``屏蔽多少负例''。
 
-每个领域从固定网格
-$\{0.00,0.10,0.25,0.50,0.75,1.00\}$
-中最大化验证集 Answer-Path MRR。若精确并列，则选择较大的 $\lambda$，优先更接近原基线。最终方法的名称和复杂度服从实验：只有中间权重表现出稳定额外收益时才保留软加权；否则按奥卡姆剃刀采用路径一致负例屏蔽。
+\section{实验设计}
 
-\section{实验}
+\subsection{数据、图与受控检索器}
 
-\subsection{数据、图与官方检索器组件}
+我们使用 WikiTopics 的 \DatasetCount{} 个领域。主题实体直接取自结构化查询 $(e,(r_1,r_2,r_3))$ 中的 $e$；自然语言问题与结构化查询只按发布顺序和主题标签进行单调对齐，不读取答案标签。答案仅用于构造训练路径、判断式~\eqref{eq:path-consistency} 和评价。经 answer-free 对齐与图内实体条件过滤后，共有 \AlignedQueryCount{} 条对齐查询和 \EligibleQueryCount{} 条可评价查询。
 
-我们使用 WikiTopics\_QE 的 \DatasetCount{} 个领域，以及发布的自然语言问题和结构化三跳查询。主题实体直接取自结构化查询 $(e,(r_1,r_2,r_3))$ 中的 $e$，答案实体取自 benchmark ground truth；答案仅用于训练监督和评价，不进入推理候选生成或打分特征。通过冻结的 Wikidata 英文标签快照进行结构化查询与 NLG 对齐，共得到 \AlignedQueryCount{} 条对齐查询，其中 \EligibleQueryCount{} 条满足检索实验的图可达和实体映射条件。
+我们把训练图与测试推理上下文组成同一传导式检索语料，再按头实体把高元事实确定性重建为事实节点。测试问题和答案标签不参与建图；测试答案不参与候选生成、GTE 相似度、DDE、MLP 特征或分数。所有策略共享同一图。实体身份始终使用 Wikidata QID，英文标签只作为文本编码输入。
 
-我们按官方数据准备逻辑，将训练图与测试推理上下文组成传导式图，再把同一头实体的高元事实确定性重建为一个事实节点。实体身份始终使用 Wikidata QID；文本标签仅作为编码器输入，避免同名实体被错误合并。检索器复用 HyperRetriever 的本地 GTE-large-en-v1.5 表示、30 维 DDE 结构编码以及 $4126\rightarrow256\rightarrow1$ 的两层 MLP。GTE 使用最后隐层的 CLS 表示并做 $L_2$ 归一化。训练采用 Adam，学习率 $0.0001$、batch size 32、最多 50 个 epoch，并在候选级分层内部验证集上按 patience 10 早停。
+检索器复用 HyperRetriever 的本地 GTE-large-en-v1.5 表示、\DDEDimension{} 维 DDE 和两层 MLP。训练使用固定的 batch size \TrainingBatchSize、最多 \MaximumEpochs{} 个 epoch，并以 patience \EarlyStoppingPatience{} 早停。推理从主题实体出发至多扩展 \MaximumLogicalHops{} 跳，只依据冻结 GTE 相似度构造宽度为 \SelectedBeamWidth{} 的候选池；候选生成不读取答案或训练后 MLP 分数。
 
-推理阶段从已知主题实体出发，最多扩展三跳，并只依据冻结 GTE 的问题相似度构造宽度为 32 的固定语义 beam；候选生成不读取答案、不使用训练后 MLP 分数，也不使用可调阈值。所有策略对完全相同的固定候选打分，排序键为 MLP 原始 logit，分数并列时按转移字典序稳定排序。
+\subsection{指标、统计与研究问题}
 
-\subsection{指标与统计协议}
+对问题 $q$，按 Retriever 分数降序排列候选转移，并记 $\operatorname{rank}(t)$ 为转移 $t$ 的排名。定义 Answer-Path Completion rank 为
+\begin{equation}
+  r_q=\min_{P\in\mathcal P_q}\max_{t\in P}\operatorname{rank}(t),
+\end{equation}
+其中 $\mathcal P_q$ 是候选池中的完整主题---正确答案有向路径集合。若 $\mathcal P_q$ 为空，则 $RR_q=0$；否则 $RR_q=1/r_q$。\emph{Answer-Path Completion MRR（APC-MRR）} 为 $RR_q$ 的问题平均。该指标不是实体排序 MRR；它衡量完整答案路径多早在排序前缀中形成。实现通过依次加入 top-$k$ 转移寻找首次可达的 $k$，toy test 验证其与上述 min--max 定义等价。次指标为 Reach@10；Reach@5 仅见附录。
 
-主指标为 Answer-Path MRR。对问题 $q$，将候选转移按检索分数降序排列，令 $r_q$ 为最小的 $k$，使前 $k$ 个转移组成的子图能够连接任一主题实体与任一正确答案实体；若始终不可达，则 $RR_q=0$，否则 $RR_q=1/r_q$。Answer-Path MRR 为所有问题 $RR_q$ 的均值。次指标为 Reach@10，即前 10 个转移是否已经形成主题---答案路径；附录同时给出 Reach@5。
+每种方法使用 \TrainingSeedCount{} 个共享种子。我们先在同一问题上等权平均种子，再做 \BootstrapResamples{} 次 query-level paired bootstrap；跨领域采用领域等权宏平均。本文只回答两个研究问题：\textbf{RQ1}，路径一致负例是否真实进入损失、规模多大？\textbf{RQ2}，针对性屏蔽是否优于原基线与等量随机屏蔽？Candidate Oracle 仅作为 RQ2 的候选池诊断。
 
-训练和比较使用共享随机种子 42--46。对每个问题先在五个种子间平均，再进行 10,000 次 query-level paired bootstrap；跨领域结果采用领域等权宏平均，不把同一问题的不同种子当作独立样本。所有 $\lambda_D^*$ 只由验证集确定，测试集在冻结选择文件后才生成候选和评估。
+\section{结果}
 
-\subsection{路径一致负例是否真实进入训练}
+\subsection{RQ1：监督冲突的发生率}
 
-五个种子的实际训练候选共包含 \SampledNegativeCount{} 个采样负例，其中 \PathConsistentNegativeCount{} 个满足完整路径条件，占 \ConflictRate\%。按领域等权统计，至少在一个种子中受到影响的问题比例为 \AffectedQueryRate\%。图~\ref{fig:prevalence} 展示 \DatasetCount{} 个领域的负例级冲突率与问题级覆盖率；附录表~\ref{tab:prevalence} 给出精确计数。二者回答不同问题：前者衡量损失中冲突监督的浓度，后者衡量该现象波及多少训练问题。
+正式训练候选共包含 \SampledNegativeCount{} 个采样负例，其中 \PathConsistentNegativeCount{} 个满足完整路径条件，占 \ConflictRate\%。按领域等权，\AffectedQueryRate\% 的问题至少在一个训练种子中受到影响。图~\ref{fig:prevalence} 展示领域分布；附录表~\ref{tab:prevalence} 给出精确计数。负例级比例衡量冲突在损失中的浓度，问题级比例则表明它并非只集中于极少数查询。
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{conflict_prevalence.pdf}
-  \Description{WikiTopics 十一个领域中路径一致负例占采样负例的比例，以及至少一个随机种子受到影响的问题比例。}
-  \caption{路径一致负例在 \DatasetCount{} 个领域中的发生率。所有统计均来自实际进入训练的数据，而非枚举出的潜在候选。}
+  \Description{各领域路径一致负例占采样负例的比例及受影响问题比例。}
+  \caption{实际进入训练的路径一致负例发生率。}
   \label{fig:prevalence}
 \end{figure}
 
-\subsection{主检索结果}
+\subsection{从软抑制到固定屏蔽}
 
-表~\ref{tab:main} 报告独立测试集上的五种子均值。领域等权宏平均下，策略1、策略2和策略3的 Answer-Path MRR 分别为 \StrategyOneMRR\%、\StrategyTwoMRR\% 和 \StrategyThreeMRR\%；Reach@10 分别为 \StrategyOneReachTen\%、\StrategyTwoReachTen\% 和 \StrategyThreeReachTen\%。策略3相对策略1的 MRR 差值为 \OursBaselineMRRDelta{} 个百分点，95\% CI 为 [\OursBaselineMRRCILow, \OursBaselineMRRCIHigh]；Reach@10 差值为 \OursBaselineReachTenDelta{} 个百分点，95\% CI 为 [\OursBaselineReachTenCILow, \OursBaselineReachTenCIHigh]。
+冻结网格的领域级选择见附录。另行进行的验证集领域等权分析在不读取 test 的前提下选择全局 $\lambda=\GlobalValidationLambda$。由于早期正式 test 已在该简化问题提出前访问，固定 $\lambda=0$ 的 test 比较被明确标记为\textbf{事后简化分析}，不伪装成原始确认性协议。它同时回答一个方法设计问题：固定屏蔽是否足以替代按领域校准的软抑制。
 
-相对匹配随机对照，策略3的 MRR 差值为 \OursRandomMRRDelta{} 个百分点，95\% CI 为 [\OursRandomMRRCILow, \OursRandomMRRCIHigh]；Reach@10 差值为 \OursRandomReachTenDelta{} 个百分点，95\% CI 为 [\OursRandomReachTenCILow, \OursRandomReachTenCIHigh]。这一比较把``降低多少负监督''与``降低哪些负监督''分离开来：只有策略3相对策略2的配对区间支持差异时，收益才能归因于路径定位信息，而不是单纯减少损失质量。
+固定屏蔽与原领域校准策略的 APC-MRR 差值为 \FixedTunedMRRDelta{} 个百分点，\mbox{95\% CI} [\FixedTunedMRRCILow, \FixedTunedMRRCIHigh]；Reach@10 差值为 \FixedTunedReachTenDelta{} 个百分点，\mbox{95\% CI} [\FixedTunedReachTenCILow, \FixedTunedReachTenCIHigh]。依据验证集全局最优与该差异区间，最终方法采用无领域超参数的路径一致负例屏蔽；完整校准网格保留在附录作为分析而非主方法。
 
-四个配对区间的下界均大于零。正式结果因此同时支持两个结论：降低路径一致负例的监督强度优于保留原负权重，而且路径定位优于等量随机降权。收益并非由减少相同数量的负监督自动产生。
+\subsection{RQ2：主检索结果}
+
+表~\ref{tab:main} 报告固定屏蔽比较。领域等权宏平均下，策略1、策略2和策略3的 APC-MRR 分别为 \StrategyOneMRR\%、\StrategyTwoMRR\% 和 \StrategyThreeMRR\%；Reach@10 分别为 \StrategyOneReachTen\%、\StrategyTwoReachTen\% 和 \StrategyThreeReachTen\%。
+
+策略3相对策略1的 APC-MRR 差值为 \OursBaselineMRRDelta{} 个百分点，\mbox{95\% CI} [\OursBaselineMRRCILow, \OursBaselineMRRCIHigh]；Reach@10 差值为 \OursBaselineReachTenDelta{}，区间为 [\OursBaselineReachTenCILow, \OursBaselineReachTenCIHigh]。相对策略2，对应差值为 \OursRandomMRRDelta{} [\OursRandomMRRCILow, \OursRandomMRRCIHigh] 和 \OursRandomReachTenDelta{} [\OursRandomReachTenCILow, \OursRandomReachTenCIHigh] 个百分点。策略2与策略3减少完全相同数量的负监督，因此二者差异隔离了路径定位信息。
 
 \begin{table*}[t]
   \centering
-  \caption{独立测试集上的正式 Retriever-only 结果。每个单元格为五个共享种子的均值；粗体表示同一领域、同一指标下三个策略中的最优值。$\lambda_D^*$ 只由验证集 Answer-Path MRR 冻结。}
+  \caption{固定屏蔽的 Retriever-only 结果。策略1为原基线，策略2为等量随机屏蔽，策略3为路径一致负例屏蔽；单元格为共享种子均值。}
   \label{tab:main}
-  \resizebox{0.96\textwidth}{!}{\input{generated/tables/main_retriever.tex}}
+  \resizebox{0.94\textwidth}{!}{\input{generated/tables/main_retriever.tex}}
 \end{table*}
 
-验证集最终选择了 \MaskSelectedDomainCount{} 个 $\lambda_D^*=0.00$ 领域、\SoftSelectedDomainCount{} 个中间权重领域和 \BaselineSelectedDomainCount{} 个 $\lambda_D^*=1.00$ 领域。结果表明硬屏蔽是主要但并非普遍的最简选择：一个领域需要软加权，另一个领域保留原基线。附录表~\ref{tab:lambda} 给出全部冻结选择；我们不使用测试结果反向修改网格或判定规则。
-
-\subsection{最短路径选择敏感性}
-
-单路径监督还可能依赖``恰好选择了哪一条等长最短路径''。我们仅对确实存在多条等长最短答案路径的测试问题构造三个固定变体，使用种子 2718、3141 和 5772 改变 shortest-path DAG 中前驱的稳定顺序；不枚举指数数量的路径。每个变体分别训练策略1与策略3。统计时先在每个变体内平均五个共享训练种子，再对三个变体均值报告 Answer-Path MRR、Reach@10 的均值、标准差和范围。
-
-图~\ref{fig:main-sensitivity}(a) 汇总策略3相对策略1和策略2的逐领域 MRR 差值，图~\ref{fig:main-sensitivity}(b) 比较路径选择变体间的波动。领域等权平均的 MRR 标准差由策略1的 \StrategyOneSensitivityMRRStd\% 变为策略3的 \StrategyThreeSensitivityMRRStd\%，平均范围由 \StrategyOneSensitivityMRRRange\% 变为 \StrategyThreeSensitivityMRRRange\%。策略3没有降低路径择一波动，因而``降权会减少 tie-breaking 任意性''这一更强机制解释未获支持。另一方面，两种策略的平均范围都不超过 0.12 个百分点，说明主结论对三个固定路径变体的绝对波动较小，而不是策略3比策略1更稳定。
-
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.94\textwidth]{main_and_path_sensitivity.pdf}
-  \Description{左图为策略3相对策略1和策略2的逐领域 Answer-Path MRR 差值；右图为策略1和策略3在三个最短路径选择变体之间的 MRR 标准差。}
-  \caption{主结果与路径选择敏感性。(a) 路径定位降权是否优于原基线及等量随机对照；(b) 它是否降低单路径选择带来的训练任意性。}
-  \label{fig:main-sensitivity}
-\end{figure*}
+  \includegraphics[width=\columnwidth]{main_effects.pdf}
+  \Description{各领域策略3相对策略1和策略2的 APC-MRR 差值及配对 bootstrap 置信区间。}
+  \caption{逐领域 APC-MRR 差值与 95\% 配对 bootstrap 区间。}
+  \label{fig:effects}
+\end{figure}
+
+图~\ref{fig:effects} 给出逐领域效应及不确定性，避免用单一宏平均掩盖异质性。我们据此只主张领域等权总体收益，不声称每个领域均独立显著。
+
+\subsection{Candidate Oracle 诊断}
+
+在完全固定的 beam=\SelectedBeamWidth{} 候选池中，若存在至少一条完整主题---答案路径，则 Candidate Oracle Reach 为一。领域等权宏平均为 \CandidateOracleMacro\%，总体涉及 \CandidateOracleQueryCount{} 个 test 查询。这个上限不训练新模型，也不改变 beam；它把``候选池中没有答案路径''与``候选已存在但排序靠后''分开。表~\ref{tab:oracle} 的逐领域结果表明，当前绝对指标同时受候选生成上限约束，因此本文不把较小的绝对 APC-MRR 误解为纯排序失败。
 
 \section{局限与结论}
 
-本文有四项边界。第一，路径一致性是结构性质，不是语义真值；满足式~\eqref{eq:path-consistency} 的候选仍可能缺少回答问题所需的语义信息。第二，我们有意隔离 Retriever 训练，不调用生成器，因此不评价端到端生成式问答质量。第三，最短路径判据依赖观测图的实体对齐、事实覆盖和建图质量；图中缺失或错误的事实会改变距离。第四，正式验证集中在 WikiTopics 的 \DatasetCount{} 个领域，尚不能外推到监督定义不同的第二数据集。
+本文有四项边界。第一，路径一致性是结构性质而非语义真值；屏蔽避免确定负惩罚，但不证明候选足以回答自然语言问题。第二，我们隔离 Retriever 训练，不评价端到端生成答案。第三，Candidate Oracle 显示固定候选池存在明显上限；扩大 beam 会改变研究问题，本文没有用 test 搜索更宽候选。第四，证据来自 WikiTopics 的多个领域而非独立第二数据集；此外，固定屏蔽 test 比较是透明披露的事后简化分析，后续独立 benchmark 才能提供新的确认性检验。
 
-在这些限制内，本文识别出单路径弱监督中的一个可复核冲突：部分实际采样负例同时位于完整最短答案路径上。我们用一个领域级权重校准其损失强度，不改标签、不增模型参数，也不改变推理。正式 Retriever-only 实验中，策略3相对策略1将领域等权 Answer-Path MRR 提高 \OursBaselineMRRDelta{} 个百分点、Reach@10 提高 \OursBaselineReachTenDelta{} 个百分点；相对策略2的对应增益为 \OursRandomMRRDelta{} 和 \OursRandomReachTenDelta{} 个百分点，四个配对置信区间均排除零。验证选择在多数领域简化为硬屏蔽，但仍保留一个软加权领域和一个原基线领域。路径变体实验显示绝对波动较小，却没有显示策略3比策略1更稳定。综合而言，正式证据支持按路径位置降低冲突负监督，也限制了关于 tie-breaking 稳健性的主张。
+在这些限制内，结果支持一条紧凑结论：单路径弱监督会把一部分完整最短答案路径成员实际送入负损失；只屏蔽这些结构冲突项优于保留原负监督和等量随机屏蔽。收益来自屏蔽对象的路径位置，而非模型复杂度或简单减少训练信号。
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
@@ -192,39 +196,48 @@ $\{0.00,0.10,0.25,0.50,0.75,1.00\}$
 
 \section{可复现协议与 provenance}
 
-代码以官方 HyperRAG 提交为冻结上游，实验配置、标签快照、数据校验、队列命令、物理 GPU、Python/PyTorch/CUDA 环境、Git 提交、随机种子、$\lambda$、checkpoint 和逐问题指标均随运行产物保存。原始产物经聚合 JSON/CSV 自动生成 LaTeX 宏、表格和 PDF/SVG 图；正文不手抄实验数字。实体节点以 QID 为身份、标签只用于文本编码。该约束尤其重要，因为不同 QID 可能共享同一英文标签，若以标签作为节点身份会错误合并实体。
+正式链路固定为：原始数据与标签快照 $\rightarrow$ answer-free 单调对齐 $\rightarrow$ 训练/评价候选 $\rightarrow$ 聚合 JSON/CSV $\rightarrow$ 自动生成 LaTeX 与图。每个运行记录代码提交、dirty state、上游提交、配置、命令、环境、GPU、种子、方法、checkpoint 与逐问题指标。历史结果保持只读；本稿使用的修正版结果写入独立 final-revision 根目录。传导式图只合并训练图与测试推理上下文，不读取测试问题或答案标签；所有方法共享该图。
 
-候选 beam 宽度在正式扫参前只用艺术领域验证集做一次 $10$ 与 $32$ 的 P0 覆盖率比较：二者分别覆盖 13.10\%（1,294/9,878）和 21.92\%（2,165/9,878）的验证问题，因此冻结为 $32$，不继续搜索第三个宽度。$\lambda$ 网格、选择指标、五个训练种子、三个路径变体种子和 bootstrap 协议均在正式结果前冻结。历史结构代理产物保持只读，不与正式 Retriever-only 结果混写。
+候选宽度在正式扫参前仅用 art/valid 比较 10 与 32：前者覆盖 \BeamTenCoverage\%（\BeamTenReachableCount/\BeamValidationQueryCount），后者覆盖 \BeamThirtyTwoCoverage\%（\BeamThirtyTwoReachableCount/\BeamValidationQueryCount），故冻结为 \SelectedBeamWidth{}，未继续搜索更大宽度。
 
 \section{逐领域冲突发生率}
 
 \begin{table}[h]
   \centering
-  \caption{五个训练种子中实际采样负例的逐领域路径一致冲突统计。}
+  \caption{实际采样负例的逐领域路径一致冲突统计。}
   \label{tab:prevalence}
   \resizebox{\columnwidth}{!}{\input{generated/tables/prevalence.tex}}
 \end{table}
 
-\section{完整验证集权重选择}
+\section{完整验证集权重分析}
 
 \begin{table*}[h]
   \centering
-  \caption{各领域在验证集上的 Answer-Path MRR（\%）。粗体为按冻结规则选出的 $\lambda_D^*$；精确并列时取更大的 $\lambda$。}
+  \caption{各领域验证集 APC-MRR（\%）。粗体为领域选择；全局领域等权最优为 $\lambda=\GlobalValidationLambda$。}
   \label{tab:lambda}
   \resizebox{0.84\textwidth}{!}{\input{generated/tables/lambda_validation.tex}}
 \end{table*}
 
-\section{路径选择敏感性明细}
+\section{Candidate Oracle 明细}
 
-\begin{table*}[h]
+\begin{table}[h]
   \centering
-  \caption{仅在存在多条等长最短答案路径的问题上统计的路径选择敏感性。范围为三个固定 tie-breaking 变体之间的最大值减最小值。}
-  \label{tab:path-sensitivity}
-  \resizebox{0.80\textwidth}{!}{\input{generated/tables/path_sensitivity.tex}}
-\end{table*}
+  \caption{固定候选池中的完整答案路径上限。宏平均对领域等权。}
+  \label{tab:oracle}
+  \resizebox{\columnwidth}{!}{\input{generated/tables/candidate_oracle.tex}}
+\end{table}
 
-\section{历史结构诊断的定位}
+\section{Reach@5 补充结果}
 
-先前结构代理实验在约 90,000 个问题上观察到路径一致负例会真实进入采样，并发现硬屏蔽可能提高结构覆盖但伴随排序代价；其中一次端点实验的排序指标下降约 1.32 个百分点。该结果只用于提出研究问题和设计正式对照，不能通过重复试验被改写为成功，也不充当本文语义 Retriever 的主证据。正式结论只取决于本稿报告的 GTE+DDE+MLP Retriever-only 实验、验证集冻结选择与独立测试结果。
+\begin{table}[h]
+  \centering
+  \caption{固定屏蔽比较的 Reach@5（\%）；该指标未用于方法选择。}
+  \label{tab:reach-five}
+  \resizebox{\columnwidth}{!}{\input{generated/tables/reach_five.tex}}
+\end{table}
+
+\section{历史结构代理的定位}
+
+早期结构代理实验只用于提出监督冲突问题和设计正式对照，不与 GTE+DDE+MLP Retriever-only 结果混写，也不参与最终方法选择。旧产物保持只读以追溯 provenance；正文结论只依赖本文报告的正式候选、训练、评价和事后简化分析。
 
 \end{document}

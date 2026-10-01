@@ -150,6 +150,41 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
                 root / "lambda_validation.json",
                 {"best_global_lambda": 0.0},
             )
+            beam_selection = _write(
+                root / "beam.json",
+                {
+                    "selected_beam_width": 32,
+                    "candidates": {
+                        "10": {
+                            "query_count": 10,
+                            "path_reachable_query_count": 2,
+                            "path_reachable_query_rate": 0.2,
+                        },
+                        "32": {
+                            "query_count": 10,
+                            "path_reachable_query_count": 4,
+                            "path_reachable_query_rate": 0.4,
+                        },
+                    },
+                },
+            )
+            config = _write(
+                root / "config.json",
+                {
+                    "retrieval": {"maximum_logical_hops": 3},
+                    "model": {"dde_dimension": 30},
+                    "training": {
+                        "batch_size": 32,
+                        "maximum_epochs": 50,
+                        "patience": 10,
+                        "seeds": [42, 43, 44, 45, 46],
+                    },
+                    "statistics": {
+                        "paired_bootstrap_resamples": 10000,
+                        "paired_bootstrap_seed": 20260928,
+                    },
+                },
+            )
             output = root / "generated"
             generate_paper_artifacts(
                 preflight,
@@ -159,6 +194,8 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
                 fixed,
                 oracle,
                 lambda_validation,
+                beam_selection,
+                config,
                 output,
             )
             macros = (output / "results.tex").read_text(encoding="utf-8")

@@ -20,6 +20,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fixed-masking", type=Path, required=True)
     parser.add_argument("--candidate-oracle", type=Path, required=True)
     parser.add_argument("--lambda-validation", type=Path, required=True)
+    parser.add_argument("--beam-selection", type=Path, required=True)
+    parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser
 
@@ -34,6 +36,8 @@ def main() -> int:
         args.fixed_masking,
         args.candidate_oracle,
         args.lambda_validation,
+        args.beam_selection,
+        args.config,
         args.output_dir,
     )
     print(json.dumps(outputs, ensure_ascii=False, indent=2))
