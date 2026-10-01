@@ -140,6 +140,16 @@ class FinalRevisionAnalysisTests(unittest.TestCase):
             result["final_main"]["equal_domain_macro"]["ours"]["reciprocal_rank"],
             0.295,
         )
+        self.assertEqual(
+            len(result["final_main"]["per_seed_equal_domain_macro"]),
+            15,
+        )
+        seed_42_ours = next(
+            row
+            for row in result["final_main"]["per_seed_equal_domain_macro"]
+            if row["seed"] == 42 and row["method"] == "ours"
+        )
+        self.assertAlmostEqual(seed_42_ours["reciprocal_rank"], 0.295)
 
 
 if __name__ == "__main__":

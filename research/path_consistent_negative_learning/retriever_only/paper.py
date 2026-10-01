@@ -274,6 +274,33 @@ def _reach_five_table(main: Mapping[str, Any]) -> list[str]:
     return lines
 
 
+def _per_seed_table(main: Mapping[str, Any]) -> list[str]:
+    lookup = {
+        (int(row["seed"]), row["method"]): row
+        for row in main["per_seed_equal_domain_macro"]
+    }
+    seeds = sorted({seed for seed, _ in lookup})
+    lines = [
+        r"\begin{tabular}{lrrrrrr}",
+        r"\toprule",
+        r"种子 & \multicolumn{3}{c}{APC-MRR (\%)} & \multicolumn{3}{c}{Reach@10 (\%)} \\",
+        r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}",
+        r" & 策略1 & 策略2 & 策略3 & 策略1 & 策略2 & 策略3 \\",
+        r"\midrule",
+    ]
+    for seed in seeds:
+        mrr = [lookup[(seed, method)]["reciprocal_rank"] for method in METHODS]
+        reach = [lookup[(seed, method)]["answer_reach_10"] for method in METHODS]
+        lines.append(
+            " & ".join(
+                [str(seed), *(_percent(float(value)) for value in mrr), *(_percent(float(value)) for value in reach)]
+            )
+            + r" \\"
+        )
+    lines.extend((r"\bottomrule", r"\end{tabular}"))
+    return lines
+
+
 def _lambda_table(selection: Mapping[str, Any]) -> list[str]:
     grid = [float(value) for value in selection["lambda_grid"]]
     lines = [
@@ -368,6 +395,7 @@ def generate_paper_artifacts(
         "lambda": tables / "lambda_validation.tex",
         "oracle": tables / "candidate_oracle.tex",
         "reach_five": tables / "reach_five.tex",
+        "per_seed": tables / "per_seed.tex",
         "manifest": output_dir / "generation_manifest.json",
     }
     contents = {
@@ -387,6 +415,7 @@ def generate_paper_artifacts(
         "lambda": _lambda_table(selection),
         "oracle": _oracle_table(oracle),
         "reach_five": _reach_five_table(main),
+        "per_seed": _per_seed_table(main),
     }
     for name, path in outputs.items():
         if name == "manifest":

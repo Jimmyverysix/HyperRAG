@@ -115,6 +115,15 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
                             "answer_reach_10": comparison,
                         },
                     },
+                    "per_seed_equal_domain_macro": [
+                        {
+                            "seed": seed,
+                            "method": method,
+                            **metrics,
+                        }
+                        for seed in (42, 43, 44, 45, 46)
+                        for method in ("baseline", "matched_random", "ours")
+                    ],
                 },
             )
             fixed = _write(
@@ -202,6 +211,9 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
             table = (output / "tables" / "main_retriever.tex").read_text(
                 encoding="utf-8"
             )
+            per_seed_table = (output / "tables" / "per_seed.tex").read_text(
+                encoding="utf-8"
+            )
             manifest = json.loads(
                 (output / "generation_manifest.json").read_text(encoding="utf-8")
             )
@@ -210,6 +222,7 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
         self.assertIn("策略2", table)
         self.assertIn("策略3", table)
         self.assertNotIn(r"\lambda", table)
+        self.assertIn("42", per_seed_table)
         self.assertIn(r"\newcommand{\GlobalValidationLambda}{0.00}", macros)
         self.assertIn(r"\newcommand{\CandidateOracleMacro}{40.00}", macros)
         self.assertEqual(manifest["scope"], "formal_zero_llm_retriever_only")

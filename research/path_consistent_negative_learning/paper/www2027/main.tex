@@ -236,6 +236,15 @@ $\lambda=1$ 与原 mean BCE 的数值和梯度严格等价；$\lambda=0$ 与删�
   \resizebox{\columnwidth}{!}{\input{generated/tables/reach_five.tex}}
 \end{table}
 
+\section{逐种子结果}
+
+\begin{table*}[h]
+  \centering
+  \caption{每个训练种子的领域等权宏结果（\%）。配对统计仍先在问题上平均种子；本表只用于展示运行间波动。}
+  \label{tab:per-seed}
+  \resizebox{0.82\textwidth}{!}{\input{generated/tables/per_seed.tex}}
+\end{table*}
+
 \section{历史结构代理的定位}
 
 早期结构代理实验只用于提出监督冲突问题和设计正式对照，不与 GTE+DDE+MLP Retriever-only 结果混写，也不参与最终方法选择。旧产物保持只读以追溯 provenance；正文结论只依赖本文报告的正式候选、训练、评价和事后简化分析。

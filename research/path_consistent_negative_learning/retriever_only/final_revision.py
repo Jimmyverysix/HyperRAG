@@ -131,6 +131,12 @@ def aggregate_fixed_masking(
         "tuned_strategy",
     )
     query_values: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
+    seed_domain_values: dict[str, dict[int, dict[str, list[float]]]] = {
+        method: {
+            seed: {metric: [] for metric in METRICS} for seed in FORMAL_SEEDS
+        }
+        for method in methods
+    }
     domain_rows = []
     sources: dict[str, dict[str, str]] = {}
     for domain in domains:
@@ -168,15 +174,20 @@ def aggregate_fixed_masking(
         row: dict[str, Any] = {"domain": domain}
         sources[domain] = {}
         for method, (directory, expected) in source_specs.items():
-            averaged = average_query_metrics(
-                _load_reports(directory, expected_methods=expected)
-            )
+            reports = _load_reports(directory, expected_methods=expected)
+            averaged = average_query_metrics(reports)
             query_values[domain][method] = averaged
             row[method] = {
                 metric: fmean(value[metric] for value in averaged.values())
                 for metric in METRICS
             }
             sources[domain][method] = str(directory)
+            for report in reports:
+                seed = int(report["seed"])
+                for metric in METRICS:
+                    seed_domain_values[method][seed][metric].append(
+                        fmean(float(query[metric]) for query in report["queries"])
+                    )
         key_sets = {
             tuple(sorted(query_values[domain][method])) for method in methods
         }
@@ -191,6 +202,18 @@ def aggregate_fixed_masking(
         }
         for method in methods
     }
+    per_seed_macro = [
+        {
+            "seed": seed,
+            "method": method,
+            **{
+                metric: fmean(seed_domain_values[method][seed][metric])
+                for metric in METRICS
+            },
+        }
+        for seed in FORMAL_SEEDS
+        for method in methods
+    ]
     comparisons = {}
     domain_comparisons = []
     for reference in ("baseline", "matched_random_masking", "tuned_strategy"):
@@ -268,6 +291,17 @@ def aggregate_fixed_masking(
             for row in domain_comparisons
             if row["reference"] in {"baseline", "matched_random_masking"}
         ],
+        "per_seed_equal_domain_macro": [
+            {
+                **row,
+                "method": {
+                    "matched_random_masking": "matched_random",
+                    "fixed_masking": "ours",
+                }.get(row["method"], row["method"]),
+            }
+            for row in per_seed_macro
+            if row["method"] in {"baseline", "matched_random_masking", "fixed_masking"}
+        ],
     }
     return {
         "schema_version": 1,
@@ -277,6 +311,7 @@ def aggregate_fixed_masking(
         "equal_domain_macro": macro,
         "comparisons": comparisons,
         "domain_comparisons": domain_comparisons,
+        "per_seed_equal_domain_macro": per_seed_macro,
         "final_main": final_main,
         "sources": sources,
     }

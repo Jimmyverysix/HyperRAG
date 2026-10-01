@@ -149,6 +149,7 @@ def _write_final_main_csv(path: Path, payload: dict[str, Any]) -> None:
         "scope",
         "domain",
         "method",
+        "seed",
         "apc_mrr",
         "answer_reach_10",
         "answer_reach_5",
@@ -164,6 +165,7 @@ def _write_final_main_csv(path: Path, payload: dict[str, Any]) -> None:
                         "scope": "domain",
                         "domain": row["domain"],
                         "method": method,
+                        "seed": "",
                         "apc_mrr": metrics["reciprocal_rank"],
                         "answer_reach_10": metrics["answer_reach_10"],
                         "answer_reach_5": metrics["answer_reach_5"],
@@ -175,9 +177,22 @@ def _write_final_main_csv(path: Path, payload: dict[str, Any]) -> None:
                     "scope": "equal_domain_macro",
                     "domain": "ALL",
                     "method": method,
+                    "seed": "",
                     "apc_mrr": metrics["reciprocal_rank"],
                     "answer_reach_10": metrics["answer_reach_10"],
                     "answer_reach_5": metrics["answer_reach_5"],
+                }
+            )
+        for row in payload["per_seed_equal_domain_macro"]:
+            writer.writerow(
+                {
+                    "scope": "per_seed_equal_domain_macro",
+                    "domain": "ALL",
+                    "method": row["method"],
+                    "seed": row["seed"],
+                    "apc_mrr": row["reciprocal_rank"],
+                    "answer_reach_10": row["answer_reach_10"],
+                    "answer_reach_5": row["answer_reach_5"],
                 }
             )
 
