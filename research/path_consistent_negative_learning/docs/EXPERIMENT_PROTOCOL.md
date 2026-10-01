@@ -1,118 +1,115 @@
-# Retriever-only 零 LLM 正式实验协议
-
-冻结日期：2026-09-28
-
-状态：P0 的 beam 宽度决策规则已冻结；正式 sweep 配置将在 P0 结束后记录唯一宽度并冻结。
-
-配置真源：`configs/retriever_only/wiki_main.json`
+# 最终 Retriever-only 实验协议
 
 ## 1. 研究范围
 
-本协议检验：单路径弱监督是否对“未被选中、但位于另一条完整 topic-answer 最短路径上的实际采样负例”施加了过强负监督。
+本项目只研究一个问题：单路径弱监督是否把仍位于完整最短答案路径上的候选作为负例送入 Retriever 损失，以及只屏蔽这些冲突项能否改善检索。
 
-正式实验使用 HyperRAG 官方 HyperRetriever 的 GTE 文本表示、DDE 结构编码、两层 MLP 和训练超参数，并在确定性重建的 WikiTopics 超图上执行 Retriever-only 训练与评价。全流程不调用生成式 LLM，不调用 OpenAI、百炼或其他付费 API，不生成答案文本，不使用人工标注或 LLM Judge。
+实验复用 HyperRAG 官方 HyperRetriever 的 GTE 文本表示、DDE 结构编码和两层 MLP。它不是端到端 HyperRAG 生成实验，不调用生成式 LLM、付费 API、人工语义标注或 LLM Judge，也不增加 GNN、attention、teacher、learnable lambda 等模型组件。
 
-历史结构代理结果只作为 Structural Diagnostic Study。新实验不得覆盖历史 artifacts，也不得表述为“完整复现官方 HyperRAG”。
+## 2. 数据、身份与 answer-free 对齐
 
-## 2. 数据与图
+- 数据：WikiTopics_QE 与发布的 WikiTopicsQE_NLG，共 11 个领域。
+- 结构化查询形状：`(e, (r1, r2, r3))`。
+- 主题实体：只取结构化查询中的 `e`。
+- 实体身份：始终使用 Wikidata QID；英文标签只作为文本编码输入，同名实体不合并。
+- NLG 对齐：只使用发布顺序与主题标签代价做单调对齐，不读取 NLG 或结构化答案标签。
+- 答案允许用途：训练正路径、路径一致判定、评价。
+- 答案禁止用途：候选生成、GTE 相似度、DDE、MLP 特征、推理分数。
 
-领域固定为：art、award、edu、health、infra、loc、org、people、sci、sport、tax。
+历史正式结果曾使用答案数量/答案标签辅助重建 NLG—结构化查询映射，并允许答案标签证据决定查询是否纳入。最终审计认定这会使答案间接影响 query embedding 与候选池，因此旧结果仅保留为 provenance；最终结果在独立 run root 中按 answer-free 对齐完整重跑。
 
-数据使用 WikiTopics_QE 整数图和现有 WikiTopics NLG。整数图经 `og_mappings.pkl` 映射到 Wikidata ID；`train_graph.txt` 与 `test_inference.txt` 合并后，按 head 实体聚合外向事实为超边。图中的实体身份始终使用 Wikidata QID，英文标签只作为 GTE 编码文本，因而同名但 QID 不同的实体不会被合并。超边文本由同一超边内的结构化事实按稳定顺序序列化为 `head | relation: tail; ...`，不调用生成式模型，也不使用无法与结构化 head 可靠回溯对齐的历史 graph sentences。自然语言 query 来自现有 NLG query 文件。
+## 3. 确定性传导式超图
 
-topic entity 直接取结构化 query 的首实体 `e`。hard answer 来自 benchmark ground truth，只用于最短路径监督与评价，禁止进入候选生成、文本编码、DDE 或 MLP scoring。
+图由 `train_graph.txt` 与 `test_inference.txt` 合并构成。后者是所有方法共享的固定检索语料，不包含测试问题或测试答案标签。相同头实体的外向事实按稳定顺序聚合为一个事实节点，形成实体—事实二部 incidence graph。
 
-NLG 与结构 query 的对齐必须复现原转换脚本的标签过滤，并对每个 domain/split 做精确数量断言。任何不一致都在训练前失败。
+传导设置满足：
 
-## 3. 训练 baseline
+- 测试问题不参与训练；
+- 测试答案标签不参与建图；
+- 测试答案不参与候选生成或特征；
+- 所有方法共享完全相同的图、候选和编码。
 
-对每个可达 topic-answer pair 选择一条最短路径，将所选路径转移的并集作为 positives。围绕这些路径构造官方 path-guided candidate subgraph，再按官方 released sampler 从中采样与 positives 等量的 negatives，最多尝试 `20 x |positives|` 次。
+因此本文称其为“在确定性 WikiTopics 超图上复用官方 HyperRetriever 组件的 Retriever-only 受控实验”，不声称完整复现端到端 HyperRAG。
 
-主实验的最短路径按稳定字典序选择。采样、模型初始化、候选级 80/20 stratified internal split 和 DataLoader 共享种子 42、43、44、45、46。Baseline、Matched Random 与路径方法在同一个 seed 下共享候选、特征、划分、初始化协议与训练预算。
+## 4. 训练候选与路径一致负例
 
-候选表示固定为：query GTE、head GTE、hyperedge GTE、tail GTE 与 30 维 DDE 的拼接。MLP 固定为 `4126 -> 256 -> 1`，激活为 ReLU。训练固定为 Adam、学习率 `0.0001`、batch size 32、最多 50 轮、patience 10、`min_delta=0.00001`。
+对每个可达的主题—答案对，原流程选择一条最短路径，将所选路径转移的并集作为正例；再在同一路径引导子图中按发布采样逻辑采样等量负例，最多尝试 `20 × |positives|` 次。
 
-## 4. 路径一致负例与损失
-
-只对已经被 baseline 采样为 negative 的候选 `t=(v,f,u)` 判断。若存在 topic `s` 和正确 answer `a` 满足
+对实际采样负例 `t=(v,f,u)`，若存在主题 `s` 和正确答案 `a` 满足
 
 ```text
 d_I(s,v) + 2 + d_I(u,a) = d_I(s,a)
 ```
 
-则它是路径一致负例。该定义只表示候选属于另一条完整最短答案路径，不表示它一定是语义正例或人工确认的有效证据。
+则 `t` 是路径一致负例。判据必须使用完整主题—答案最短路径条件，不能用“局部更靠近答案”替代。该属性是结构成员资格，不是语义真值。
 
-逐样本权重为：路径一致负例取 `lambda`，其他样本取 `1.00`。损失固定为逐样本 `BCEWithLogits` 的加权和除以当前 batch 的权重和。网格固定为 `{0.00, 0.10, 0.25, 0.50, 0.75, 1.00}`；`1.00` 是 Baseline，`0.00` 是 Masking，中间值是 Soft Weighting。不得追加事后网格点。
+## 5. 三个主策略
 
-## 5. Retrieve-only 候选接口
+1. **策略1：Baseline**。所有候选权重为 1。
+2. **策略2：Matched Random Masking**。对每个问题，从全部已采样负例中均匀无放回选择恰好 `|D_q|` 个并屏蔽；抽样不查看路径一致身份。
+3. **策略3：Path-Consistent Negative Masking**。只屏蔽 `D_q`。
 
-验证与测试只输入自然语言 query、topic entity 和确定性超图。直接三跳全展开在 art 的实测典型规模约为每题 1,560 万候选，因此采用答案不可见的 GTE 语义束接口：每跳先按冻结 GTE 的 query 与 head、hyperedge、tail 平均余弦相似度保留固定数量的转移，最多三跳；反向重复转移按稳定顺序去重。正式 sweep 前只在 art/valid 做一次 beam=10 与 beam=32 的 P0 比较，以候选集合最终能否形成 topic--answer 路径的覆盖率为唯一决策指标；覆盖率较高者胜，精确并列取计算量更小的 10，不追加第三个宽度。P0 实测覆盖率分别为 13.10%（1,294/9,878）和 21.92%（2,165/9,878），故正式宽度在任何 lambda 验证与测试前冻结为 32。该候选束不读取 hard answer，不读取训练后 MLP，对所有方法、lambda 和种子完全相同。DDE 按官方单跳候选接口计算；接口直接返回 candidate transition 与原始 MLP logit，不做 logit 阈值截断，不调用生成器。
+三个策略共享候选池、GTE、DDE、MLP、Adam、候选级内部训练/早停划分、初始化协议、随机种子、早停预算与推理候选。策略2用于排除“只因为少惩罚相同数量负例”的解释。
 
-## 6. 指标
+统一分析目标为
 
-对每个 query，将候选按 logit 降序排序；同分时按 transition 的稳定字典序排序。令 `r_q` 为最小的 `k`，使 top-k 有向转移构成的子图能够从 topic 到达任一正确 hard answer。若不存在则 `RR_q=0`，否则 `RR_q=1/r_q`。
+```text
+w_i(lambda) = lambda, i in D_q
+              1,      otherwise
 
-主指标：Answer-Path MRR。
+L = sum_i w_i BCEWithLogits(z_i, y_i) / sum_i w_i
+```
 
-次指标：Answer Reach@10；补充 Answer Reach@5。
+其中 `lambda=1.00` 与 Baseline 的 loss/gradient 等价，`lambda=0.00` 与删除路径一致负例后的均值 loss/gradient 等价。若一个 batch 的权重和为零，则跳过该 batch 的反向传播与 Adam step。
 
-selected-path PR-AUC 等旧指标仅保留为历史 Appendix diagnostic，不作为本轮主指标或选择条件。
+冻结网格为 `{0.00, 0.10, 0.25, 0.50, 0.75, 1.00}`。网格只用于验证集分析；最终主方法是否简化为固定 masking 由验证集领域等权结果与事后简化比较共同决定。
 
-## 7. lambda 选择与方法决策
+## 6. 固定候选接口
 
-每个领域只在官方 valid split 上，以五个共享种子的 Answer-Path MRR 算术均值选择 `lambda_D*`。完全并列时选择更大的 lambda。选择器拒绝 test 输入；test 运行只能读取冻结的选择文件。
+验证与测试候选只输入自然语言问题、主题实体和固定超图。每跳按问题与 head、事实节点、tail 的冻结 GTE 余弦相似度构造语义 beam，最多三跳。正式宽度为 32；它在正式 lambda sweep 前仅用 art/valid 与宽度 10 比较后冻结，未继续搜索更宽 beam。
 
-11 领域正式 sweep 完成后生成 `docs/METHOD_DECISION.md`：若中间 lambda 在多个领域稳定优于 `0.00`，最终方法保留 Soft Weighting；若绝大多数领域选择 `0.00` 且中间 lambda 没有稳定额外收益，则按奥卡姆剃刀简化为 Masking。不得预设结论。
+候选生成不读取答案，不读取训练后 MLP，不做 logit 阈值截断。所有方法对同一候选池输出原始 MLP logit，分数并列时按转移字典序稳定排序。
 
-## 8. 三个正式实验部分
+## 7. 指标
 
-### A. Conflict Prevalence
+主指标为 Answer-Path Completion MRR（APC-MRR）。对问题 `q`，令 `P_q` 为固定候选池中的完整主题—正确答案有向路径集合，定义
 
-只报告实际 sampled conflict rate、affected-query rate 和 11-domain 分布。
+```text
+r_q = min_{P in P_q} max_{t in P} rank(t)
+```
 
-### B. Main Retriever Experiment
+若 `P_q` 为空，则 `RR_q=0`；否则 `RR_q=1/r_q`。APC-MRR 是问题级 `RR_q` 的均值。实现通过逐个加入 top-k 转移并记录首次形成完整答案路径的 `k` 计算；自动 toy test 验证它与 min–max 定义等价。
 
-最终表只比较：1. Baseline；2. Matched Random；3. Ours。
+APC-MRR 不是传统实体排序 MRR。次指标为 Reach@10；Reach@5 只作附录诊断。
 
-Matched Random 对每个 query 从该题的全部已采样 negatives 中均匀无放回选取恰好 `|D_q|` 个样本，抽样过程不查看路径一致身份。若最终方法是 Masking，则屏蔽相同数量；若最终方法是 Soft Weighting，则赋予相同 lambda。随机集合可能偶然与 `D_q` 重合，因此这是偏保守的路径无关对照。其他设置全部一致。
+Candidate Oracle Reach 在整个固定候选池上计算：若池中存在至少一条完整主题—答案路径则为 1，否则为 0。它只诊断候选生成上限，不训练模型、不修改 beam，也不产生新的研究问题。
 
-该抽样池是正式 sweep 前的可行性修订：art/seed=42 的 P0 训练候选中有 96/9,876 个问题满足“普通负例数小于 `|D_q|`”，原先只从普通负例抽样的写法无法执行。修订不使用任何模型结果，不改变候选或降权数量，并保留这些冲突最集中的问题。
+## 8. 选择、测试与事后简化
 
-### C. Path-Selection Sensitivity
+每个领域的 `lambda_D*` 只使用官方 valid split、五个共享种子的 APC-MRR 算术均值选择；精确并列时选择更大的 lambda。选择器拒绝 test report，测试候选准备与评价要求读取已冻结的选择文件。
 
-只在存在多条等长最短路径的训练 query 上改变最短路径择一。固定变体种子 2718、3141、5772，使用 shortest-path DAG 和 seeded predecessor ordering 为每个 topic-answer pair 选一条路径，不枚举全部路径。每个变体训练 Baseline 与 Ours；敏感性指标只聚合至少一个 topic--answer 对具有多条等长最短路径的测试 query。统计时先在每个变体内平均五个共享训练种子，再只对三个变体均值计算 Answer-Path MRR、Answer Reach@10 的 mean、standard deviation 和 range；不得把 15 个 seed--variant 运行当成 15 个独立路径变体。
-
-P0 完成前不开发第二数据集或新模型。
+另对每个固定 lambda 计算 valid 的领域等权宏 APC-MRR。若全局最优为 `lambda=0.00`，才在现有 test 上运行固定 masking。由于项目在提出简化问题前已经访问过一次 test，该步骤必须标记为 **POST-HOC SIMPLIFICATION ANALYSIS**，并同时比较：Baseline、Matched Random Masking、Fixed Path-Consistent Masking 与原领域级 tuned strategy。
 
 ## 9. 统计
 
-主要比较按 query key 配对。先对同一 query 的五个 seeds 等权平均，再执行 10,000 次 paired bootstrap，bootstrap seed 为 20260928，报告百分点差与 95% CI。不得把同一 query 的多个 seed 当作独立样本。
+- 训练种子：42、43、44、45、46。
+- 配对单位：同一领域、同一 query key。
+- 先在同一问题上等权平均五个种子，再进行 10,000 次 paired bootstrap。
+- bootstrap seed：20260928。
+- 报告：百分点差值与 95% CI。
+- 跨领域：领域等权宏平均，不按查询数加权。
+- 不把同一问题的不同种子当作独立样本。
 
-跨领域使用 equal-domain macro average。lambda 选择只看 valid；所有统计脚本必须拒绝选择阶段的 test 数据。
+## 10. 结果链与历史保护
 
-## 10. 测试门槛
-
-正式 sweep 前必须通过：
-
-- 等长最短路径候选被识别；
-- 非最短路径不被识别；
-- 局部降距成立但全局条件不成立的反例；
-- `lambda=1.00` 与 baseline loss/gradient 等价；
-- `lambda=0.00` 与删除路径一致负例后求均值等价；
-- Matched Random 每个 query 数量严格相同，并在全部负例均属于 `D_q` 时仍有定义；
-- 相同 seed 的路径选择、采样和训练数据可复现；
-- NLG/结构 query 单调对齐完整；当前 Wikidata 已缺少英文标签的 topic/answer 单独计数并排除，不静默丢弃；
-- 答案实体不进入 inference feature；
-- test split 不参与 lambda selection。
-
-## 11. 结果与 provenance
-
-每个 run 保存：研究代码 commit 与 dirty state、官方上游 commit、config、domain、split、seed、lambda、method、完整 command、环境、GPU、指标、checkpoint 和逐 query 结果。中断重跑不得覆盖元数据不一致的目录。
-
-结果链固定为：
+最终结果链为：
 
 ```text
-raw artifacts -> aggregate JSON/CSV -> LaTeX macros/tables -> PDF/SVG figures -> paper
+raw run reports
+→ aggregate JSON/CSV
+→ generated LaTeX macros/tables and PDF/SVG figures
+→ paper/main.pdf
+→ review_bundle/
 ```
 
-禁止手工抄写实验结果进 LaTeX。所有小于 1 的小数必须有前导 0。
+旧的结构代理、旧 Retriever-only 结果和已删除的探索性支线均保持只读，不覆盖、不删除，也不进入最终论文。最终 answer-free 重跑写入独立服务器 run root；仓库中的新聚合产物统一写入 `artifacts/final_revision/`。
