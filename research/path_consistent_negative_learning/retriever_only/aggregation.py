@@ -193,6 +193,7 @@ def aggregate_main_test(
         for method in methods
     }
     comparisons = {}
+    domain_comparisons = []
     for reference in ("baseline", "matched_random"):
         comparisons[f"ours_minus_{reference}"] = {}
         for metric in ("reciprocal_rank", "answer_reach_10"):
@@ -214,10 +215,31 @@ def aggregate_main_test(
                 "ci_low_percentage_points": 100.0 * estimate["ci_low"],
                 "ci_high_percentage_points": 100.0 * estimate["ci_high"],
             }
+            if metric == "reciprocal_rank":
+                for domain, values in differences.items():
+                    domain_estimate = paired_equal_domain_bootstrap(
+                        {domain: values}
+                    )
+                    domain_comparisons.append(
+                        {
+                            "domain": domain,
+                            "reference": reference,
+                            "metric": "APC-MRR",
+                            "difference_percentage_points": 100.0
+                            * domain_estimate["difference"],
+                            "ci_low_percentage_points": 100.0
+                            * domain_estimate["ci_low"],
+                            "ci_high_percentage_points": 100.0
+                            * domain_estimate["ci_high"],
+                            "resamples": domain_estimate["resamples"],
+                            "seed": domain_estimate["seed"],
+                        }
+                    )
     return {
         "domains": domain_rows,
         "equal_domain_macro": macro,
         "comparisons": comparisons,
+        "domain_comparisons": domain_comparisons,
     }
 
 

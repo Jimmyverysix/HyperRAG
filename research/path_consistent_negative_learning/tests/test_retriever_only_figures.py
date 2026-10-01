@@ -53,27 +53,30 @@ class RetrieverFigureTests(unittest.TestCase):
                     "matched_random": {"reciprocal_rank": 0.21},
                     "ours": {"reciprocal_rank": 0.23},
                 }
-            ]
-        }
-        sensitivity = {
-            "domains": [
+            ],
+            "domain_comparisons": [
                 {
                     "domain": "toy",
-                    "method": method,
-                    "answer_path_mrr": {"standard_deviation": value},
+                    "reference": reference,
+                    "difference_percentage_points": value,
+                    "ci_low_percentage_points": value - 0.01,
+                    "ci_high_percentage_points": value + 0.01,
                 }
-                for method, value in (("baseline", 0.02), ("ours", 0.01))
+                for reference, value in (
+                    ("baseline", 0.03),
+                    ("matched_random", 0.02),
+                )
             ]
         }
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
             generate_method_figure(case, output)
             generate_prevalence_figure(prevalence, output)
-            generate_main_figure(main, sensitivity, output)
+            generate_main_figure(main, output)
             for stem in (
                 "supervision_conflict",
                 "conflict_prevalence",
-                "main_and_path_sensitivity",
+                "main_effects",
             ):
                 self.assertGreater((output / f"{stem}.pdf").stat().st_size, 0)
                 self.assertGreater((output / f"{stem}.svg").stat().st_size, 0)

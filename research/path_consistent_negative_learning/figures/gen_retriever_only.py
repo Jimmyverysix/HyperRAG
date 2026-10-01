@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyBboxPatch
 import numpy as np
 
-from .www_style import COLORS, apply_style, panel_label, save_vector_figure
+from .www_style import COLORS, apply_style, save_vector_figure
 
 
 CONFLICT_COLOR = "#D55E00"
@@ -200,110 +200,59 @@ def generate_prevalence_figure(
 
 def generate_main_figure(
     main: Mapping[str, Any],
-    sensitivity: Mapping[str, Any],
     output_dir: Path,
 ) -> None:
+    """Draw per-domain APC-MRR effects with paired 95% intervals."""
+
     apply_style()
-    rows = main["domains"]
-    domains = [row["domain"] for row in rows]
-    versus_baseline = np.asarray(
-        [
-            100.0
-            * (
-                float(row["ours"]["reciprocal_rank"])
-                - float(row["baseline"]["reciprocal_rank"])
-            )
-            for row in rows
-        ]
-    )
-    versus_random = np.asarray(
-        [
-            100.0
-            * (
-                float(row["ours"]["reciprocal_rank"])
-                - float(row["matched_random"]["reciprocal_rank"])
-            )
-            for row in rows
-        ]
-    )
-    sensitivity_lookup = {
-        (row["domain"], row["method"]): row for row in sensitivity["domains"]
+    lookup = {
+        (row["domain"], row["reference"]): row
+        for row in main["domain_comparisons"]
     }
-    baseline_std = np.asarray(
-        [
-            100.0
-            * float(
-                sensitivity_lookup[(domain, "baseline")]["answer_path_mrr"][
-                    "standard_deviation"
-                ]
-            )
-            for domain in domains
-        ]
+    domains = [row["domain"] for row in main["domains"]]
+    order = sorted(
+        range(len(domains)),
+        key=lambda index: lookup[(domains[index], "baseline")][
+            "difference_percentage_points"
+        ],
     )
-    ours_std = np.asarray(
-        [
-            100.0
-            * float(
-                sensitivity_lookup[(domain, "ours")]["answer_path_mrr"][
-                    "standard_deviation"
-                ]
-            )
-            for domain in domains
-        ]
-    )
+    domains = [domains[index] for index in order]
     y_values = np.arange(len(domains))
-    figure, axes = plt.subplots(1, 2, figsize=(7.2, 3.8), sharey=True)
-    axes[0].axvline(0.0, color="#777777", linewidth=0.8)
-    axes[0].scatter(
-        versus_baseline,
-        y_values - 0.13,
-        color=COLORS["ours"],
-        marker="o",
-        label="策略3 $-$ 策略1",
-        zorder=3,
-    )
-    axes[0].scatter(
-        versus_random,
-        y_values + 0.13,
-        color=COLORS["random"],
-        marker="s",
-        label="策略3 $-$ 策略2",
-        zorder=3,
-    )
-    axes[0].set_xlabel("Answer-Path MRR 差值（百分点）")
-    axes[0].set_yticks(y_values, domains)
-    axes[0].legend(loc="best", fontsize=7)
-    axes[0].grid(axis="x", color="#DDDDDD", linewidth=0.6)
-    panel_label(axes[0], "a")
-    for y_value, first, second in zip(y_values, baseline_std, ours_std):
-        axes[1].plot(
-            [first, second],
-            [y_value, y_value],
-            color="#BDBDBD",
-            linewidth=1.2,
+    figure, axis = plt.subplots(figsize=(7.1, 4.2))
+    axis.axvline(0.0, color="#777777", linewidth=0.8)
+    for offset, reference, color, marker, label in (
+        (-0.14, "baseline", COLORS["ours"], "o", "策略3 − 策略1"),
+        (0.14, "matched_random", COLORS["random"], "s", "策略3 − 策略2"),
+    ):
+        rows = [lookup[(domain, reference)] for domain in domains]
+        centers = np.asarray(
+            [float(row["difference_percentage_points"]) for row in rows]
         )
-    axes[1].scatter(
-        baseline_std,
-        y_values,
-        color=COLORS["baseline"],
-        marker="o",
-        label="策略1",
-        zorder=3,
-    )
-    axes[1].scatter(
-        ours_std,
-        y_values,
-        color=COLORS["ours"],
-        marker="s",
-        label="策略3",
-        zorder=3,
-    )
-    axes[1].set_xlabel("路径择一变体间 MRR 标准差（百分点）")
-    axes[1].legend(loc="best", fontsize=7)
-    axes[1].grid(axis="x", color="#DDDDDD", linewidth=0.6)
-    panel_label(axes[1], "b")
-    figure.tight_layout(w_pad=1.4)
-    save_vector_figure(figure, output_dir / "main_and_path_sensitivity")
+        lower = centers - np.asarray(
+            [float(row["ci_low_percentage_points"]) for row in rows]
+        )
+        upper = np.asarray(
+            [float(row["ci_high_percentage_points"]) for row in rows]
+        ) - centers
+        axis.errorbar(
+            centers,
+            y_values + offset,
+            xerr=np.vstack((lower, upper)),
+            color=color,
+            marker=marker,
+            markersize=4.5,
+            linewidth=1.0,
+            capsize=2.0,
+            linestyle="none",
+            label=label,
+        )
+    axis.set_yticks(y_values, domains)
+    axis.set_xlabel("APC-MRR 差值（百分点，95% 配对 bootstrap CI）")
+    axis.grid(axis="x", color="#DDDDDD", linewidth=0.6)
+    axis.set_axisbelow(True)
+    axis.legend(loc="best")
+    figure.tight_layout()
+    save_vector_figure(figure, output_dir / "main_effects")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -311,7 +260,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--case-study", type=Path, required=True)
     parser.add_argument("--prevalence", type=Path, required=True)
     parser.add_argument("--main-test", type=Path, required=True)
-    parser.add_argument("--sensitivity", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser
 
@@ -320,11 +268,7 @@ def main() -> int:
     args = build_parser().parse_args()
     generate_method_figure(_load(args.case_study), args.output_dir)
     generate_prevalence_figure(_load(args.prevalence), args.output_dir)
-    generate_main_figure(
-        _load(args.main_test),
-        _load(args.sensitivity),
-        args.output_dir,
-    )
+    generate_main_figure(_load(args.main_test), args.output_dir)
     print(f"figures -> {args.output_dir}")
     return 0
 

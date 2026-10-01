@@ -8,6 +8,7 @@ import unittest
 import numpy as np
 
 from research.path_consistent_negative_learning.retriever_only.aggregation import (
+    aggregate_main_test,
     aggregate_path_sensitivity,
     average_query_metrics,
     paired_equal_domain_bootstrap,
@@ -77,6 +78,49 @@ class RetrieverAggregationTests(unittest.TestCase):
         self.assertEqual(len(rows), 6)
         self.assertEqual(rows[-1]["scope"], "equal_domain_macro")
         self.assertEqual(rows[-1]["answer_path_mrr"], 0.2)
+
+    def test_main_aggregate_includes_domain_level_paired_intervals(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            run_root = Path(temporary)
+            for method, score in (
+                ("baseline", 0.1),
+                ("matched_random", 0.2),
+                ("ours", 0.3),
+            ):
+                for seed in (42, 43, 44, 45, 46):
+                    path = (
+                        run_root
+                        / "test"
+                        / "toy"
+                        / method
+                        / f"seed_{seed}"
+                        / "test_scores.report.json"
+                    )
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(
+                        json.dumps(
+                            {
+                                "split": "test",
+                                "method": method,
+                                "seed": seed,
+                                "queries": [
+                                    {
+                                        "query_key": "q",
+                                        "reciprocal_rank": score,
+                                        "answer_reach_10": score,
+                                        "answer_reach_5": score,
+                                    }
+                                ],
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+            result = aggregate_main_test(run_root, ("toy",))
+        self.assertEqual(len(result["domain_comparisons"]), 2)
+        first = result["domain_comparisons"][0]
+        self.assertEqual(first["domain"], "toy")
+        self.assertEqual(first["metric"], "APC-MRR")
+        self.assertAlmostEqual(first["difference_percentage_points"], 20.0)
 
     def test_path_sensitivity_averages_seeds_before_variants(self) -> None:
         variant_scores = {
