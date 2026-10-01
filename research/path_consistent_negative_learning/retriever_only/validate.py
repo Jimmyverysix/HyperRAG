@@ -5,13 +5,12 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from datetime import datetime, timezone
-import json
 from pathlib import Path
 import sys
 from typing import Sequence
 
-from .alignment import normalize_text, text_mentions_topic
-from .data import NLG_QUERY_SHAPE, LabelSnapshot, load_aligned_queries
+from .alignment import text_mentions_topic
+from .data import LabelSnapshot, load_aligned_queries
 from .graph import build_deterministic_hypergraph
 from .provenance import collect_provenance
 
@@ -33,10 +32,6 @@ def validate_domain(
     split_reports: dict[str, object] = {}
     for split in ("train", "valid", "test"):
         queries = load_aligned_queries(structured_dir, nlg_dir, split, labels)
-        released_answers_payload = json.loads(
-            (nlg_dir / f"{split}_answers_hard.json").read_text(encoding="utf-8")
-        )
-        released_answers = released_answers_payload[NLG_QUERY_SHAPE]
         labeled_topics = sum(query.topic_node is not None for query in queries)
         topic_mentions = sum(
             query.topic_node is not None
@@ -54,30 +49,8 @@ def validate_domain(
             and any(answer in bundle.graph for answer in query.answer_nodes)
             for query in queries
         )
-        comparable_answers = 0
-        overlapping_answers = 0
         question_counts = Counter(query.text for query in queries)
-        for query in queries:
-            # The released conversion stores answers in a dict keyed by generated
-            # question text, so duplicate questions overwrite earlier answers.
-            # Those rows remain valid queries but cannot audit alignment by the
-            # overwritten answer value.
-            if question_counts[query.text] != 1:
-                continue
-            structured = {
-                normalize_text(labels.labels[value]) for value in query.answer_nodes
-            }
-            released = {
-                normalize_text(str(value))
-                for value in released_answers.get(query.text, [])
-            }
-            if structured and released:
-                comparable_answers += 1
-                overlapping_answers += bool(structured & released)
         topic_mention_rate = topic_mentions / labeled_topics if labeled_topics else 0.0
-        answer_overlap_rate = (
-            overlapping_answers / comparable_answers if comparable_answers else 0.0
-        )
         split_reports[split] = {
             "aligned_queries": len(queries),
             "queries_with_current_topic_label": labeled_topics,
@@ -89,9 +62,6 @@ def validate_domain(
             "duplicate_question_occurrences": sum(
                 count for count in question_counts.values() if count > 1
             ),
-            "comparable_hard_answer_queries": comparable_answers,
-            "hard_answer_label_overlap_queries": overlapping_answers,
-            "hard_answer_label_overlap_rate": answer_overlap_rate,
             "alignment_supported_queries": sum(
                 query.alignment_supported for query in queries
             ),
