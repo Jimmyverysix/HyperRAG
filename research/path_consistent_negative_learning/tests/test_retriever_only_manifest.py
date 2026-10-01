@@ -30,6 +30,9 @@ class RetrieverManifestTests(unittest.TestCase):
     def test_phase_counts(self) -> None:
         self.assertEqual(len(build_jobs("encode", self.config, **self.arguments)), 2)
         self.assertEqual(len(build_jobs("prepare", self.config, **self.arguments)), 6)
+        self.assertEqual(
+            len(build_jobs("prepare-batched", self.config, **self.arguments)), 4
+        )
         self.assertEqual(len(build_jobs("sweep", self.config, **self.arguments)), 8)
 
     def test_domain_subset_preserves_requested_order(self) -> None:

@@ -47,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--label-snapshot", type=Path, required=True)
     parser.add_argument("--domain", required=True)
     parser.add_argument("--embeddings", type=Path, required=True)
-    parser.add_argument("--variant-seed", type=int, required=True)
+    parser.add_argument("--variant-seed", type=int)
     parser.add_argument("--seeds", type=int, nargs="+", required=True)
     parser.add_argument("--outputs", type=Path, nargs="+", required=True)
     parser.add_argument("--device", required=True)

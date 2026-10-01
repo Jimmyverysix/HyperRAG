@@ -133,6 +133,54 @@ def build_jobs(
                 )
         return jobs
 
+    if phase == "prepare-batched":
+        for domain in domains:
+            embedding = run_root / "embeddings" / f"{domain}.pt"
+            valid = run_root / "prepared" / "eval" / domain / "valid.pt"
+            jobs.append(
+                {
+                    "job_id": f"prepare-valid-{domain}",
+                    "output_dir": str(run_root / "queue" / "prepare" / domain / "valid"),
+                    "commands": [[
+                        "{python}", "-m", PIPELINE_MODULE, "prepare-eval",
+                        *_common_data(structured_root, nlg_root, label_snapshot, domain),
+                        "--embeddings", str(embedding),
+                        "--split", "valid",
+                        "--beam-width", str(config["retrieval"]["beam_width"]),
+                        "--output", str(valid),
+                    ]],
+                    "expected_files": [str(valid), str(valid) + ".report.json"],
+                }
+            )
+            outputs = [
+                run_root / "prepared" / "train" / domain / f"seed_{seed}.pt"
+                for seed in seeds
+            ]
+            report = run_root / "prepared" / "train" / domain / "batch.report.json"
+            jobs.append(
+                {
+                    "job_id": f"prepare-train-batched-{domain}",
+                    "output_dir": str(run_root / "queue" / "prepare" / domain / "train"),
+                    "commands": [[
+                        "{python}", "-m", PREPARE_BATCH_MODULE,
+                        "--structured-root", str(structured_root),
+                        "--nlg-root", str(nlg_root),
+                        "--label-snapshot", str(label_snapshot),
+                        "--domain", domain,
+                        "--embeddings", str(embedding),
+                        "--seeds", *(str(seed) for seed in seeds),
+                        "--outputs", *(str(output) for output in outputs),
+                        "--device", "cuda",
+                        "--report", str(report),
+                    ]],
+                    "expected_files": [
+                        *(value for output in outputs for value in (str(output), str(output) + ".report.json")),
+                        str(report),
+                    ],
+                }
+            )
+        return jobs
+
     if phase == "sweep":
         for domain in domains:
             embedding = run_root / "embeddings" / f"{domain}.pt"
@@ -536,6 +584,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(
             "encode",
             "prepare",
+            "prepare-batched",
             "sweep",
             "prepare-test",
             "main-test",
