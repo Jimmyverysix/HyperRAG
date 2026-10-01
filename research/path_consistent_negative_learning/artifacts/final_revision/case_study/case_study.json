@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "selection_rule": "first_released_order_query_with_sampled_conflict",
+  "domain": "art",
+  "seed": 42,
+  "query_key": "art:train:2676:22,87,49",
+  "question": "Which composers work in the same genre as Giancarlo Santi?",
+  "topic": {
+    "node_id": "Q3762962",
+    "text": "Giancarlo Santi"
+  },
+  "answers": [
+    {
+      "node_id": "Q1332599",
+      "text": "Luis Bacalov"
+    },
+    {
+      "node_id": "Q23848",
+      "text": "Ennio Morricone"
+    },
+    {
+      "node_id": "Q323977",
+      "text": "Francesco De Masi"
+    },
+    {
+      "node_id": "Q3629660",
+      "text": "Augusto Martelli"
+    }
+  ],
+  "sampled_negative_transition": {
+    "head": "Q3762962",
+    "hyperedge": "H:Q3762962",
+    "tail": "Q212781",
+    "head_text": "Giancarlo Santi",
+    "hyperedge_text": "Giancarlo Santi | director (inverse): Storm Rider; genre: Spaghetti Western",
+    "tail_text": "Spaghetti Western"
+  },
+  "distance_equality": {
+    "topic_to_head": 0,
+    "transition_cost": 2,
+    "tail_to_answer": 2,
+    "topic_to_answer": 4
+  },
+  "selected_paths": [
+    [
+      {
+        "node_id": "Q3762962",
+        "kind": "entity",
+        "text": "Giancarlo Santi"
+      },
+      {
+        "node_id": "H:Q479837",
+        "kind": "hyperedge",
+        "text": "Storm Rider | composer: Luis Bacalov; director: Giancarlo Santi; film editor: Roberto Perpignani; genre: Spaghetti Western; original language of film or TV show: English; original language of film or TV show: Italian; screenwriter: Ernesto Gastaldi"
+      },
+      {
+        "node_id": "Q1332599",
+        "kind": "entity",
+        "text": "Luis Bacalov"
+      }
+    ],
+    [
+      {
+        "node_id": "Q3762962",
+        "kind": "entity",
+        "text": "Giancarlo Santi"
+      },
+      {
+        "node_id": "H:Q212781",
+        "kind": "hyperedge",
+        "text": "Spaghetti Western | genre (inverse): Camillo Bazzoni; genre (inverse): California; genre (inverse): Straight to Hell; genre (inverse): God Forgives... I Don't!; genre (inverse): More Dollars for the MacGregors; genre (inverse): The Man Called Noon; genre (inverse): Arizona Colt Returns; genre (inverse): Django Shoots First; genre (inverse): Doc West; genre (inverse): Pride and Vengeance; genre (inverse): The Return of Clint the Stranger; genre (inverse): A Hole in the Forehead; genre (inverse): Chino; genre (inverse): Franco Giraldi; genre (inverse): Giarrettiera Colt; genre (inverse): Giorgio Stegani; genre (inverse): Giuseppe Vari; genre (inverse): For a Few Dollars More; genre (inverse): The Tall Women; genre (inverse): He Was Called Holy Ghost; genre (inverse): Bullet in the Flesh; genre (inverse): All'ombra di una colt; genre (inverse): Giorgio Ferroni; genre (inverse): Mario Amendola; genre (inverse): The Tramplers; genre (inverse): Time of Vultures; genre (inverse): Lucio Fulci; genre (inverse): Pasquale Squitieri; genre (inverse): Adiós, Sabata; genre (inverse): Renegade Riders; genre (inverse): Shoot Twice; genre (inverse): Giancarlo Santi; genre (inverse): Long Days of Hate; genre (inverse): Io sono il capataz; genre (inverse): Sheriff Won't Shoot; genre (inverse): Vengeance is Mine; genre (inverse): Up the MacGregors!; genre (inverse): The Good, the Bad and the Ugly; genre (inverse): Storm Rider; genre (inverse): A Genius, Two Partners and a Dupe; genre (inverse): Sergio Corbucci; genre (inverse): Damiano Damiani; genre (inverse): The Ruthless Four; genre (inverse): Duccio Tessari; genre (inverse): Umberto Lenzi; genre (inverse): Luciano Ercoli; genre (inverse): Blindman; genre (inverse): Two Sons of Ringo; genre (inverse): Gianfranco Parolini; genre (inverse): Enzo Barboni; genre (inverse): The Christmas Kid; genre (inverse): My Name is Nobody; genre (inverse): Enzo G. Castellari; genre (inverse): Sergio Martino; genre (inverse): Bruno Corbucci"
+      },
+      {
+        "node_id": "Q1304420",
+        "kind": "entity",
+        "text": "The Return of Clint the Stranger"
+      },
+      {
+        "node_id": "H:Q1304420",
+        "kind": "hyperedge",
+        "text": "The Return of Clint the Stranger | composer: Ennio Morricone; genre: Spaghetti Western; original language of film or TV show: Spanish; producer: Alfonso Balcázar"
+      },
+      {
+        "node_id": "Q23848",
+        "kind": "entity",
+        "text": "Ennio Morricone"
+      }
+    ],
+    [
+      {
+        "node_id": "Q3762962",
+        "kind": "entity",
+        "text": "Giancarlo Santi"
+      },
+      {
+        "node_id": "H:Q212781",
+        "kind": "hyperedge",
+        "text": "Spaghetti Western | genre (inverse): Camillo Bazzoni; genre (inverse): California; genre (inverse): Straight to Hell; genre (inverse): God Forgives... I Don't!; genre (inverse): More Dollars for the MacGregors; genre (inverse): The Man Called Noon; genre (inverse): Arizona Colt Returns; genre (inverse): Django Shoots First; genre (inverse): Doc West; genre (inverse): Pride and Vengeance; genre (inverse): The Return of Clint the Stranger; genre (inverse): A Hole in the Forehead; genre (inverse): Chino; genre (inverse): Franco Giraldi; genre (inverse): Giarrettiera Colt; genre (inverse): Giorgio Stegani; genre (inverse): Giuseppe Vari; genre (inverse): For a Few Dollars More; genre (inverse): The Tall Women; genre (inverse): He Was Called Holy Ghost; genre (inverse): Bullet in the Flesh; genre (inverse): All'ombra di una colt; genre (inverse): Giorgio Ferroni; genre (inverse): Mario Amendola; genre (inverse): The Tramplers; genre (inverse): Time of Vultures; genre (inverse): Lucio Fulci; genre (inverse): Pasquale Squitieri; genre (inverse): Adiós, Sabata; genre (inverse): Renegade Riders; genre (inverse): Shoot Twice; genre (inverse): Giancarlo Santi; genre (inverse): Long Days of Hate; genre (inverse): Io sono il capataz; genre (inverse): Sheriff Won't Shoot; genre (inverse): Vengeance is Mine; genre (inverse): Up the MacGregors!; genre (inverse): The Good, the Bad and the Ugly; genre (inverse): Storm Rider; genre (inverse): A Genius, Two Partners and a Dupe; genre (inverse): Sergio Corbucci; genre (inverse): Damiano Damiani; genre (inverse): The Ruthless Four; genre (inverse): Duccio Tessari; genre (inverse): Umberto Lenzi; genre (inverse): Luciano Ercoli; genre (inverse): Blindman; genre (inverse): Two Sons of Ringo; genre (inverse): Gianfranco Parolini; genre (inverse): Enzo Barboni; genre (inverse): The Christmas Kid; genre (inverse): My Name is Nobody; genre (inverse): Enzo G. Castellari; genre (inverse): Sergio Martino; genre (inverse): Bruno Corbucci"
+      },
+      {
+        "node_id": "Q212781",
+        "kind": "entity",
+        "text": "Spaghetti Western"
+      },
+      {
+        "node_id": "H:Q369585",
+        "kind": "hyperedge",
+        "text": "Renegade Riders | composer: Francesco De Masi; director: Enzo G. Castellari; genre: Spaghetti Western; original language of film or TV show: Italian"
+      },
+      {
+        "node_id": "Q323977",
+        "kind": "entity",
+        "text": "Francesco De Masi"
+      }
+    ],
+    [
+      {
+        "node_id": "Q3762962",
+        "kind": "entity",
+        "text": "Giancarlo Santi"
+      },
+      {
+        "node_id": "H:Q212781",
+        "kind": "hyperedge",
+        "text": "Spaghetti Western | genre (inverse): Camillo Bazzoni; genre (inverse): California; genre (inverse): Straight to Hell; genre (inverse): God Forgives... I Don't!; genre (inverse): More Dollars for the MacGregors; genre (inverse): The Man Called Noon; genre (inverse): Arizona Colt Returns; genre (inverse): Django Shoots First; genre (inverse): Doc West; genre (inverse): Pride and Vengeance; genre (inverse): The Return of Clint the Stranger; genre (inverse): A Hole in the Forehead; genre (inverse): Chino; genre (inverse): Franco Giraldi; genre (inverse): Giarrettiera Colt; genre (inverse): Giorgio Stegani; genre (inverse): Giuseppe Vari; genre (inverse): For a Few Dollars More; genre (inverse): The Tall Women; genre (inverse): He Was Called Holy Ghost; genre (inverse): Bullet in the Flesh; genre (inverse): All'ombra di una colt; genre (inverse): Giorgio Ferroni; genre (inverse): Mario Amendola; genre (inverse): The Tramplers; genre (inverse): Time of Vultures; genre (inverse): Lucio Fulci; genre (inverse): Pasquale Squitieri; genre (inverse): Adiós, Sabata; genre (inverse): Renegade Riders; genre (inverse): Shoot Twice; genre (inverse): Giancarlo Santi; genre (inverse): Long Days of Hate; genre (inverse): Io sono il capataz; genre (inverse): Sheriff Won't Shoot; genre (inverse): Vengeance is Mine; genre (inverse): Up the MacGregors!; genre (inverse): The Good, the Bad and the Ugly; genre (inverse): Storm Rider; genre (inverse): A Genius, Two Partners and a Dupe; genre (inverse): Sergio Corbucci; genre (inverse): Damiano Damiani; genre (inverse): The Ruthless Four; genre (inverse): Duccio Tessari; genre (inverse): Umberto Lenzi; genre (inverse): Luciano Ercoli; genre (inverse): Blindman; genre (inverse): Two Sons of Ringo; genre (inverse): Gianfranco Parolini; genre (inverse): Enzo Barboni; genre (inverse): The Christmas Kid; genre (inverse): My Name is Nobody; genre (inverse): Enzo G. Castellari; genre (inverse): Sergio Martino; genre (inverse): Bruno Corbucci"
+      },
+      {
+        "node_id": "Q1168421",
+        "kind": "entity",
+        "text": "More Dollars for the MacGregors"
+      },
+      {
+        "node_id": "H:Q1168421",
+        "kind": "hyperedge",
+        "text": "More Dollars for the MacGregors | composer: Augusto Martelli; genre: Spaghetti Western; original language of film or TV show: Spanish; original language of film or TV show: Italian"
+      },
+      {
+        "node_id": "Q3629660",
+        "kind": "entity",
+        "text": "Augusto Martelli"
+      }
+    ]
+  ],
+  "witness_answer": {
+    "node_id": "Q23848",
+    "text": "Ennio Morricone"
+  },
+  "selected_path_for_witness_answer": [
+    {
+      "node_id": "Q3762962",
+      "kind": "entity",
+      "text": "Giancarlo Santi"
+    },
+    {
+      "node_id": "H:Q212781",
+      "kind": "hyperedge",
+      "text": "Spaghetti Western | genre (inverse): Camillo Bazzoni; genre (inverse): California; genre (inverse): Straight to Hell; genre (inverse): God Forgives... I Don't!; genre (inverse): More Dollars for the MacGregors; genre (inverse): The Man Called Noon; genre (inverse): Arizona Colt Returns; genre (inverse): Django Shoots First; genre (inverse): Doc West; genre (inverse): Pride and Vengeance; genre (inverse): The Return of Clint the Stranger; genre (inverse): A Hole in the Forehead; genre (inverse): Chino; genre (inverse): Franco Giraldi; genre (inverse): Giarrettiera Colt; genre (inverse): Giorgio Stegani; genre (inverse): Giuseppe Vari; genre (inverse): For a Few Dollars More; genre (inverse): The Tall Women; genre (inverse): He Was Called Holy Ghost; genre (inverse): Bullet in the Flesh; genre (inverse): All'ombra di una colt; genre (inverse): Giorgio Ferroni; genre (inverse): Mario Amendola; genre (inverse): The Tramplers; genre (inverse): Time of Vultures; genre (inverse): Lucio Fulci; genre (inverse): Pasquale Squitieri; genre (inverse): Adiós, Sabata; genre (inverse): Renegade Riders; genre (inverse): Shoot Twice; genre (inverse): Giancarlo Santi; genre (inverse): Long Days of Hate; genre (inverse): Io sono il capataz; genre (inverse): Sheriff Won't Shoot; genre (inverse): Vengeance is Mine; genre (inverse): Up the MacGregors!; genre (inverse): The Good, the Bad and the Ugly; genre (inverse): Storm Rider; genre (inverse): A Genius, Two Partners and a Dupe; genre (inverse): Sergio Corbucci; genre (inverse): Damiano Damiani; genre (inverse): The Ruthless Four; genre (inverse): Duccio Tessari; genre (inverse): Umberto Lenzi; genre (inverse): Luciano Ercoli; genre (inverse): Blindman; genre (inverse): Two Sons of Ringo; genre (inverse): Gianfranco Parolini; genre (inverse): Enzo Barboni; genre (inverse): The Christmas Kid; genre (inverse): My Name is Nobody; genre (inverse): Enzo G. Castellari; genre (inverse): Sergio Martino; genre (inverse): Bruno Corbucci"
+    },
+    {
+      "node_id": "Q1304420",
+      "kind": "entity",
+      "text": "The Return of Clint the Stranger"
+    },
+    {
+      "node_id": "H:Q1304420",
+      "kind": "hyperedge",
+      "text": "The Return of Clint the Stranger | composer: Ennio Morricone; genre: Spaghetti Western; original language of film or TV show: Spanish; producer: Alfonso Balcázar"
+    },
+    {
+      "node_id": "Q23848",
+      "kind": "entity",
+      "text": "Ennio Morricone"
+    }
+  ],
+  "conflict_witness_path": [
+    {
+      "node_id": "Q3762962",
+      "kind": "entity",
+      "text": "Giancarlo Santi"
+    },
+    {
+      "node_id": "H:Q3762962",
+      "kind": "hyperedge",
+      "text": "Giancarlo Santi | director (inverse): Storm Rider; genre: Spaghetti Western"
+    },
+    {
+      "node_id": "Q212781",
+      "kind": "entity",
+      "text": "Spaghetti Western"
+    },
+    {
+      "node_id": "H:Q1304420",
+      "kind": "hyperedge",
+      "text": "The Return of Clint the Stranger | composer: Ennio Morricone; genre: Spaghetti Western; original language of film or TV show: Spanish; producer: Alfonso Balcázar"
+    },
+    {
+      "node_id": "Q23848",
+      "kind": "entity",
+      "text": "Ennio Morricone"
+    }
+  ],
+  "provenance": {
+    "created_at": "2026-10-01T07:02:56.082698+00:00",
+    "research_commit": "570dd72e91ec9e56c73fa33603389da548c6caf3",
+    "research_worktree_dirty": true,
+    "official_upstream_commit": "6d5a9033353c516a9220d78591f2c666f19ee0b1",
+    "command": [
+      "E:\\code\\HyperRAG\\research\\path_consistent_negative_learning\\scripts\\extract_retriever_case_study.py",
+      "--structured-root",
+      "tmp/downloads/WikiTopics_QE/WikiTopics_QE",
+      "--nlg-root",
+      "tmp/downloads/WikiTopics_NLG/WikiTopicsQE_NLG",
+      "--label-snapshot",
+      "research/path_consistent_negative_learning/artifacts/retriever_only/raw/label_snapshot.json",
+      "--domain",
+      "art",
+      "--seed",
+      "42",
+      "--output",
+      "research/path_consistent_negative_learning/artifacts/final_revision/case_study/case_study.json"
+    ],
+    "python": "3.13.6 (tags/v3.13.6:4e66535, Aug  6 2025, 14:36:00) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.19045-SP0",
+    "torch": "2.8.0+cpu",
+    "cuda_available": false,
+    "cuda_visible_devices": null,
+    "gpu_name": null
+  }
+}
