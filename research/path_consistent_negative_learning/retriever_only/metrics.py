@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import heapq
 from typing import Mapping, Sequence
 
 from .graph import Transition
@@ -67,6 +68,41 @@ def answer_path_metrics(
         reach_at_5=float(first_rank is not None and first_rank <= 5),
         reach_at_10=float(first_rank is not None and first_rank <= 10),
     )
+
+
+def answer_path_completion_rank_minimax(
+    ranked_transitions: Sequence[Transition],
+    topic: str,
+    answers: Sequence[str],
+) -> int | None:
+    """Compute the APC rank as the minimum path bottleneck rank.
+
+    For every directed topic--answer path, its cost is the largest rank of a
+    transition on that path.  The returned value is the minimum such cost.
+    This is the formal min--max definition of Answer-Path Completion rank and
+    is equivalent to the incremental top-k reachability implementation above.
+    """
+
+    answer_set = set(answers)
+    if topic in answer_set:
+        return 1
+    adjacency: dict[str, list[tuple[str, int]]] = {}
+    for rank, (head, _, tail) in enumerate(ranked_transitions, start=1):
+        adjacency.setdefault(head, []).append((tail, rank))
+    best = {topic: 0}
+    queue: list[tuple[int, str]] = [(0, topic)]
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if cost != best[node]:
+            continue
+        if node in answer_set:
+            return cost
+        for following, rank in adjacency.get(node, ()):
+            candidate = max(cost, rank)
+            if candidate < best.get(following, candidate + 1):
+                best[following] = candidate
+                heapq.heappush(queue, (candidate, following))
+    return None
 
 
 def mean_metrics(values: Sequence[AnswerPathMetrics]) -> Mapping[str, float]:

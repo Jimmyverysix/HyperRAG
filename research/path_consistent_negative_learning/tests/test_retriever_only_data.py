@@ -82,8 +82,15 @@ class RetrieverOnlyAlignmentTests(unittest.TestCase):
         self.assertEqual(queries[0].answer_nodes, ("Q3",))
         self.assertEqual(queries[0].text, "Where is One?")
         self.assertTrue(queries[0].topic_text_alignment_evidence)
-        self.assertTrue(queries[0].hard_answer_alignment_evidence)
         self.assertTrue(queries[0].alignment_supported)
+
+    def test_alignment_does_not_read_nlg_answers(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            structured, nlg, labels = self._write_fixture(Path(temporary))
+            (nlg / "train_answers_hard.json").unlink()
+            queries = load_aligned_queries(structured, nlg, "train", labels)
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(queries[0].topic_qid, "Q1")
 
     def test_graph_is_deterministically_serialized_after_filter(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

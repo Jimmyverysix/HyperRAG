@@ -80,6 +80,16 @@ class RetrieverManifestTests(unittest.TestCase):
             self.assertEqual(
                 len(build_jobs("main-test", self.config, **arguments)), 12
             )
+            posthoc = build_jobs(
+                "fixed-masking-posthoc", self.config, **arguments
+            )
+            self.assertEqual(len(posthoc), 4)
+            self.assertTrue(
+                all("-a-" in job["job_id"] for job in posthoc)
+            )
+            self.assertTrue(
+                any("fixed_matched_random" in command for job in posthoc for command in job["commands"][-1])
+            )
             self.assertEqual(
                 len(build_jobs("path-sensitivity", self.config, **arguments)), 12
             )

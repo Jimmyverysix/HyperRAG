@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import math
 import re
 import unicodedata
-from typing import AbstractSet, Mapping, Sequence
+from typing import Sequence
 
 
 NON_ALPHANUMERIC = re.compile(r"[^a-z0-9]+")
@@ -48,13 +48,8 @@ class AlignmentPair:
 def align_queries(
     topics: Sequence[str | None],
     nlg_questions: Sequence[str],
-    *,
-    structured_answer_counts: Sequence[int] | None = None,
-    nlg_answer_counts: Mapping[str, int] | None = None,
-    structured_answer_labels: Sequence[AbstractSet[str]] | None = None,
-    nlg_answer_labels: Mapping[str, AbstractSet[str]] | None = None,
 ) -> tuple[AlignmentPair, ...]:
-    """Align ordered sequences by deleting structured rows filtered during release.
+    """Align ordered sequences without consulting answer annotations.
 
     The released conversion preserves order and only filters structured queries.
     Dynamic programming therefore needs match and structured-delete transitions,
@@ -63,10 +58,6 @@ def align_queries(
 
     if len(topics) < len(nlg_questions):
         raise ValueError("NLG contains more queries than the structured source")
-    if structured_answer_counts is not None and len(structured_answer_counts) != len(topics):
-        raise ValueError("structured_answer_counts must align with topics")
-    if structured_answer_labels is not None and len(structured_answer_labels) != len(topics):
-        raise ValueError("structured_answer_labels must align with topics")
     deletions = len(topics) - len(nlg_questions)
     normalized_topics = [
         normalize_text(topic) if topic is not None else None for topic in topics
@@ -88,19 +79,6 @@ def align_queries(
             nlg_index = index - deleted
             if nlg_index < len(nlg_questions):
                 cost = _topic_cost(topic, normalized_questions[nlg_index])
-                if structured_answer_counts is not None and nlg_answer_counts is not None:
-                    observed = nlg_answer_counts.get(nlg_questions[nlg_index])
-                    if observed is not None and observed != structured_answer_counts[index]:
-                        cost += 0.10
-                if structured_answer_labels is not None and nlg_answer_labels is not None:
-                    expected_labels = structured_answer_labels[index]
-                    observed_labels = nlg_answer_labels.get(nlg_questions[nlg_index])
-                    if (
-                        expected_labels
-                        and observed_labels
-                        and expected_labels.isdisjoint(observed_labels)
-                    ):
-                        cost += 4.0
                 candidate = value + cost
                 if candidate <= current[deleted]:
                     current[deleted] = candidate

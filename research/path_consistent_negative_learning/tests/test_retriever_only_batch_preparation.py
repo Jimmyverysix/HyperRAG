@@ -64,7 +64,6 @@ class RetrieverBatchPreparationTests(unittest.TestCase):
             answer_nodes=("a",),
             text="toy question",
             topic_text_alignment_evidence=True,
-            hard_answer_alignment_evidence=True,
             alignment_supported=True,
         )
         nodes = tuple(sorted(graph))

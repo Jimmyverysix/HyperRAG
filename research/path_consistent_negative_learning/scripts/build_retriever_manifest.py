@@ -277,6 +277,85 @@ def build_jobs(
                 )
         return jobs
 
+    if phase == "fixed-masking-posthoc":
+        for domain in domains:
+            selected_lambda = float(selection["domains"][domain]["lambda"])
+            if selected_lambda == 0.0:
+                continue
+            embedding = run_root / "embeddings" / f"{domain}.pt"
+            test_data = run_root / "prepared" / "eval" / domain / "test.pt"
+            for seed in seeds:
+                training = run_root / "prepared" / "train" / domain / f"seed_{seed}.pt"
+                fixed_root = run_root / "posthoc_fixed_masking" / domain
+                fixed_dir = fixed_root / "fixed_masking" / f"seed_{seed}"
+                fixed_scores = fixed_dir / "test_scores.pt"
+                fixed_checkpoint = (
+                    run_root
+                    / "sweep"
+                    / domain
+                    / "lambda_0p00"
+                    / f"seed_{seed}"
+                    / "checkpoint.pt"
+                )
+                jobs.append(
+                    {
+                        "job_id": f"posthoc-fixed-{domain}-s{seed}",
+                        "output_dir": str(fixed_dir),
+                        "commands": [[
+                            "{python}", "-m", PIPELINE_MODULE, "evaluate",
+                            "--evaluation-data", str(test_data),
+                            "--embeddings", str(embedding),
+                            "--checkpoint", str(fixed_checkpoint),
+                            "--evaluation-arm", "fixed_masking",
+                            "--device", "cuda",
+                            "--selection-file", str(selection_file),
+                            "--scores", str(fixed_scores),
+                        ]],
+                        "expected_files": [
+                            str(fixed_scores),
+                            str(fixed_scores.with_suffix(".report.json")),
+                        ],
+                    }
+                )
+                random_dir = fixed_root / "matched_random_masking" / f"seed_{seed}"
+                random_checkpoint = random_dir / "checkpoint.pt"
+                random_scores = random_dir / "test_scores.pt"
+                jobs.append(
+                    {
+                        "job_id": f"posthoc-random-mask-{domain}-s{seed}",
+                        "output_dir": str(random_dir),
+                        "commands": [
+                            [
+                                "{python}", "-m", PIPELINE_MODULE, "train",
+                                "--training-data", str(training),
+                                "--embeddings", str(embedding),
+                                "--method", "matched_random",
+                                "--lambda", "0.0",
+                                "--seed", str(seed),
+                                "--device", "cuda",
+                                "--checkpoint", str(random_checkpoint),
+                            ],
+                            [
+                                "{python}", "-m", PIPELINE_MODULE, "evaluate",
+                                "--evaluation-data", str(test_data),
+                                "--embeddings", str(embedding),
+                                "--checkpoint", str(random_checkpoint),
+                                "--evaluation-arm", "fixed_matched_random",
+                                "--device", "cuda",
+                                "--selection-file", str(selection_file),
+                                "--scores", str(random_scores),
+                            ],
+                        ],
+                        "expected_files": [
+                            str(random_checkpoint),
+                            str(random_checkpoint.with_suffix(".report.json")),
+                            str(random_scores),
+                            str(random_scores.with_suffix(".report.json")),
+                        ],
+                    }
+                )
+        return jobs
+
     if phase == "path-sensitivity":
         variants = config["path_selection_sensitivity"]["variant_seeds"]
         for domain in domains:
@@ -460,6 +539,7 @@ def build_parser() -> argparse.ArgumentParser:
             "sweep",
             "prepare-test",
             "main-test",
+            "fixed-masking-posthoc",
             "path-sensitivity",
             "path-sensitivity-prepare",
             "path-sensitivity-train",

@@ -184,7 +184,15 @@ def command_evaluate(args: argparse.Namespace) -> dict[str, Any]:
     if data.split == "test":
         selection = _require_selection(args)
         selected = float(selection["domains"][data.domain]["lambda"])
-        if evaluation_arm == "ours" and float(checkpoint["lambda"]) != selected:
+        if evaluation_arm in {"fixed_masking", "fixed_matched_random"}:
+            if float(checkpoint["lambda"]) != 0.0:
+                raise ValueError("fixed-masking post-hoc evaluation requires lambda=0.0")
+            expected_method = (
+                "ours" if evaluation_arm == "fixed_masking" else "matched_random"
+            )
+            if checkpoint["method"] != expected_method:
+                raise ValueError("fixed-masking checkpoint method mismatch")
+        elif evaluation_arm == "ours" and float(checkpoint["lambda"]) != selected:
             raise ValueError("checkpoint lambda does not match frozen selection")
         if evaluation_arm == "baseline" and float(checkpoint["lambda"]) != 1.0:
             raise ValueError("baseline evaluation requires the lambda=1.0 checkpoint")
@@ -212,6 +220,11 @@ def command_evaluate(args: argparse.Namespace) -> dict[str, Any]:
             "checkpoint": str(args.checkpoint),
             "evaluation_data": str(args.evaluation_data),
             "scores": str(args.scores),
+            "analysis_design": (
+                "POST-HOC SIMPLIFICATION ANALYSIS"
+                if evaluation_arm in {"fixed_masking", "fixed_matched_random"}
+                else "confirmatory frozen protocol"
+            ),
         }
     )
     return result
@@ -270,7 +283,14 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--embeddings", type=Path, required=True)
     evaluate.add_argument("--checkpoint", type=Path, required=True)
     evaluate.add_argument(
-        "--evaluation-arm", choices=("baseline", "ours", "matched_random")
+        "--evaluation-arm",
+        choices=(
+            "baseline",
+            "ours",
+            "matched_random",
+            "fixed_masking",
+            "fixed_matched_random",
+        ),
     )
     evaluate.add_argument("--device", required=True)
     evaluate.add_argument("--batch-size", type=int, default=1024)

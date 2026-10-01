@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections import Counter
 from dataclasses import dataclass
 import json
 from pathlib import Path
 import pickle
 from typing import Any, Iterable, Mapping
 
-from .alignment import align_queries, normalize_text, text_mentions_topic
+from .alignment import align_queries, text_mentions_topic
 from .labels import relation_base_id
 
 
@@ -101,7 +100,6 @@ class AlignedQuery:
     answer_nodes: tuple[str, ...]
     text: str
     topic_text_alignment_evidence: bool
-    hard_answer_alignment_evidence: bool
     alignment_supported: bool
 
 
@@ -172,19 +170,10 @@ def load_aligned_queries(
 
     mappings = DomainMappings.load(structured_domain_dir / "og_mappings.pkl")
     entities = mappings.entity_map(split)
-    nlg_answers_payload = json.loads(
-        (nlg_domain_dir / f"{split}_answers_hard.json").read_text(encoding="utf-8")
-    )
-    nlg_answers = nlg_answers_payload.get(NLG_QUERY_SHAPE)
-    if not isinstance(nlg_answers, Mapping):
-        raise ValueError(f"Malformed NLG answers for {structured_domain_dir.name}/{split}")
-
     answer_lookup = {raw: values for raw, values in raw_answers.items()}
     raw_records: list[
         tuple[object, int, tuple[int, int, int], str | None, tuple[str, str, str]]
     ] = []
-    structured_answer_counts: list[int] = []
-    structured_answer_labels: list[frozenset[str]] = []
     for raw_query in _iter_raw_queries(raw_queries):
         topic_id, relation_ids = _parse_query(raw_query)
         topic_qid = entities.get(topic_id)
@@ -203,15 +192,6 @@ def load_aligned_queries(
         raw_answer_ids = answer_lookup.get(raw_query)
         if raw_answer_ids is None:
             raise ValueError(f"Missing answers for {raw_query!r}")
-        structured_answer_counts.append(len(raw_answer_ids))
-        structured_answer_labels.append(
-            frozenset(
-                normalize_text(labels.labels[entities[int(answer_id)]])
-                for answer_id in raw_answer_ids
-                if int(answer_id) in entities
-                and entities[int(answer_id)] in labels.labels
-            )
-        )
 
     pairs = align_queries(
         [
@@ -219,15 +199,7 @@ def load_aligned_queries(
             for _, _, _, topic_qid, _ in raw_records
         ],
         nlg_queries,
-        structured_answer_counts=structured_answer_counts,
-        nlg_answer_counts={str(key): len(value) for key, value in nlg_answers.items()},
-        structured_answer_labels=structured_answer_labels,
-        nlg_answer_labels={
-            str(key): frozenset(normalize_text(str(label)) for label in value)
-            for key, value in nlg_answers.items()
-        },
     )
-    nlg_question_counts = Counter(nlg_queries)
     aligned: list[AlignedQuery] = []
     for pair in pairs:
         raw_query, topic_id, relation_ids, topic_qid, relation_qids = raw_records[
@@ -267,17 +239,6 @@ def load_aligned_queries(
         topic_evidence = topic_label is not None and text_mentions_topic(
             text, topic_label
         )
-        released_answer_nodes = {
-            normalize_text(str(value)) for value in nlg_answers.get(text, [])
-        }
-        answer_evidence = (
-            nlg_question_counts[text] == 1
-            and bool(answer_nodes)
-            and bool(released_answer_nodes)
-            and not {
-                normalize_text(labels.labels[value]) for value in answer_nodes
-            }.isdisjoint(released_answer_nodes)
-        )
         aligned.append(
             AlignedQuery(
                 key=_query_key(
@@ -298,8 +259,10 @@ def load_aligned_queries(
                 answer_nodes=answer_nodes,
                 text=text,
                 topic_text_alignment_evidence=topic_evidence,
-                hard_answer_alignment_evidence=answer_evidence,
-                alignment_supported=topic_evidence or answer_evidence,
+                # The monotonic release-order alignment is answer-free.  A
+                # current topic label need not be repeated verbatim by the NLG
+                # question, so exact mention is diagnostic rather than a gate.
+                alignment_supported=topic_node is not None,
             )
         )
     return tuple(aligned)
