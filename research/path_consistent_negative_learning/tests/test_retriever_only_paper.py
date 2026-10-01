@@ -117,27 +117,38 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
                     },
                 },
             )
-            sensitivity_rows = []
-            for method in ("baseline", "ours"):
-                sensitivity_rows.append(
-                    {
-                        "domain": "toy",
-                        "method": method,
-                        "query_count": 3,
-                        "answer_path_mrr": {
-                            "mean": 0.2,
-                            "standard_deviation": 0.01,
-                            "range": 0.03,
-                        },
-                        "answer_reach_10": {
-                            "mean": 0.3,
-                            "standard_deviation": 0.02,
-                            "range": 0.04,
-                        },
-                    }
-                )
-            sensitivity = _write(
-                root / "sensitivity.json", {"domains": sensitivity_rows}
+            fixed = _write(
+                root / "fixed.json",
+                {
+                    "equal_domain_macro": {"tuned_strategy": metrics},
+                    "comparisons": {
+                        "fixed_masking_minus_tuned_strategy": {
+                            "reciprocal_rank": comparison,
+                            "answer_reach_10": comparison,
+                        }
+                    },
+                },
+            )
+            oracle = _write(
+                root / "oracle.json",
+                {
+                    "domains": [
+                        {
+                            "domain": "toy",
+                            "query_count": 5,
+                            "oracle_reachable_query_count": 2,
+                            "candidate_oracle_reach": 0.4,
+                        }
+                    ],
+                    "equal_domain_macro_candidate_oracle_reach": 0.4,
+                    "micro_candidate_oracle_reach": 0.4,
+                    "overall_query_count": 5,
+                    "overall_reachable_query_count": 2,
+                },
+            )
+            lambda_validation = _write(
+                root / "lambda_validation.json",
+                {"best_global_lambda": 0.0},
             )
             output = root / "generated"
             generate_paper_artifacts(
@@ -145,7 +156,9 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
                 selection,
                 prevalence,
                 main,
-                sensitivity,
+                fixed,
+                oracle,
+                lambda_validation,
                 output,
             )
             macros = (output / "results.tex").read_text(encoding="utf-8")
@@ -159,7 +172,9 @@ class RetrieverPaperGenerationTests(unittest.TestCase):
         self.assertIn("策略1", table)
         self.assertIn("策略2", table)
         self.assertIn("策略3", table)
-        self.assertIn("0.50", table)
+        self.assertNotIn(r"\lambda", table)
+        self.assertIn(r"\newcommand{\GlobalValidationLambda}{0.00}", macros)
+        self.assertIn(r"\newcommand{\CandidateOracleMacro}{40.00}", macros)
         self.assertEqual(manifest["scope"], "formal_zero_llm_retriever_only")
         self.assertEqual(manifest["dataset_count"], 1)
         self.assertEqual(manifest["sources"]["preflight"], preflight.as_posix())

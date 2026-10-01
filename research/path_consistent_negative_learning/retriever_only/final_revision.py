@@ -192,6 +192,7 @@ def aggregate_fixed_masking(
         for method in methods
     }
     comparisons = {}
+    domain_comparisons = []
     for reference in ("baseline", "matched_random_masking", "tuned_strategy"):
         label = f"fixed_masking_minus_{reference}"
         comparisons[label] = {}
@@ -214,6 +215,60 @@ def aggregate_fixed_masking(
                 "ci_low_percentage_points": 100.0 * estimate["ci_low"],
                 "ci_high_percentage_points": 100.0 * estimate["ci_high"],
             }
+            if metric == "reciprocal_rank":
+                for domain, values in differences.items():
+                    domain_estimate = paired_equal_domain_bootstrap(
+                        {domain: values}
+                    )
+                    domain_comparisons.append(
+                        {
+                            "domain": domain,
+                            "reference": reference,
+                            "metric": "APC-MRR",
+                            "difference_percentage_points": 100.0
+                            * domain_estimate["difference"],
+                            "ci_low_percentage_points": 100.0
+                            * domain_estimate["ci_low"],
+                            "ci_high_percentage_points": 100.0
+                            * domain_estimate["ci_high"],
+                            "resamples": domain_estimate["resamples"],
+                            "seed": domain_estimate["seed"],
+                        }
+                    )
+    final_main = {
+        "domains": [
+            {
+                "domain": row["domain"],
+                "baseline": row["baseline"],
+                "matched_random": row["matched_random_masking"],
+                "ours": row["fixed_masking"],
+            }
+            for row in domain_rows
+        ],
+        "equal_domain_macro": {
+            "baseline": macro["baseline"],
+            "matched_random": macro["matched_random_masking"],
+            "ours": macro["fixed_masking"],
+        },
+        "comparisons": {
+            "ours_minus_baseline": comparisons["fixed_masking_minus_baseline"],
+            "ours_minus_matched_random": comparisons[
+                "fixed_masking_minus_matched_random_masking"
+            ],
+        },
+        "domain_comparisons": [
+            {
+                **row,
+                "reference": (
+                    "matched_random"
+                    if row["reference"] == "matched_random_masking"
+                    else row["reference"]
+                ),
+            }
+            for row in domain_comparisons
+            if row["reference"] in {"baseline", "matched_random_masking"}
+        ],
+    }
     return {
         "schema_version": 1,
         "analysis_design": "POST-HOC SIMPLIFICATION ANALYSIS",
@@ -221,5 +276,7 @@ def aggregate_fixed_masking(
         "domains": domain_rows,
         "equal_domain_macro": macro,
         "comparisons": comparisons,
+        "domain_comparisons": domain_comparisons,
+        "final_main": final_main,
         "sources": sources,
     }

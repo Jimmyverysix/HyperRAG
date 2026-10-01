@@ -144,6 +144,44 @@ def _write_fixed_csv(path: Path, payload: dict[str, Any]) -> None:
                 )
 
 
+def _write_final_main_csv(path: Path, payload: dict[str, Any]) -> None:
+    fields = [
+        "scope",
+        "domain",
+        "method",
+        "apc_mrr",
+        "answer_reach_10",
+        "answer_reach_5",
+    ]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for row in payload["domains"]:
+            for method in ("baseline", "matched_random", "ours"):
+                metrics = row[method]
+                writer.writerow(
+                    {
+                        "scope": "domain",
+                        "domain": row["domain"],
+                        "method": method,
+                        "apc_mrr": metrics["reciprocal_rank"],
+                        "answer_reach_10": metrics["answer_reach_10"],
+                        "answer_reach_5": metrics["answer_reach_5"],
+                    }
+                )
+        for method, metrics in payload["equal_domain_macro"].items():
+            writer.writerow(
+                {
+                    "scope": "equal_domain_macro",
+                    "domain": "ALL",
+                    "method": method,
+                    "apc_mrr": metrics["reciprocal_rank"],
+                    "answer_reach_10": metrics["answer_reach_10"],
+                    "answer_reach_5": metrics["answer_reach_5"],
+                }
+            )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="analysis", required=True)
@@ -180,6 +218,12 @@ def main() -> int:
         )
         _write_json(args.output_dir / "fixed_masking.json", payload)
         _write_fixed_csv(args.output_dir / "fixed_masking_results.csv", payload)
+        _write_json(
+            args.output_dir / "final_main_results.json", payload["final_main"]
+        )
+        _write_final_main_csv(
+            args.output_dir / "final_main_results.csv", payload["final_main"]
+        )
     return 0
 
 

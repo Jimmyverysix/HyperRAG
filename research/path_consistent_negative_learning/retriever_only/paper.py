@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from statistics import fmean
 from typing import Any, Mapping, Sequence
 
 
@@ -72,7 +71,9 @@ def _macro_lines(
     selection: Mapping[str, Any],
     prevalence: Mapping[str, Any],
     main: Mapping[str, Any],
-    sensitivity: Mapping[str, Any],
+    fixed: Mapping[str, Any],
+    oracle: Mapping[str, Any],
+    lambda_validation: Mapping[str, Any],
 ) -> list[str]:
     aligned, eligible = _preflight_counts(preflight)
     masking, soft, baseline = _selection_counts(selection)
@@ -80,16 +81,6 @@ def _macro_lines(
     comparisons = main["comparisons"]
     baseline_difference = comparisons["ours_minus_baseline"]
     random_difference = comparisons["ours_minus_matched_random"]
-
-    sensitivity_rows = sensitivity["domains"]
-    sensitivity_summary = {}
-    for method in ("baseline", "ours"):
-        rows = [row for row in sensitivity_rows if row["method"] == method]
-        for metric in ("answer_path_mrr", "answer_reach_10"):
-            for statistic in ("standard_deviation", "range"):
-                sensitivity_summary[(method, metric, statistic)] = fmean(
-                    float(row[metric][statistic]) for row in rows
-                )
 
     lines = ["% 自动生成；禁止手工修改实验数字。"]
     values = {
@@ -111,6 +102,16 @@ def _macro_lines(
         "MaskSelectedDomainCount": masking,
         "SoftSelectedDomainCount": soft,
         "BaselineSelectedDomainCount": baseline,
+        "GlobalValidationLambda": _decimal(
+            float(lambda_validation["best_global_lambda"])
+        ),
+        "CandidateOracleMacro": _percent(
+            float(oracle["equal_domain_macro_candidate_oracle_reach"])
+        ),
+        "CandidateOracleMicro": _percent(
+            float(oracle["micro_candidate_oracle_reach"])
+        ),
+        "CandidateOracleQueryCount": _count(int(oracle["overall_query_count"])),
     }
     for method, prefix in (
         ("baseline", "StrategyOne"),
@@ -139,33 +140,38 @@ def _macro_lines(
             values[f"{prefix}{suffix}CIHigh"] = _decimal(
                 float(result["ci_high_percentage_points"])
             )
-    values["StrategyOneSensitivityMRRStd"] = _percent(
-        sensitivity_summary[("baseline", "answer_path_mrr", "standard_deviation")]
-    )
-    values["StrategyThreeSensitivityMRRStd"] = _percent(
-        sensitivity_summary[("ours", "answer_path_mrr", "standard_deviation")]
-    )
-    values["StrategyOneSensitivityMRRRange"] = _percent(
-        sensitivity_summary[("baseline", "answer_path_mrr", "range")]
-    )
-    values["StrategyThreeSensitivityMRRRange"] = _percent(
-        sensitivity_summary[("ours", "answer_path_mrr", "range")]
-    )
+    tuned = fixed["equal_domain_macro"]["tuned_strategy"]
+    values["TunedStrategyMRR"] = _percent(float(tuned["reciprocal_rank"]))
+    values["TunedStrategyReachTen"] = _percent(float(tuned["answer_reach_10"]))
+    fixed_tuned = fixed["comparisons"]["fixed_masking_minus_tuned_strategy"]
+    for metric, suffix in (
+        ("reciprocal_rank", "MRR"),
+        ("answer_reach_10", "ReachTen"),
+    ):
+        result = fixed_tuned[metric]
+        values[f"FixedTuned{suffix}Delta"] = _decimal(
+            float(result["difference_percentage_points"])
+        )
+        values[f"FixedTuned{suffix}CILow"] = _decimal(
+            float(result["ci_low_percentage_points"])
+        )
+        values[f"FixedTuned{suffix}CIHigh"] = _decimal(
+            float(result["ci_high_percentage_points"])
+        )
     lines.extend(_macro(name, value) for name, value in values.items())
     return lines
 
 
 def _main_table(
-    selection: Mapping[str, Any],
     main: Mapping[str, Any],
 ) -> list[str]:
     lines = [
-        r"\begin{tabular}{lrrrrrrr}",
+        r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
-        r"领域 & $\lambda_D^*$ & \multicolumn{3}{c}{Answer-Path MRR (\%)} & "
+        r"领域 & \multicolumn{3}{c}{APC-MRR (\%)} & "
         r"\multicolumn{3}{c}{Reach@10 (\%)} \\",
-        r"\cmidrule(lr){3-5}\cmidrule(lr){6-8}",
-        r" & & 策略1 & 策略2 & 策略3 & 策略1 & 策略2 & 策略3 \\",
+        r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}",
+        r" & 策略1 & 策略2 & 策略3 & 策略1 & 策略2 & 策略3 \\",
         r"\midrule",
     ]
     for row in main["domains"]:
@@ -173,7 +179,6 @@ def _main_table(
         reach_values = [float(row[method]["answer_reach_10"]) for method in METHODS]
         fields = [
             _escape(row["domain"]),
-            _decimal(float(selection["domains"][row["domain"]]["lambda"]), 2),
             *_bold_best(mrr_values),
             *_bold_best(reach_values),
         ]
@@ -184,7 +189,7 @@ def _main_table(
     macro_reach = [float(macro[method]["answer_reach_10"]) for method in METHODS]
     lines.append(
         " & ".join(
-            ["领域等权宏平均", "--", *_bold_best(macro_mrr), *_bold_best(macro_reach)]
+            ["领域等权宏平均", *_bold_best(macro_mrr), *_bold_best(macro_reach)]
         )
         + r" \\"
     )
@@ -240,32 +245,39 @@ def _lambda_table(selection: Mapping[str, Any]) -> list[str]:
     return lines
 
 
-def _sensitivity_table(sensitivity: Mapping[str, Any]) -> list[str]:
-    by_domain = {}
-    for row in sensitivity["domains"]:
-        by_domain.setdefault(row["domain"], {})[row["method"]] = row
+def _oracle_table(oracle: Mapping[str, Any]) -> list[str]:
     lines = [
-        r"\begin{tabular}{lrrrrr}",
+        r"\begin{tabular}{lrrr}",
         r"\toprule",
-        r"领域 & 问题数 & 策略1 MRR & 策略3 MRR & 策略1 范围 & 策略3 范围 \\",
+        r"领域 & 问题数 & 可达问题数 & Candidate Oracle Reach (\%) \\",
         r"\midrule",
     ]
-    for domain, methods in by_domain.items():
-        baseline = methods["baseline"]
-        ours = methods["ours"]
+    for row in oracle["domains"]:
         lines.append(
             " & ".join(
                 [
-                    _escape(domain),
-                    _count(int(baseline["query_count"])),
-                    _percent(float(baseline["answer_path_mrr"]["mean"])),
-                    _percent(float(ours["answer_path_mrr"]["mean"])),
-                    _percent(float(baseline["answer_path_mrr"]["range"])),
-                    _percent(float(ours["answer_path_mrr"]["range"])),
+                    _escape(row["domain"]),
+                    _count(int(row["query_count"])),
+                    _count(int(row["oracle_reachable_query_count"])),
+                    _percent(float(row["candidate_oracle_reach"])),
                 ]
             )
             + r" \\"
         )
+    lines.append(r"\midrule")
+    lines.append(
+        " & ".join(
+            [
+                "领域等权宏平均",
+                _count(int(oracle["overall_query_count"])),
+                _count(int(oracle["overall_reachable_query_count"])),
+                _percent(
+                    float(oracle["equal_domain_macro_candidate_oracle_reach"])
+                ),
+            ]
+        )
+        + r" \\"
+    )
     lines.extend((r"\bottomrule", r"\end{tabular}"))
     return lines
 
@@ -275,7 +287,9 @@ def generate_paper_artifacts(
     selection_path: Path,
     prevalence_path: Path,
     main_path: Path,
-    sensitivity_path: Path,
+    fixed_path: Path,
+    oracle_path: Path,
+    lambda_validation_path: Path,
     output_dir: Path,
 ) -> dict[str, str]:
     """Write every numeric LaTeX artifact consumed by the paper."""
@@ -284,7 +298,9 @@ def generate_paper_artifacts(
     selection = _load(selection_path)
     prevalence = _load(prevalence_path)
     main = _load(main_path)
-    sensitivity = _load(sensitivity_path)
+    fixed = _load(fixed_path)
+    oracle = _load(oracle_path)
+    lambda_validation = _load(lambda_validation_path)
     output_dir.mkdir(parents=True, exist_ok=True)
     tables = output_dir / "tables"
     tables.mkdir(parents=True, exist_ok=True)
@@ -293,15 +309,23 @@ def generate_paper_artifacts(
         "main": tables / "main_retriever.tex",
         "prevalence": tables / "prevalence.tex",
         "lambda": tables / "lambda_validation.tex",
-        "sensitivity": tables / "path_sensitivity.tex",
+        "oracle": tables / "candidate_oracle.tex",
         "manifest": output_dir / "generation_manifest.json",
     }
     contents = {
-        "results": _macro_lines(preflight, selection, prevalence, main, sensitivity),
-        "main": _main_table(selection, main),
+        "results": _macro_lines(
+            preflight,
+            selection,
+            prevalence,
+            main,
+            fixed,
+            oracle,
+            lambda_validation,
+        ),
+        "main": _main_table(main),
         "prevalence": _prevalence_table(prevalence),
         "lambda": _lambda_table(selection),
-        "sensitivity": _sensitivity_table(sensitivity),
+        "oracle": _oracle_table(oracle),
     }
     for name, path in outputs.items():
         if name == "manifest":
@@ -315,7 +339,9 @@ def generate_paper_artifacts(
             "selection": selection_path.as_posix(),
             "prevalence": prevalence_path.as_posix(),
             "main_test": main_path.as_posix(),
-            "sensitivity": sensitivity_path.as_posix(),
+            "fixed_masking": fixed_path.as_posix(),
+            "candidate_oracle": oracle_path.as_posix(),
+            "lambda_validation": lambda_validation_path.as_posix(),
         },
         "outputs": [
             path.relative_to(output_dir).as_posix()

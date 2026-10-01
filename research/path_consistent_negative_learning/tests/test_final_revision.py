@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import tempfile
 import unittest
 
 import torch
 
 from research.path_consistent_negative_learning.retriever_only.final_revision import (
+    aggregate_fixed_masking,
     analyze_candidate_oracle,
     analyze_validation_lambdas,
 )
@@ -76,6 +78,67 @@ class FinalRevisionAnalysisTests(unittest.TestCase):
         self.assertEqual(result["overall_reachable_query_count"], 1)
         self.assertEqual(
             result["equal_domain_macro_candidate_oracle_reach"], 0.5
+        )
+
+    def test_fixed_masking_uses_posthoc_runs_only_when_tuned_lambda_differs(self) -> None:
+        def write_reports(directory: Path, method: str, score: float) -> None:
+            for seed in (42, 43, 44, 45, 46):
+                path = directory / f"seed_{seed}" / "test_scores.report.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    json.dumps(
+                        {
+                            "split": "test",
+                            "method": method,
+                            "seed": seed,
+                            "queries": [
+                                {
+                                    "query_key": "q",
+                                    "reciprocal_rank": score,
+                                    "answer_reach_10": score,
+                                    "answer_reach_5": score,
+                                }
+                            ],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            run_root = root / "run"
+            posthoc_root = run_root / "posthoc_fixed_masking"
+            for domain, selected in (("mask", 0.0), ("soft", 0.1)):
+                write_reports(run_root / "test" / domain / "baseline", "baseline", 0.1)
+                write_reports(run_root / "test" / domain / "ours", "ours", 0.3)
+                write_reports(
+                    run_root / "test" / domain / "matched_random",
+                    "matched_random",
+                    0.2,
+                )
+                if selected != 0.0:
+                    write_reports(
+                        posthoc_root / domain / "fixed_masking",
+                        "fixed_masking",
+                        0.29,
+                    )
+                    write_reports(
+                        posthoc_root / domain / "matched_random_masking",
+                        "fixed_matched_random",
+                        0.19,
+                    )
+            result = aggregate_fixed_masking(
+                run_root,
+                posthoc_root,
+                {"domains": {"mask": {"lambda": 0.0}, "soft": {"lambda": 0.1}}},
+                ("mask", "soft"),
+            )
+        self.assertEqual(result["analysis_design"], "POST-HOC SIMPLIFICATION ANALYSIS")
+        self.assertIn("final_main", result)
+        self.assertEqual(len(result["final_main"]["domain_comparisons"]), 4)
+        self.assertAlmostEqual(
+            result["final_main"]["equal_domain_macro"]["ours"]["reciprocal_rank"],
+            0.295,
         )
 
 

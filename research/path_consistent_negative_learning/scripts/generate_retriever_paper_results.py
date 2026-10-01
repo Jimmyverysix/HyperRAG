@@ -17,7 +17,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--selection", type=Path, required=True)
     parser.add_argument("--prevalence", type=Path, required=True)
     parser.add_argument("--main-test", type=Path, required=True)
-    parser.add_argument("--sensitivity", type=Path, required=True)
+    parser.add_argument("--fixed-masking", type=Path, required=True)
+    parser.add_argument("--candidate-oracle", type=Path, required=True)
+    parser.add_argument("--lambda-validation", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser
 
@@ -29,7 +31,9 @@ def main() -> int:
         args.selection,
         args.prevalence,
         args.main_test,
-        args.sensitivity,
+        args.fixed_masking,
+        args.candidate_oracle,
+        args.lambda_validation,
         args.output_dir,
     )
     print(json.dumps(outputs, ensure_ascii=False, indent=2))
