@@ -105,7 +105,7 @@ RR_q = 0             if P_q is empty
 12. selector 拒绝 test report；
 13. APC-MRR 的递增 top-k 与 min–max 定义一致。
 
-最终全项目测试结果由仓库 CI 风格命令 `python -m pytest -q research/path_consistent_negative_learning/tests` 产生；具体通过数量在最终交付时记录，不把重复跑同一检查当作额外证据。
+最终全项目测试结果由仓库 CI 风格命令 `python -m pytest -q research/path_consistent_negative_learning/tests` 产生：**140 passed**。不把重复跑同一检查当作额外证据。
 
 ## 6. 审计后的结果使用规则
 

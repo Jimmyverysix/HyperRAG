@@ -194,6 +194,13 @@ def command_evaluate(args: argparse.Namespace) -> dict[str, Any]:
                 raise ValueError("fixed-masking checkpoint method mismatch")
         elif evaluation_arm == "ours" and float(checkpoint["lambda"]) != selected:
             raise ValueError("checkpoint lambda does not match frozen selection")
+        elif (
+            evaluation_arm == "matched_random"
+            and float(checkpoint["lambda"]) != selected
+        ):
+            raise ValueError(
+                "matched-random checkpoint lambda does not match frozen selection"
+            )
         if evaluation_arm == "baseline" and float(checkpoint["lambda"]) != 1.0:
             raise ValueError("baseline evaluation requires the lambda=1.0 checkpoint")
     scores = score_candidates(
