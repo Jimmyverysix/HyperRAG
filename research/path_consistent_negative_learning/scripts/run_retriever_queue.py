@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from datetime import datetime, timezone
 import json
 import os
@@ -147,15 +147,32 @@ def run_manifest(
 
     failures = []
     with ThreadPoolExecutor(max_workers=len(gpu_slots)) as executor:
-        futures = {executor.submit(execute, job): job for job in jobs}
-        for future in as_completed(futures):
-            job = futures[future]
-            try:
-                status, gpu = future.result()
-                print(f"{status}: {job['job_id']} gpu={gpu}", flush=True)
-            except Exception as exc:
-                failures.append({"job_id": job["job_id"], "error": str(exc)})
-                print(f"failed: {job['job_id']}: {exc}", flush=True)
+        pending, futures, completed_ids, failed_ids = list(jobs), {}, set(), set()
+        while pending or futures:
+            for job in list(pending):
+                dependencies = set(job.get("depends_on", []))
+                if dependencies & failed_ids:
+                    pending.remove(job)
+                    failed_ids.add(job["job_id"])
+                    failures.append({"job_id": job["job_id"], "error": "upstream job failed"})
+                elif dependencies <= completed_ids and len(futures) < len(gpu_slots):
+                    pending.remove(job)
+                    futures[executor.submit(execute, job)] = job
+            if not futures:
+                if pending:
+                    raise ValueError("manifest contains unresolved job dependencies")
+                break
+            done, _ = wait(futures, return_when=FIRST_COMPLETED)
+            for future in done:
+                job = futures.pop(future)
+                try:
+                    status, gpu = future.result()
+                    completed_ids.add(job["job_id"])
+                    print(f"{status}: {job['job_id']} gpu={gpu}", flush=True)
+                except Exception as exc:
+                    failed_ids.add(job["job_id"])
+                    failures.append({"job_id": job["job_id"], "error": str(exc)})
+                    print(f"failed: {job['job_id']}: {exc}", flush=True)
     failure_path = manifest_path.with_suffix(".failures.json")
     if failures:
         failure_path.write_text(

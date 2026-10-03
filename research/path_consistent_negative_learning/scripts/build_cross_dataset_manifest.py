@@ -18,6 +18,13 @@ def build(phase, base):
     sources = base / "data_sources/pcn_cross_dataset_20261003"
     prefix = ["{python}", "-m", RUNNER]
     jobs = []
+    if phase == "main":
+        preparation = build("prepare-new", base)["jobs"]
+        training = build("train-new", base)["jobs"]
+        for item in training:
+            dataset = item["job_id"].split("_", 1)[0]
+            item["depends_on"] = [f"{dataset}_prepare_train", f"{dataset}_prepare_test"]
+        return {"phase": phase, "jobs": preparation + training + build("existing-positive", base)["jobs"]}
     if phase == "existing-positive":
         # Launch large WikiTopics jobs first to avoid a long final GPU tail.
         for domain in ("people", "loc", "org", "art", "sci", "infra", "award", "edu", "health", "sport", "tax"):
@@ -76,7 +83,7 @@ def build(phase, base):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", choices=("existing-positive", "encode-new", "prepare-new", "train-new"), required=True)
+    parser.add_argument("--phase", choices=("existing-positive", "encode-new", "prepare-new", "train-new", "main"), required=True)
     parser.add_argument("--base", type=Path, default=Path("/root/hyperrag_pcneg"))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
