@@ -18,6 +18,25 @@ def build(phase, base):
     sources = base / "data_sources/pcn_cross_dataset_20261003"
     prefix = ["{python}", "-m", RUNNER]
     jobs = []
+    if phase == "all-shortest":
+        for dataset in ("pathquestion", "kqapro"):
+            work = root / dataset
+            output = work / "all_shortest"
+            prepared = output / "prepared"
+            commands = [prefix + ["prepare", "--dataset", dataset,
+                        "--data-root", str(sources/dataset), "--embeddings", str(work/"embeddings.pt"),
+                        "--output-dir", str(prepared), "--split", "train", "--all-shortest", "--device", "cuda:0"]]
+            for seed in SEEDS:
+                commands.append(prefix + ["train", "--prepared", str(prepared/f"train_seed_{seed}.pt"),
+                                "--embeddings", str(work/"embeddings.pt"), "--evaluation", str(work/"prepared/test.pt"),
+                                "--output-dir", str(output/f"seed_{seed}"), "--strategy", "baseline", "--seed", str(seed),
+                                "--batch-size", "512", "--feature-storage", "indexed", "--device", "cuda:0",
+                                "--source-protocol", "all_shortest_positive_union_new_negative_pool"])
+            item = job(f"{dataset}_all_shortest", commands, output,
+                       [output/f"seed_{s}/metrics.json" for s in SEEDS])
+            item["maximum_used_mib"] = 18000
+            jobs.append(item)
+        return {"phase": phase, "jobs": jobs}
     if phase == "main":
         preparation = build("prepare-new", base)["jobs"]
         training = build("train-new", base)["jobs"]
@@ -35,7 +54,7 @@ def build(phase, base):
                            "--embeddings", str(base / f"runs/retriever_only/embeddings/{domain}.pt"),
                            "--evaluation", str(old / f"prepared/eval/{domain}/test.pt"),
                            "--output-dir", str(output), "--strategy", "positive_relabel", "--seed", str(seed),
-                           "--batch-size", "32", "--feature-storage", "materialized", "--device", "cuda:0",
+                           "--batch-size", "32", "--feature-storage", "indexed", "--device", "cuda:0",
                            "--source-protocol", "WikiTopics_fixed_original_config"]]
                 jobs.append(job(f"wiki_{domain}_relabel_{seed}", commands, output, [output/"metrics.json"]))
         for seed in SEEDS:
@@ -83,7 +102,7 @@ def build(phase, base):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", choices=("existing-positive", "encode-new", "prepare-new", "train-new", "main"), required=True)
+    parser.add_argument("--phase", choices=("existing-positive", "encode-new", "prepare-new", "train-new", "main", "all-shortest"), required=True)
     parser.add_argument("--base", type=Path, default=Path("/root/hyperrag_pcneg"))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()

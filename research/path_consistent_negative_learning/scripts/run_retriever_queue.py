@@ -101,6 +101,11 @@ def run_manifest(
             )
             started = _timestamp()
             for command_index, command in enumerate(commands):
+                if "maximum_used_mib" in job:
+                    ready = _wait_for_gpus((gpu,), int(job["maximum_used_mib"]),
+                                           timeout_seconds=3600.0)
+                    if not ready:
+                        raise RuntimeError(f"{job['job_id']} waited for GPU memory for one hour")
                 with (output_dir / f"command_{command_index}.stdout.log").open(
                     "w", encoding="utf-8"
                 ) as stdout, (output_dir / f"command_{command_index}.stderr.log").open(

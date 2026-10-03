@@ -13,7 +13,7 @@
   "beam_width": 32,
   "maximum_hops": 3,
   "datasets": {
-    "WikiTopics": {"batch_size": 32, "feature_storage": "materialized", "reuse_existing_three_strategies": true},
+    "WikiTopics": {"batch_size": 32, "existing_feature_storage": "materialized", "new_positive_feature_storage": "indexed", "completed_materialized_positive_runs_preserved": true, "reuse_existing_three_strategies": true},
     "MetaQA-3hop-vanilla": {"batch_size": 512, "feature_storage": "indexed", "reuse_existing_three_strategies": true},
     "KQAPro-entity": {"batch_size": 512, "feature_storage": "indexed", "test_definition": "official_val_entity_single_topic_subset", "split_seed": 20261003},
     "PathQuestion-2H3H": {"batch_size": 512, "feature_storage": "materialized", "test_definition": "question_topic_grouped_seeded_80_10_10", "split_seed": 20261003}
