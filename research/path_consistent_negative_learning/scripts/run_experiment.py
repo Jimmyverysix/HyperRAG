@@ -64,10 +64,12 @@ def merge_embeddings(args):
 
 def query_diagnostics(adapter, query, structure):
     positives, _, distances, on_path = structure
+    # Count only the answer DAG, rather than every topic-reachable node. This
+    # is exact because every prefix contributing to an answer is in on_path.
     counts = {query.topic: 1}
-    for head in sorted(distances, key=lambda n: (distances[n], n)):
+    for head in sorted(on_path, key=lambda n: (distances[n], n)):
         for _, tail in adapter.graph.outgoing.get(head, ()):
-            if distances.get(tail) == distances[head] + 1:
+            if tail in on_path and distances.get(tail) == distances[head] + 1:
                 counts[tail] = counts.get(tail, 0) + counts.get(head, 0)
     answer_counts = [counts[a] for a in query.answers if a in counts and distances[a] > 0]
     hops = [distances[a] for a in query.answers if a in distances and distances[a] > 0]
