@@ -26,16 +26,22 @@ def build(phase, base):
             commands = [prefix + ["prepare", "--dataset", dataset,
                         "--data-root", str(sources/dataset), "--embeddings", str(work/"embeddings.pt"),
                         "--output-dir", str(prepared), "--split", "train", "--all-shortest", "--device", "cuda:0"]]
+            prepare_id = f"{dataset}_all_shortest_prepare"
+            item = job(prepare_id, commands, output / "prepare_logs",
+                       [prepared / f"train_seed_{s}.pt" for s in SEEDS])
+            item["maximum_used_mib"] = 18000
+            jobs.append(item)
             for seed in SEEDS:
-                commands.append(prefix + ["train", "--prepared", str(prepared/f"train_seed_{seed}.pt"),
+                commands = [prefix + ["train", "--prepared", str(prepared/f"train_seed_{seed}.pt"),
                                 "--embeddings", str(work/"embeddings.pt"), "--evaluation", str(work/"prepared/test.pt"),
                                 "--output-dir", str(output/f"seed_{seed}"), "--strategy", "baseline", "--seed", str(seed),
                                 "--batch-size", "512", "--feature-storage", "indexed", "--device", "cuda:0",
-                                "--source-protocol", "all_shortest_positive_union_new_negative_pool"])
-            item = job(f"{dataset}_all_shortest", commands, output,
-                       [output/f"seed_{s}/metrics.json" for s in SEEDS])
-            item["maximum_used_mib"] = 18000
-            jobs.append(item)
+                                "--source-protocol", "all_shortest_positive_union_new_negative_pool"]]
+                item = job(f"{dataset}_all_shortest_{seed}", commands, output / f"seed_{seed}",
+                           [output / f"seed_{seed}/metrics.json"])
+                item["depends_on"] = [prepare_id]
+                item["maximum_used_mib"] = 18000
+                jobs.append(item)
         return {"phase": phase, "jobs": jobs}
     if phase == "main":
         preparation = build("prepare-new", base)["jobs"]

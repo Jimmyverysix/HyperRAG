@@ -1,0 +1,19 @@
+{
+  "version": "zmtkeke_IRN_PQ_2H3H",
+  "split_seed": 20261003,
+  "split_protocol": "exact_question_topic_grouped_80_10_10",
+  "raw_files": [
+    "2H.txt",
+    "3H.txt"
+  ],
+  "uses_gold_path_for": "topic_only; not graph, candidates, features or selected positive path",
+  "dataset": "PathQuestion-2H3H",
+  "entity_count": 2256,
+  "relation_text_count_with_inverse": 26,
+  "triple_count": 3377,
+  "split_sizes": {
+    "train": 5684,
+    "valid": 710,
+    "test": 711
+  }
+}

@@ -86,13 +86,19 @@ def meta_reports(directory, old_method):
         with path.open(encoding="utf-8", newline="") as f:
             for row in csv.DictReader(f):
                 key = row["query_id"]
-                rows[key].append([float(row["APC_MRR_or_RR"]), float(row["Reach@10"]), np.nan])
+                rr = float(row["APC_MRR_or_RR"])
+                # RR is 1 / the integer completion rank, so Reach@5 is exact.
+                rows[key].append([rr, float(row["Reach@10"]), float(rr >= 1/5)])
                 oracle[key] = int(row["Candidate_Oracle"])
                 candidates[key] = int(row["candidate_count"])
     if any(len(v) != 5 for v in rows.values()):
         raise ValueError("MetaQA query seed coverage differs")
     keys = sorted(rows)
     array = np.asarray([rows[k] for k in keys]).transpose(1, 0, 2)
+    for seed, values in zip(SEEDS, array):
+        recorded = read_json(directory/f"test_{old_method}_{seed}.json")["metrics"]["answer_reach_5"]
+        if abs(float(values[:, 2].mean()) - recorded) > 1e-12:
+            raise ValueError("Reach@5 reconstructed from RR differs from the recorded MetaQA report")
     return {"keys": keys, "values": array.mean(axis=0), "oracle": oracle,
             "candidate_counts": candidates,
             "per_seed": {s: a.mean(axis=0) for s, a in zip(SEEDS, array)},
@@ -156,7 +162,7 @@ def summarize(name, groups, resamples):
                     if mask.any():
                         conditional[group] = np.nan_to_num(difference[mask])
             result = bootstrap(differences, resamples=resamples)
-            # Old MetaQA files did not record Reach@5; zero is not a score.
+            # Never turn an unavailable metric into a zero score.
             for m in METRICS:
                 if m not in output["methods"][strategy]["all_questions"]:
                     result.pop(m, None)
@@ -201,7 +207,23 @@ def main():
     summaries.append(summarize("MetaQA-3hop-vanilla", {"metaqa": meta}, args.resamples))
     for dataset in ("pathquestion", "kqapro"):
         arms = {s: average_reports([new/f"{dataset}/{s}/seed_{seed}/metrics.json" for seed in SEEDS]) for s in STRATEGIES}
-        summaries.append(summarize(dataset, {dataset: arms}, args.resamples))
+        summary = summarize(dataset, {dataset: arms}, args.resamples)
+        optional = average_reports([new/f"{dataset}/all_shortest/seed_{s}/metrics.json" for s in SEEDS])
+        if optional:
+            ours = arms["pcn_mask"]
+            if optional["keys"] != ours["keys"] or optional["candidate_counts"] != ours["candidate_counts"]:
+                raise ValueError("all-shortest evaluation must share the original fixed candidate pool")
+            mask = np.asarray([bool(optional["oracle"][k]) for k in optional["keys"]])
+            summary["methods"]["all_shortest"] = {"status": "complete", "seeds": list(SEEDS),
+                "training_candidates": "different_positive_union_and_new_negative_pool",
+                "all_questions": dict(zip(METRICS, map(float, optional["values"].mean(axis=0)))),
+                "oracle_reachable_only": dict(zip(METRICS, map(float, optional["values"][mask].mean(axis=0))))}
+            summary["sources"]["all_shortest"] = {dataset: optional["sources"]}
+            diff = ours["values"] - optional["values"]
+            summary["comparisons"]["pcn_mask_minus_all_shortest"] = {
+                "all_questions": bootstrap({dataset: diff}, args.resamples),
+                "oracle_reachable_only": bootstrap({dataset: diff[mask]}, args.resamples)}
+        summaries.append(summary)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result = {"created_utc": datetime.now(timezone.utc).isoformat(), "seeds": list(SEEDS),
               "bootstrap": {"resamples": args.resamples, "confidence": .95, "seed": 20261003,

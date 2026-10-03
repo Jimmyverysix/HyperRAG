@@ -1,0 +1,22 @@
+{
+  "WebQSP.train.json": {
+    "questions": 3098,
+    "with_topic": 3097,
+    "with_entity_answer": 2997,
+    "inference_chain_lengths": {
+      "2": 1285,
+      "1": 2114,
+      "0": 54
+    }
+  },
+  "WebQSP.test.json": {
+    "questions": 1639,
+    "with_topic": 1639,
+    "with_entity_answer": 1582,
+    "inference_chain_lengths": {
+      "1": 1145,
+      "0": 23,
+      "2": 647
+    }
+  }
+}

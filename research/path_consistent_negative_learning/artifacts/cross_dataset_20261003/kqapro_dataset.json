@@ -1,0 +1,32 @@
+{
+  "version": "official_KQAPro_mirror_drt",
+  "split_seed": 20261003,
+  "raw_counts": {
+    "train": 94376,
+    "val": 11797
+  },
+  "exclusion_counts": {
+    "train": {
+      "not_one_unambiguous_topic": 7612,
+      "non_entity_output": 83202
+    },
+    "val": {
+      "non_entity_output": 10339,
+      "not_one_unambiguous_topic": 990
+    }
+  },
+  "evaluation_split": "official_val_entity_output_single_topic_subset",
+  "development_split": "seeded_10pct_of_official_train_subset",
+  "graph_projection": "entity_relation_only; attributes, qualifiers and concepts excluded",
+  "topic_source": "sole unambiguous Find annotation",
+  "task_subset": "terminal What and one unambiguous Find; no answer_reachability_filter",
+  "dataset": "KQAPro-entity",
+  "entity_count": 16960,
+  "relation_text_count_with_inverse": 698,
+  "triple_count": 177923,
+  "split_sizes": {
+    "train": 3205,
+    "valid": 357,
+    "test": 468
+  }
+}

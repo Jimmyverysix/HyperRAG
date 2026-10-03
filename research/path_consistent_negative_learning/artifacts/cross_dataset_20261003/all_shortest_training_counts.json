@@ -1,0 +1,26 @@
+[
+  {
+    "dataset": "pathquestion",
+    "seed": 42,
+    "eligible_questions": 5537,
+    "single_path_positive_count": 11728,
+    "single_path_negative_count": 11478,
+    "all_shortest_positive_count": 17024,
+    "all_shortest_negative_count": 15975,
+    "all_shortest_pcn_count": 0,
+    "single_path_source": "/root/hyperrag_pcneg/runs/cross_dataset_20261003/pathquestion/pcn_mask/seed_42",
+    "all_shortest_source": "/root/hyperrag_pcneg/runs/cross_dataset_20261003/pathquestion/all_shortest/seed_42"
+  },
+  {
+    "dataset": "kqapro",
+    "seed": 42,
+    "eligible_questions": 3197,
+    "single_path_positive_count": 7562,
+    "single_path_negative_count": 7557,
+    "all_shortest_positive_count": 46184,
+    "all_shortest_negative_count": 46141,
+    "all_shortest_pcn_count": 0,
+    "single_path_source": "/root/hyperrag_pcneg/runs/cross_dataset_20261003/kqapro/pcn_mask/seed_42",
+    "all_shortest_source": "/root/hyperrag_pcneg/runs/cross_dataset_20261003/kqapro/all_shortest/seed_42"
+  }
+]
