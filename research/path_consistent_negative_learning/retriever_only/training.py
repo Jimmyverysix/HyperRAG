@@ -17,7 +17,7 @@ from torch.optim import Adam
 from ..path_supervision.weighted_loss import weighted_binary_cross_entropy
 from .embeddings import EmbeddingStore
 from .official import create_official_mlp
-from .prepared import PreparedCandidates, materialize_features, method_weights
+from .prepared import PreparedCandidates, materialize_features, method_supervision
 
 
 @dataclass(frozen=True)
@@ -28,6 +28,7 @@ class TrainingConfig:
     patience: int = 10
     minimum_delta: float = 0.00001
     feature_materialization_chunk_size: int = 8192
+    feature_storage: str = "materialized"
 
 
 def seed_everything(seed: int) -> None:
@@ -136,7 +137,7 @@ def train_retriever(
         raise ValueError("training data has no labels")
     seed_everything(seed)
     device = torch.device(device_name)
-    weights = method_weights(
+    effective_labels, weights = method_supervision(
         data,
         method=method,
         lambda_=lambda_,
@@ -150,14 +151,34 @@ def train_retriever(
     validation_generator = torch.Generator().manual_seed(seed)
     model = create_official_mlp(device=device)
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
-    features = materialize_features(
-        data,
-        embeddings.node_embeddings,
-        embeddings.query_embeddings,
-        device=device,
-        chunk_size=config.feature_materialization_chunk_size,
-    )
-    labels = data.labels.float().to(device).unsqueeze(1)
+    if config.feature_storage == "materialized":
+        features = materialize_features(
+            data,
+            embeddings.node_embeddings,
+            embeddings.query_embeddings,
+            device=device,
+            chunk_size=config.feature_materialization_chunk_size,
+        )
+        def get_features(indices: torch.Tensor) -> torch.Tensor:
+            return features[indices]
+    elif config.feature_storage == "indexed":
+        # MetaQA's dense fixed features exceed a 3090's memory. Keep compact
+        # frozen embeddings and indices on the GPU instead of reassembling
+        # every batch on CPU and transferring the same vectors every epoch.
+        nodes = embeddings.node_embeddings.to(device)
+        queries = embeddings.query_embeddings.to(device)
+        query_ids = data.query_embedding_indices.to(device)
+        head_ids = data.head_embedding_indices.to(device)
+        edge_ids = data.edge_embedding_indices.to(device)
+        tail_ids = data.tail_embedding_indices.to(device)
+        dde = data.dde_features.to(device)
+        def get_features(indices: torch.Tensor) -> torch.Tensor:
+            return torch.cat((queries[query_ids[indices]], nodes[head_ids[indices]],
+                              nodes[edge_ids[indices]], nodes[tail_ids[indices]],
+                              dde[indices]), dim=1)
+    else:
+        raise ValueError(f"unsupported feature storage: {config.feature_storage}")
+    labels = effective_labels.float().to(device).unsqueeze(1)
     device_weights = weights.to(device).unsqueeze(1)
     positive_weight_mask = weights > 0
     best_loss = float("inf")
@@ -187,7 +208,7 @@ def train_retriever(
                 train_weight_sums[batch_index] = 0.0
                 continue
             device_indices = indices.to(device)
-            batch_features = features[device_indices]
+            batch_features = get_features(device_indices)
             batch_labels = labels[device_indices]
             batch_weights = device_weights[device_indices]
             optimizer.zero_grad(set_to_none=True)
@@ -216,7 +237,7 @@ def train_retriever(
                 shuffle=False,
             )):
                 device_indices = indices.to(device)
-                batch_features = features[device_indices]
+                batch_features = get_features(device_indices)
                 batch_labels = labels[device_indices]
                 batch_weights = device_weights[device_indices]
                 logits = model(batch_features)
@@ -279,6 +300,7 @@ def train_retriever(
         "seed": seed,
         "candidate_count": len(data.labels),
         "positive_count": int(data.labels.sum()),
+        "effective_positive_count": int(effective_labels.sum()),
         "path_consistent_negative_count": int(data.path_consistent_mask.sum()),
         "train_candidate_count": len(train_indices),
         "internal_validation_candidate_count": len(validation_indices),

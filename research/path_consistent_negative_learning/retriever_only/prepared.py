@@ -94,7 +94,7 @@ def method_weights(
     if not 0.0 <= lambda_ <= 1.0:
         raise ValueError("lambda must be in [0, 1]")
     weights = torch.ones_like(data.labels, dtype=torch.float32)
-    if method == "baseline":
+    if method in ("baseline", "positive_relabel"):
         return weights
     if method == "ours":
         weights[data.path_consistent_mask] = lambda_
@@ -112,6 +112,26 @@ def method_weights(
         for local_index in rng.sample(negative, count):
             weights[start + local_index] = lambda_
     return weights
+
+
+def method_supervision(
+    data: PreparedCandidates,
+    *,
+    method: str,
+    lambda_: float = 0.0,
+    seed: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Apply one strategy to the same sampled candidates without mutating them.
+
+    Train/validation indices must be built from ``data.labels`` before this
+    transformation so relabeling cannot change the shared internal split.
+    """
+
+    weights = method_weights(data, method=method, lambda_=lambda_, seed=seed)
+    labels = data.labels.clone()
+    if method == "positive_relabel":
+        labels[data.path_consistent_mask] = True
+    return labels, weights
 
 
 def assemble_features(

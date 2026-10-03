@@ -9,6 +9,8 @@ from typing import Callable, Iterable, Iterator, Mapping, Sequence
 
 import networkx as nx
 
+from ..path_supervision.dag import on_shortest_answer_dag
+
 from .data import AlignedQuery
 from .graph import (
     LOGICAL_TRANSITION_COST,
@@ -167,12 +169,9 @@ def path_consistent_transitions_from_dag(
         head, edge, tail = transition
         if not graph.has_edge(head, edge) or not graph.has_edge(edge, tail):
             continue
-        head_distance = source_distances.get(head)
-        tail_distance = source_distances.get(tail)
-        if (
-            head_distance is not None
-            and tail_distance == head_distance + LOGICAL_TRANSITION_COST
-            and tail in shortest_path_nodes
+        if on_shortest_answer_dag(
+            head, tail, source_distances, shortest_path_nodes,
+            transition_cost=LOGICAL_TRANSITION_COST,
         ):
             selected.append(transition)
     return tuple(sorted(set(selected)))
