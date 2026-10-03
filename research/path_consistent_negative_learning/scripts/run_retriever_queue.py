@@ -15,9 +15,6 @@ import time
 from typing import Any, Sequence
 
 
-ALLOWED_GPUS = frozenset(range(6))
-
-
 def _timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -62,8 +59,8 @@ def run_manifest(
     workers_per_gpu: int = 1,
 ) -> None:
     requested = tuple(dict.fromkeys(gpus))
-    if not requested or len(requested) > 6 or not set(requested) <= ALLOWED_GPUS:
-        raise ValueError("GPU IDs must be a nonempty subset of 0--5")
+    if not requested or len(requested) > 6 or any(gpu < 0 for gpu in requested):
+        raise ValueError("select one to six nonnegative physical GPU IDs")
     if workers_per_gpu <= 0:
         raise ValueError("workers_per_gpu must be positive")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

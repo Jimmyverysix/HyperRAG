@@ -1,0 +1,23 @@
+{
+  "version": "pcn_cross_dataset_20261003",
+  "seeds": [42, 43, 44, 45, 46],
+  "strategies": ["baseline", "random_mask", "pcn_mask", "positive_relabel"],
+  "gpus": [0, 2, 3, 4, 5, 6],
+  "maximum_gpu_count": 6,
+  "model": "frozen_gte_1024_official_dde_30_mlp_4126_256_1",
+  "optimizer": "Adam",
+  "learning_rate": 0.0001,
+  "maximum_epochs": 50,
+  "patience": 10,
+  "minimum_delta": 0.00001,
+  "beam_width": 32,
+  "maximum_hops": 3,
+  "datasets": {
+    "WikiTopics": {"batch_size": 32, "feature_storage": "materialized", "reuse_existing_three_strategies": true},
+    "MetaQA-3hop-vanilla": {"batch_size": 512, "feature_storage": "indexed", "reuse_existing_three_strategies": true},
+    "KQAPro-entity": {"batch_size": 512, "feature_storage": "indexed", "test_definition": "official_val_entity_single_topic_subset", "split_seed": 20261003},
+    "PathQuestion-2H3H": {"batch_size": 512, "feature_storage": "materialized", "test_definition": "question_topic_grouped_seeded_80_10_10", "split_seed": 20261003}
+  },
+  "statistics": {"unit": "question_after_shared_seed_average", "bootstrap_samples": 10000, "confidence_level": 0.95, "seed": 20261003},
+  "optional_all_shortest": {"implemented_for_ordinary_graph": true, "changes_positive_set_and_negative_sampling": true, "main_four_strategy_comparison_keeps_candidates_fixed": true}
+}
